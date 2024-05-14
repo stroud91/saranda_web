@@ -1,5 +1,5 @@
 import React from 'react';
-import './Dine.scss'; // Define some basic card styles for dining options
+
 
 const Dine = () => {
   return (
