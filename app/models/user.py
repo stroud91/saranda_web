@@ -15,8 +15,6 @@ class User(db.Model, UserMixin):
     hashed_password = db.Column(db.String(255), nullable=False)
 
 
-    bookings = db.relationship('Booking', backref='user', lazy=True)
-
     @property
     def password(self):
         return self.hashed_password

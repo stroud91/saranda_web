@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './Home.scss'; // Ensure styles are set for video and overlays
+
 
 const Home = () => {
   return (
