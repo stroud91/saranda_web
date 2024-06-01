@@ -1,7 +1,8 @@
 import React from 'react';
-import './BackgroundVideoLayout.scss';
+import './BackgroundVideoLayout.css';
+import videoSource from "../assets/video.mp4";
 
-const BackgroundVideoLayout = ({ videoSource, children }) => {
+const BackgroundVideoLayout = ({ children }) => {
   return (
     <div className="video-background-layout">
       <video autoPlay loop muted className="background-video">

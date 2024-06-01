@@ -1,5 +1,5 @@
 import React from 'react';
-
+import './ThemedBackgroundLayout.css';
 
 const ThemedBackgroundLayout = ({ backgroundImage, children }) => {
   return (
