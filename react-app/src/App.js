@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import SignupFormPage from "./components/SignupFormPage";
 import LoginFormPage from "./components/LoginFormPage";
 import { authenticate } from "./store/session";
-import Navigation from "./components/Navigation";
+import Navigation from "./components/Navigation/Navigation";
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './components/pages/Home';
@@ -14,7 +14,8 @@ import Stay from './components/pages/Stay';
 import About from './components/pages/About';
 import BackgroundVideoLayout from './components/layout/BackgroundVideoLayout';
 import ThemedBackgroundLayout from './components/layout/ThemedBackgroundLayout';
-import backgroundImage from './components/assets/background.jpg'
+import backgroundImage from './components/assets/background.jpg';
+import './App.css';
 
 function App() {
   const dispatch = useDispatch();
