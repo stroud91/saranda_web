@@ -3,12 +3,13 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  margin: 20px;
+  margin: 20px auto;
   padding: 20px;
   background: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
+  max-width: 1200px; 
 }
 
 .card {
@@ -19,24 +20,32 @@
   transition: transform 0.3s, opacity 0.3s;
   opacity: 0;
   transform: translateY(20px);
-  flex: 1 1 calc(33% - 40px);
-  max-width: calc(33% - 40px);
+  flex: 1 1 calc(30% - 40px); 
+  max-width: calc(30% - 40px); 
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
 }
 
 .card-image {
   width: 100%;
   height: 200px;
   object-fit: cover;
+  border-bottom: 2px solid #ddd;
 }
 
 .card-content {
-  padding: 20px;
+  padding: 10px;
+  text-align: center;
+  font-family: 'Special Elite', cursive; 
 }
 
 .card-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   margin-bottom: 10px;
+  font-weight: bold;
 }
 
 .card-description {
