@@ -15,7 +15,7 @@ import About from './components/pages/About';
 import BackgroundVideoLayout from './components/layout/BackgroundVideoLayout';
 import ThemedBackgroundLayout from './components/layout/ThemedBackgroundLayout';
 import backgroundImage from './components/assets/background.jpg';
-import './App.css';
+
 
 function App() {
   const dispatch = useDispatch();
