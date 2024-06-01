@@ -17,13 +17,6 @@ const Home = () => {
           Your browser does not support the video tag.
         </video>
       </div>
-      <header className="navbar">
-        <Link to="/" className="nav-link">Home</Link>
-        <Link to="/dine" className="nav-link">Dine</Link>
-        <Link to="/stay" className="nav-link">Sleep</Link>
-        <Link to="/activities" className="nav-link">Activities</Link>
-        <Link to="/about" className="nav-link">About Saranda</Link>
-      </header>
       {!showContent ? (
         <div className="hero-section">
           <div className="overlay-text">
