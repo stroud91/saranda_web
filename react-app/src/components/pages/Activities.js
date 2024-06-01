@@ -4,10 +4,12 @@ import './Page.css';
 
 const Activities = () => {
   const cardsData = [
-    { title: 'Activity 1', description: 'Description 1', image: '/path-to-image1.jpg' },
-    { title: 'Activity 2', description: 'Description 2', image: '/path-to-image2.jpg' },
-    { title: 'Activity 3', description: 'Description 3', image: '/path-to-image3.jpg' },
-    // Add more cards as needed
+    { title: 'Restaurant 1', description: 'Description 1', image: '/path-to-image1.jpg' },
+    { title: 'Restaurant 2', description: 'Description 2', image: '/path-to-image2.jpg' },
+    { title: 'Restaurant 3', description: 'Description 3', image: '/path-to-image3.jpg' },
+    { title: 'Restaurant 4', description: 'Description 4', image: '/path-to-image1.jpg' },
+    { title: 'Restaurant 5', description: 'Description 5', image: '/path-to-image2.jpg' },
+    { title: 'Restaurant 6', description: 'Description 6', image: '/path-to-image3.jpg' },
   ];
 
   useEffect(() => {
