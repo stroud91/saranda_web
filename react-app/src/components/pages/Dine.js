@@ -6,6 +6,7 @@ const Dine = () => {
   const cardsData = [
     { title: 'Restaurant 1', description: 'Description 1', image: '/path-to-image1.jpg' },
     { title: 'Restaurant 2', description: 'Description 2', image: '/path-to-image2.jpg' },
+    { title: 'Restaurant 3', description: 'Description 3', image: '/path-to-image3.jpg' },
     // Add more cards as needed
   ];
 
@@ -30,9 +31,11 @@ const Dine = () => {
   return (
     <div className="page">
       <h1>Dine</h1>
-      {cardsData.map((card, index) => (
-        <Card key={index} title={card.title} description={card.description} image={card.image} />
-      ))}
+      <div className="card-container">
+        {cardsData.map((card, index) => (
+          <Card key={index} title={card.title} description={card.description} image={card.image} />
+        ))}
+      </div>
     </div>
   );
 };

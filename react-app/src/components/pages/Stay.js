@@ -6,6 +6,7 @@ const Stay = () => {
   const cardsData = [
     { title: 'Hotel 1', description: 'Description 1', image: '/path-to-image1.jpg' },
     { title: 'Hotel 2', description: 'Description 2', image: '/path-to-image2.jpg' },
+    { title: 'Hotel 3', description: 'Description 3', image: '/path-to-image3.jpg' },
     // Add more cards as needed
   ];
 
@@ -30,9 +31,11 @@ const Stay = () => {
   return (
     <div className="page">
       <h1>Stay</h1>
-      {cardsData.map((card, index) => (
-        <Card key={index} title={card.title} description={card.description} image={card.image} />
-      ))}
+      <div className="card-container">
+        {cardsData.map((card, index) => (
+          <Card key={index} title={card.title} description={card.description} image={card.image} />
+        ))}
+      </div>
     </div>
   );
 };
