@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Card from '../Card/Card';
+import Card from '../Card/Card.js';
 import './Page.css';
 
 const Dine = () => {
