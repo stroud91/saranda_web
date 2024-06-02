@@ -25,21 +25,20 @@ const Home = () => {
           </div>
         </div>
       ) : (
-        <div className="home-content">
-          <div className="overlay-text">
-            <h1>Welcome to Saranda!</h1>
-            <p>Discover the beauty of Saranda.</p>
-            <div className="action-buttons">
-              <Link to="/dine" className="btn btn-primary">Dine</Link>
-              <Link to="/stay" className="btn btn-primary">Sleep</Link>
-              <Link to="/activities" className="btn btn-primary">Activities</Link>
+        <>
+          <div className="home-content">
+            <div className="overlay-text">
+              <h1>Welcome to Saranda!</h1>
+              <p>Discover the beauty of Saranda.</p>
+              <div className="action-buttons">
+                <Link to="/dine" className="btn btn-primary">Dine</Link>
+                <Link to="/stay" className="btn btn-primary">Sleep</Link>
+                <Link to="/activities" className="btn btn-primary">Activities</Link>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
-      <footer className="footer">
-        <p>© 2024 Saranda Tourism. All rights reserved.</p>
-      </footer>
     </div>
   );
 };
