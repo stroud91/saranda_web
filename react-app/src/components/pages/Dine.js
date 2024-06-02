@@ -4,18 +4,18 @@ import './Page.css';
 
 const Dine = () => {
   const cardsData = [
-    { title: 'Restaurant 1', description: 'Description 1', image: '/path-to-image1.jpg' },
-    { title: 'Restaurant 2', description: 'Description 2', image: '/path-to-image2.jpg' },
-    { title: 'Restaurant 3', description: 'Description 3', image: '/path-to-image3.jpg' },
-    { title: 'Restaurant 4', description: 'Description 4', image: '/path-to-image1.jpg' },
-    { title: 'Restaurant 5', description: 'Description 5', image: '/path-to-image2.jpg' },
-    { title: 'Restaurant 6', description: 'Description 6', image: '/path-to-image3.jpg' },
-
+    { title: 'Restaurant 1', description: 'Description 1', image: 'https://placekitten.com/300/200' },
+    { title: 'Restaurant 2', description: 'Description 2', image: 'https://placekitten.com/301/200' },
+    { title: 'Restaurant 3', description: 'Description 3', image: 'https://placekitten.com/302/200' },
+    { title: 'Restaurant 4', description: 'Description 4', image: 'https://placekitten.com/303/200' },
+    { title: 'Restaurant 5', description: 'Description 5', image: 'https://placekitten.com/304/200' },
+    { title: 'Restaurant 6', description: 'Description 6', image: 'https://placekitten.com/305/200' },
   ];
 
   useEffect(() => {
+    console.log(cardsData); 
     const handleScroll = () => {
-      const cards = document.querySelectorAll('.card');
+      const cards = document.querySelectorAll('.polaroid-card');
       const triggerBottom = window.innerHeight / 5 * 4;
       cards.forEach(card => {
         const cardTop = card.getBoundingClientRect().top;
