@@ -3,11 +3,11 @@ import './Card.css';
 
 const Card = ({ title, description, image }) => {
   return (
-    <div className="card">
-      <img src={image} alt={title} className="card-image" />
-      <div className="card-content">
-        <h2 className="card-title">{title}</h2>
-        <p className="card-description">{description}</p>
+    <div className="polaroid-card">
+      <img src={image} alt={title} className="polaroid-image" />
+      <div className="polaroid-content">
+        <h2 className="polaroid-title">{title}</h2>
+        <p className="polaroid-description">{description}</p>
       </div>
     </div>
   );
