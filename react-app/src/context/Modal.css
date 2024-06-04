@@ -7,6 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 #modal-background {
@@ -19,6 +20,47 @@
 }
 
 #modal-content {
-  position: absolute;
-  background-color:white;
+  position: relative;
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+}
+
+.modal-carousel img {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.date-time-picker {
+  margin: 10px 0;
+}
+
+.date-time-picker label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.date-picker {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.select-time-btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.select-time-btn:hover {
+  background-color: #0056b3;
 }
