@@ -1,0 +1,101 @@
+.about-saranda-page {
+    padding: 20px;
+  }
+
+  .hero-section {
+    text-align: center;
+    background: url('https://placekitten.com/1000/400') no-repeat center center/cover;
+    color: white;
+    padding: 50px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+  }
+
+  .hero-section h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+
+  .hero-section p {
+    font-size: 1.5rem;
+  }
+
+  .archaeological-section {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .archaeological-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+
+  .archaeological-spots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .archaeological-spot {
+    width: 100%;
+    max-width: 300px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .spot-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .archaeological-spot h3 {
+    margin-top: 10px;
+    font-size: 1.5rem;
+  }
+
+  .archaeological-spot p {
+    margin-top: 10px;
+    font-size: 1rem;
+    color: #666;
+  }
+
+  .cool-pictures-section {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .cool-pictures-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+
+  .cool-pictures {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .cool-picture {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    .archaeological-spot {
+      max-width: 100%;
+    }
+
+    .cool-picture {
+      max-width: 100%;
+    }
+  }

@@ -14,7 +14,7 @@ import BackgroundVideoLayout from './components/layout/BackgroundVideoLayout';
 import ThemedBackgroundLayout from './components/layout/ThemedBackgroundLayout';
 import backgroundImage from './components/assets/background.jpg';
 import { ModalProvider, Modal } from './context/Modal';
-
+import AboutSaranda from './components/pages/AboutSaranda';
 function App() {
   const dispatch = useDispatch();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -50,16 +50,23 @@ function App() {
                 <Activities />
               </ThemedBackgroundLayout>
             </Route>
+            <Route path="/saranda">
+            <ThemedBackgroundLayout backgroundImage={backgroundImage}>
+              <AboutSaranda />
+            </ThemedBackgroundLayout>
+           </Route>
             <Route path="/about">
               <ThemedBackgroundLayout backgroundImage={backgroundImage}>
                 <About />
               </ThemedBackgroundLayout>
             </Route>
+
             <Route path="/personalized-trip">
               <ThemedBackgroundLayout backgroundImage={backgroundImage}>
                 <PersonalizedTrip />
               </ThemedBackgroundLayout>
             </Route>
+
           </Switch>
         )}
         <Footer />
