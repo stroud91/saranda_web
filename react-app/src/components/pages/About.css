@@ -1,5 +1,9 @@
 .about-page {
-    padding: 20px;
+    padding: 10px;
+    height: calc(90vh - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 10px;
   }
 
   .about-section {
