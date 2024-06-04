@@ -8,8 +8,8 @@ function Navigation() {
       <NavLink exact to="/" className="nav-link">Home</NavLink>
       <NavLink to="/dine" className="nav-link">Dine</NavLink>
       <NavLink to="/stay" className="nav-link">Sleep</NavLink>
-      <NavLink to="/activities" className="nav-link">About Us</NavLink>
-      <NavLink to="/about" className="nav-link">About Saranda</NavLink>
+      <NavLink to="/about" className="nav-link">About Us</NavLink>
+      <NavLink to="/saranda" className="nav-link">About Saranda</NavLink>
     </nav>
   );
 }
