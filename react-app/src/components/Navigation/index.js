@@ -2,8 +2,8 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useModal } from '../../context/Modal';
-import LoginFormModal from '../auth/LoginFormModal';
-import SignUpFormModal from '../auth/SignUpFormModal';
+import LoginFormModal from '../LoginFormModal';
+import SignUpFormModal from '../SignUpFormModal';
 import { logout } from '../../store/session'; 
 import './Navigation.css';
 

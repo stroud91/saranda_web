@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAccount, updateAccount } from "../../store/account";
+import './Account.css';
 
 function Account() {
   const dispatch = useDispatch();
@@ -34,44 +35,60 @@ function Account() {
   }
 
   return (
-    <div>
-      <h1>Your Account</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Username
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
+    <div className="account-container">
+      <h1 className="account-title">Your Account</h1>
+      <div className="account-content">
+        <div className="account-info">
+          <img
+            src={profilePicture || "/default-profile.png"}
+            alt="Profile"
+            className="account-profile-picture"
           />
-        </label>
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Bio
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
-        </label>
-        <label>
-          Profile Picture URL
-          <input
-            type="text"
-            value={profilePicture}
-            onChange={(e) => setProfilePicture(e.target.value)}
-          />
-        </label>
-        <button type="submit">Update Account</button>
-      </form>
+          <h2>{username}</h2>
+          <p>{email}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="account-form">
+          <label className="account-label">
+            Username
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="account-input"
+              required
+            />
+          </label>
+          <label className="account-label">
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="account-input"
+              required
+            />
+          </label>
+          <label className="account-label">
+            Bio
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="account-textarea"
+            />
+          </label>
+          <label className="account-label">
+            Profile Picture URL
+            <input
+              type="text"
+              value={profilePicture}
+              onChange={(e) => setProfilePicture(e.target.value)}
+              className="account-input"
+            />
+          </label>
+          <button type="submit" className="account-button">Update Account</button>
+        </form>
+      </div>
     </div>
   );
 }

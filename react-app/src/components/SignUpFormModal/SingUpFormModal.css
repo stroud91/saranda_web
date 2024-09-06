@@ -42,7 +42,7 @@
   .signup-modal-button {
     padding: 12px;
     background-color: #007bff;
-    color: white;
+    color: rgb(255, 255, 255);
     border: none;
     border-radius: 4px;
     cursor: pointer;
