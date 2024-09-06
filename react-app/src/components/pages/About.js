@@ -1,31 +1,49 @@
 import React from 'react';
 import './About.css';
+import img1 from '../../images/1.jpg';
+import img2 from '../../images/2.jpg';
+import img3 from '../../images/3.jpg';
+import img4 from '../../images/4.jpg';
+import img5 from '../../images/5.jpg';
+import img6 from '../../images/6.jpg';
+import img7 from '../../images/7.jpg';
+import img8 from '../../images/8.jpg';
+import img9 from '../../images/9.jpg';
+import CEO from '../../images/CEO.jpg';
+import CTO from '../../images/CTO.jpg';
+import COO from '../../images/COO.jpg';
 
 const teamMembers = [
   {
     name: 'John Doe',
     position: 'CEO',
-    image: 'https://placekitten.com/200/200',
+    image: CEO,
     description: 'John is the visionary behind our company. With over 20 years of experience in the tourism industry, he leads the team with passion and dedication.',
   },
   {
     name: 'Jane Smith',
     position: 'CTO',
-    image: 'https://placekitten.com/201/200',
+    image: CTO,
     description: 'Jane is the tech guru of our company. She ensures that our technology infrastructure is always up-to-date and running smoothly.',
   },
   {
     name: 'Emily Johnson',
     position: 'COO',
-    image: 'https://placekitten.com/202/200',
+    image: COO,
     description: 'Emily oversees the company’s day-to-day operations and makes sure everything is running efficiently.',
   },
 ];
 
 const coolPictures = [
-  'https://placekitten.com/800/400',
-  'https://placekitten.com/801/400',
-  'https://placekitten.com/802/400',
+  img1,
+  img2,
+  img3,
+  img4,
+  img5,
+  img6,
+  img7,
+  img8,
+  img9,
 ];
 
 const About = () => {
