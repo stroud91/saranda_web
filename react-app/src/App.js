@@ -15,6 +15,7 @@ import ThemedBackgroundLayout from './components/layout/ThemedBackgroundLayout';
 import backgroundImage from './components/assets/background.jpg';
 import { ModalProvider, Modal } from './context/Modal';
 import AboutSaranda from './components/pages/AboutSaranda';
+
 function App() {
   const dispatch = useDispatch();
   const [isLoaded, setIsLoaded] = useState(false);
