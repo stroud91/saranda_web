@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
-import { ClerkProvider } from "@clerk/clerk-react"; // Clerk integration
 
 import { ModalProvider, Modal } from "./context/Modal";
 import configureStore from "./store";
@@ -18,21 +17,16 @@ if (process.env.NODE_ENV !== "production") {
 	window.sessionActions = sessionActions;
 }
 
-
-const frontendApi = "your-clerk-frontend-api-key";
-
 function Root() {
 	return (
-		<ClerkProvider frontendApi={frontendApi}>
-			<ModalProvider>
-				<Provider store={store}>
-					<BrowserRouter>
-						<App />
-						<Modal />
-					</BrowserRouter>
-				</Provider>
-			</ModalProvider>
-		</ClerkProvider>
+		<ModalProvider>
+			<Provider store={store}>
+				<BrowserRouter>
+					<App />
+					<Modal />
+				</BrowserRouter>
+			</Provider>
+		</ModalProvider>
 	);
 }
 

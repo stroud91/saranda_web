@@ -1,42 +1,82 @@
-import requests
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, session, request
+from app.models import User, db
+from app.forms import LoginForm
+from app.forms import SignUpForm
+from flask_login import current_user, login_user, logout_user, login_required
 
 auth_routes = Blueprint('auth', __name__)
 
-CLERK_API_KEY = "YOUR_CLERK_API_KEY"
 
-@auth_routes.route('/clerk-auth', methods=['POST'])
-def clerk_auth():
-    # Get the token from the frontend request
-    token = request.headers.get('Authorization').split(" ")[1]
+def validation_errors_to_error_messages(validation_errors):
+    """
+    Simple function that turns the WTForms validation errors into a simple list
+    """
+    errorMessages = []
+    for field in validation_errors:
+        for error in validation_errors[field]:
+            errorMessages.append(f'{field} : {error}')
+    return errorMessages
 
-    # Verify the token by calling Clerk's API
-    headers = {
-        'Authorization': f'Bearer {CLERK_API_KEY}'
-    }
 
-    response = requests.get(f'https://api.clerk.dev/v1/tokens/{token}', headers=headers)
+@auth_routes.route('/')
+def authenticate():
+    """
+    Authenticates a user.
+    """
+    if current_user.is_authenticated:
+        return current_user.to_dict()
+    return {'errors': ['Unauthorized']}
 
-    if response.status_code != 200:
-        return {'errors': ['Invalid Token']}, 401
 
-    # Retrieve user data from Clerk's response
-    user_data = response.json()
+@auth_routes.route('/login', methods=['POST'])
+def login():
+    """
+    Logs a user in
+    """
+    form = LoginForm()
+    # Get the csrf_token from the request cookie and put it into the
+    # form manually to validate_on_submit can be used
+    form['csrf_token'].data = request.cookies['csrf_token']
+    if form.validate_on_submit():
+        # Add the user to the session, we are logged in!
+        user = User.query.filter(User.email == form.data['email']).first()
+        login_user(user)
+        return user.to_dict()
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
-    user_id = user_data.get('user_id')
 
-    if not user_id:
-        return {'errors': ['User not found']}, 404
+@auth_routes.route('/logout')
+def logout():
+    """
+    Logs a user out
+    """
+    logout_user()
+    return {'message': 'User logged out'}
 
-    # At this point, you would check if the user exists in your database or create a new user.
-    # For example:
-    # user = User.query.filter_by(clerk_id=user_id).first()
 
-    # If user doesn't exist, create a new user
-    # if not user:
-    #     user = User(username=user_data['username'], email=user_data['email'], clerk_id=user_id)
-    #     db.session.add(user)
-    #     db.session.commit()
+@auth_routes.route('/signup', methods=['POST'])
+def sign_up():
+    """
+    Creates a new user and logs them in
+    """
+    form = SignUpForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    if form.validate_on_submit():
+        user = User(
+            username=form.data['username'],
+            email=form.data['email'],
+            password=form.data['password']
+        )
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return user.to_dict()
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
-    return jsonify({"user_id": user_id, "username": user_data['username']})
 
+@auth_routes.route('/unauthorized')
+def unauthorized():
+    """
+    Returns unauthorized JSON when flask-login authentication fails
+    """
+    return {'errors': ['Unauthorized']}, 401
