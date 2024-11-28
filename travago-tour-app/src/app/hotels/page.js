@@ -1,5 +1,5 @@
 "use client";
-import HotelDetail from './HotelDetail';
+import HotelList from './HotelList';
 
 const hotels = [
   {
@@ -20,14 +20,8 @@ const hotels = [
   }
 ];
 
-const HotelDetailPage = ({ params }) => {
-  const hotel = hotels.find((hotel) => hotel.id === parseInt(params.id));
-
-  if (!hotel) {
-    return <div>Hotel not found</div>;
-  }
-
-  return <HotelDetail hotel={hotel} />;
+const HotelPage = () => {
+  return <HotelList hotels={hotels} />;
 };
 
-export default HotelDetailPage;
+export default HotelPage;
