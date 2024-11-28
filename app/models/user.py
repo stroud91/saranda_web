@@ -1,7 +1,6 @@
-from .db import db, environment, SCHEMA, add_prefix_for_prod
+from .db import db, environment, SCHEMA
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -15,8 +14,15 @@ class User(db.Model, UserMixin):
     hashed_password = db.Column(db.String(255), nullable=False)
     profile_picture = db.Column(db.String(255), nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    
+    phone_number = db.Column(db.String(20))
+    role = db.Column(db.String(50), default='guest')
+    is_verified = db.Column(db.Boolean(), default=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+    # Relationships
     bookings = db.relationship('Booking', backref='user', lazy=True)
+    tours_created = db.relationship('Tour', backref='creator', lazy=True)
 
     @property
     def password(self):

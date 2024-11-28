@@ -1,3 +1,6 @@
-from .db import db
 from .user import User
-from .db import environment, SCHEMA
+from .tour import Tour
+from .booking import Booking
+from .hotel import Hotel
+from .car_rental import CarRental
+from .db import db, environment, SCHEMA
