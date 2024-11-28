@@ -23,7 +23,7 @@ depends_on = None
 def upgrade():
     # Create users table
     op.create_table('users',
-        sa.Column('id', sa.dialects.postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('username', sa.String(255), unique=True, nullable=False),
         sa.Column('email', sa.String(255), unique=True, nullable=False),
         sa.Column('password_hash', sa.String(255), nullable=False),
@@ -36,13 +36,13 @@ def upgrade():
 
     # Create tours table
     op.create_table('tours',
-        sa.Column('id', sa.dialects.postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('tour_name', sa.String(255), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),
         sa.Column('price', sa.Numeric(10, 2), nullable=False),
         sa.Column('start_date', sa.DateTime(), nullable=False),
         sa.Column('end_date', sa.DateTime(), nullable=False),
-        sa.Column('created_by', sa.dialects.postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=False),
+        sa.Column('created_by', sa.Integer(), sa.ForeignKey('users.id'), nullable=False),
         sa.Column('created_at', sa.DateTime(), default=sa.func.now()),
         sa.Column('updated_at', sa.DateTime(), default=sa.func.now(), onupdate=sa.func.now()),
         sa.Column('location', sa.String(255), nullable=False),
@@ -51,7 +51,7 @@ def upgrade():
 
     # Create hotels table
     op.create_table('hotels',
-        sa.Column('id', sa.dialects.postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('hotel_name', sa.String(255), nullable=False),
         sa.Column('address', sa.String(255), nullable=False),
         sa.Column('price_per_night', sa.Numeric(10, 2), nullable=False),
@@ -65,7 +65,7 @@ def upgrade():
 
     # Create car_rentals table
     op.create_table('car_rentals',
-        sa.Column('id', sa.dialects.postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('car_model', sa.String(255), nullable=False),
         sa.Column('car_type', sa.String(50), nullable=False),
         sa.Column('price_per_day', sa.Numeric(10, 2), nullable=False),

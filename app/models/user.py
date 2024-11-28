@@ -11,9 +11,9 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), nullable=False, unique=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
-    hashed_password = db.Column(db.String(255), nullable=False)
-    profile_picture = db.Column(db.String(255), nullable=True)
-    bio = db.Column(db.Text, nullable=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    # profile_picture = db.Column(db.String(255), nullable=True)
+    # bio = db.Column(db.Text, nullable=True)
     phone_number = db.Column(db.String(20))
     role = db.Column(db.String(50), default='guest')
     is_verified = db.Column(db.Boolean(), default=False)
@@ -30,7 +30,7 @@ class User(db.Model, UserMixin):
 
     @password.setter
     def password(self, password):
-        self.hashed_password = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -40,6 +40,6 @@ class User(db.Model, UserMixin):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'profile_picture': self.profile_picture,
-            'bio': self.bio
+            # 'profile_picture': self.profile_picture,
+            # 'bio': self.bio
         }
