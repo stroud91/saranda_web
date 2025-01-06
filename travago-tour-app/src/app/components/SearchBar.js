@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import styles from './SearchBar.module.css';
+// import styles from './SearchBar.module.css';
 
 const SearchBar = () => {
   const [location, setLocation] = useState('');

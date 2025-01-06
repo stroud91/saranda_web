@@ -1,6 +1,6 @@
 "use client";
 import HotelCard from './HotelCard';
-import styles from './HotelList.module.css';
+// import styles from './HotelList.module.css';
 
 const HotelList = ({ hotels }) => {
   return (

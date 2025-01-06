@@ -1,5 +1,5 @@
 "use client";
-import styles from './CarRentalDetail.module.css';
+// import styles from './CarRentalDetail.module.css';
 import Image from 'next/image';
 
 const CarRentalDetail = ({ car }) => {

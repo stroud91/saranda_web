@@ -1,5 +1,5 @@
 "use client";
-import styles from './HotelDetail.module.css';
+// import styles from './HotelDetail.module.css';
 import Image from 'next/image';
 
 const HotelDetail = ({ hotel }) => {

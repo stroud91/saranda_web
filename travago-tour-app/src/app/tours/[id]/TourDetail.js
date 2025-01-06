@@ -1,5 +1,5 @@
 "use client";
-import styles from './TourDetail.module.css';
+// import styles from './TourDetail.module.css';
 import Image from 'next/image';
 
 const TourDetail = ({ tour }) => {

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
-import styles from './Navbar.module.css';
+import styles from '../../../styles/Navbar.module.css';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -31,3 +31,31 @@ body {
     text-wrap: balance;
   }
 }
+
+.signed-out-container {
+  text-align: center;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  max-width: 600px;
+  background-color: var(--background-coastal);
+}
+
+.signed-out-container h2 {
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+
+.signed-out-container p {
+  font-size: 1.2rem;
+  margin: 1rem 0;
+}
+
+.loading-container,
+.error-container {
+  text-align: center;
+  margin: 2rem 0;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}

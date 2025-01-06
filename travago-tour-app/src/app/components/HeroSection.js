@@ -1,7 +1,7 @@
 "use client";
-import styles from './HeroSection.module.css';
+// import styles from './HeroSection.module.css';
 import Image from 'next/image';
-import heroImage from '../../../public/images/hero.jpg';
+// import heroImage from '../../../public/images/hero.jpg';
 import SearchBar from './SearchBar';
 
 const HeroSection = () => {

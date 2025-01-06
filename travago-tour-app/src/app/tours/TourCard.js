@@ -1,5 +1,5 @@
 "use client";
-import styles from './TourCard.module.css';
+// import styles from './TourCard.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 
