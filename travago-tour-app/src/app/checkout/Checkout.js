@@ -1,5 +1,5 @@
 "use client";
-// import styles from './Checkout.module.css';
+import styles from './Checkout.module.css';
 
 const Checkout = ({ booking }) => {
   return (

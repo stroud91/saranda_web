@@ -1,6 +1,6 @@
 "use client";
 import TourCard from './TourCard';
-// import styles from './TourList.module.css';
+import styles from './TourList.module.css';
 
 const TourList = ({ tours }) => {
   return (

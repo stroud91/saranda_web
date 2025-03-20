@@ -1,6 +1,6 @@
 "use client";
 import CarRentalCard from './CarRentalCard';
-// import styles from './CarRentalList.module.css';
+import styles from './CarRentalList.module.css';
 
 const CarRentalList = ({ cars }) => {
   return (

@@ -1,13 +1,13 @@
 "use client";
-import { useState } from 'react';
-// import styles from './SearchBar.module.css';
+import { useState } from "react";
+import styles from "./SearchBar.module.css";
 
 const SearchBar = () => {
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState('');
+  const [location, setLocation] = useState("");
+  const [date, setDate] = useState("");
 
   const handleSearch = () => {
-    // Perform search action
+    // Perform search action (you can integrate your search logic here)
     console.log(`Searching for ${location} on ${date}`);
   };
 

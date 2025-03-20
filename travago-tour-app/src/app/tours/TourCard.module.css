@@ -1,0 +1,47 @@
+.tourCard {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    margin: 1rem;
+  }
+  
+  .tourCard:hover {
+    transform: translateY(-5px);
+  }
+  
+  .tourImage {
+    object-fit: cover;
+    width: 100%;
+    height: auto;
+  }
+  
+  .cardContent {
+    padding: 1rem;
+  }
+  
+  .cardContent h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: #333;
+  }
+  
+  .cardContent p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .detailsLink {
+    display: inline-block;
+    margin-top: 0.5rem;
+    color: #00A8E8; /* Aqua marine color */
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .detailsLink:hover {
+    text-decoration: underline;
+  }

@@ -13,7 +13,7 @@ const Navbar = () => {
 
   return (
     <header className={styles.header}>
-      <div className={styles.logo}>Travago</div>
+      <div className={styles.logo}>Meg Rooms</div>
       <nav className={`${styles.nav} ${isOpen ? styles.open : ''}`}>
         <ul>
           <li><Link href="/">Home</Link></li>

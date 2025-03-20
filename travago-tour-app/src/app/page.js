@@ -98,13 +98,13 @@ export default function Home() {
           </>
         )}
       </SignedIn>
-      <SignedOut>
+      {/* <SignedOut>
         <div className="signed-out-container">
           <h2>Please Sign In</h2>
           <p>Sign in to explore our exciting tours, car rentals, and hotels!</p>
-          <RedirectToSignIn />
+        
         </div>
-      </SignedOut>
+      </SignedOut> */}
     </main>
   );
 }

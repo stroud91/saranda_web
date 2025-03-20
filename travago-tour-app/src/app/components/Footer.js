@@ -1,12 +1,12 @@
 "use client";
-// import styles from './Footer.module.css';
+import styles from './Footer.module.css';
 import Link from 'next/link';
 
 const Footer = () => {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
-        <div className={styles.logo}>Travago</div>
+        <div className={styles.logo}>Meg Rooms</div>
         <div className={styles.links}>
           <ul>
             <li><Link href="/about-us">About Us</Link></li>

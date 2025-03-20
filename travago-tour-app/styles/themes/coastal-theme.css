@@ -1,9 +1,24 @@
-body {
-    background-color: #EAF6FF;
-    color: #333;
-  }
-  
-  .button {
-    background-color: #5CA4FF;
-    color: white;
-  }
+:root.coastal-theme {
+  /* Coastal (light) theme variables */
+  --background: #EAF6FF;
+  --text-color: #333;
+  --button-bg: #5CA4FF;
+  --button-color: #fff;
+  --link-hover: #FFD700;
+}
+
+/* Apply theming to the .coastal-theme container */
+.coastal-theme {
+  background-color: var(--background);
+  color: var(--text-color);
+  min-height: 100vh; /* Ensure full page coverage */
+}
+
+.coastal-theme a:hover {
+  color: var(--link-hover);
+}
+
+.coastal-theme .button {
+  background-color: var(--button-bg);
+  color: var(--button-color);
+}

@@ -1,0 +1,61 @@
+/* Footer.module.css */
+.footer {
+    background-color: var(--footer-bg, var(--navbar-bg)); /* Use a specific footer variable, fallback to navbar bg */
+    color: var(--footer-text, var(--navbar-text));
+    padding: 2rem 1rem;
+    text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .footer .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .footer .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .footer .links ul {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .footer .links ul li a {
+    color: var(--footer-text, var(--navbar-text));
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .footer .links ul li a:hover {
+    color: var(--link-hover);
+  }
+  
+  .footer .contactInfo {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+  
+  @media (max-width: 768px) {
+    .footer .container {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .footer .links ul {
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+  }
+  
