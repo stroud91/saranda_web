@@ -1,16 +1,23 @@
 deployment:
   tasks:
-    - export FRONTEND_DIR=travago-tour-app
-    - export BACKEND_DIR=.
-    - cd $BACKEND_DIR
-    - pip3 install pipenv
-    - pipenv install --deploy --ignore-pipfile
-    - cd $FRONTEND_DIR
+    - echo "Starting deployment..."
+
+    # Backend: install Python dependencies using pipenv
+    - echo "Setting up backend dependencies"
+    - cd $DEPLOYMENT_SOURCE
+    - pip3 install --user pipenv
+    - ~/.local/bin/pipenv install --deploy --ignore-pipfile
+
+    # Frontend: install, build, and export Next.js app
+    - echo "Setting up frontend"
+    - cd $DEPLOYMENT_SOURCE/travago-tour-app
     - npm install
     - npm run build
     - npm run export
-    - export DEPLOYPATH=/home/megruhsm/public_html
-    - rm -rf $DEPLOYPATH/*
-    - cp -r out/* $DEPLOYPATH
 
-    
+    # Deploy frontend static files to public_html
+    - echo "Deploying frontend to public_html"
+    - rm -rf /home/megruhsm/public_html/*
+    - cp -r out/* /home/megruhsm/public_html/
+
+    - echo "Deployment finished successfully!"
