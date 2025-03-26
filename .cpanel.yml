@@ -1,7 +1,16 @@
 deployment:
   tasks:
+    - export FRONTEND_DIR=travago-tour-app
+    - export BACKEND_DIR=.
+    - cd $BACKEND_DIR
+    - pip3 install pipenv
+    - pipenv install --deploy --ignore-pipfile
+    - cd $FRONTEND_DIR
     - npm install
     - npm run build
     - npm run export
-    - export DEPLOYPATH=/home/stroudalb/public_html
-    - /bin/cp -r ./* $DEPLOYPATH
+    - export DEPLOYPATH=/home/megruhsm/public_html
+    - rm -rf $DEPLOYPATH/*
+    - cp -r out/* $DEPLOYPATH
+
+    
