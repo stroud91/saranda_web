@@ -1,6 +1,6 @@
-/* Footer.module.css */
+
 .footer {
-    background-color: var(--footer-bg, var(--navbar-bg)); /* Use a specific footer variable, fallback to navbar bg */
+    background-color: var(--footer-bg, var(--navbar-bg));
     color: var(--footer-text, var(--navbar-text));
     padding: 2rem 1rem;
     text-align: center;

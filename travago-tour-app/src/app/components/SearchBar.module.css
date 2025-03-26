@@ -1,9 +1,9 @@
-/* SearchBar.module.css */
+
 .searchBar {
     display: flex;
     align-items: center;
     gap: 1rem;
-    background: rgba(255, 255, 255, 0.85); /* Slightly transparent white background */
+    background: rgba(255, 255, 255, 0.85); 
     padding: 1rem 1.5rem;
     border-radius: 8px;
     max-width: 600px;
@@ -24,7 +24,7 @@
   
   .searchBar input[type="text"]:focus,
   .searchBar input[type="date"]:focus {
-    border-color: var(--primary, #5CA4FF); /* Fallback to primary if variable not defined */
+    border-color: var(--primary, #5CA4FF); 
   }
   
   .searchBar button {
