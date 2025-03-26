@@ -1,4 +1,4 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/yourcpanelusername/public_html
+    - export DEPLOYPATH=/home/stroudalb/public_html
     - /bin/cp -r ./* $DEPLOYPATH
