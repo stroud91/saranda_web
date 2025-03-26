@@ -1,4 +1,7 @@
 deployment:
   tasks:
+    - npm install
+    - npm run build
+    - npm run export
     - export DEPLOYPATH=/home/stroudalb/public_html
     - /bin/cp -r ./* $DEPLOYPATH
