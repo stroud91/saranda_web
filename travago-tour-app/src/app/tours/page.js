@@ -1,27 +1,20 @@
-"use client";
 import TourList from './TourList';
 
-const tours = [
-  {
-    id: 1,
-    name: 'Explore the Albanian Riviera',
-    image: '/images/albanian-riviera.jpg',
-    price: 350,
-    duration: 5,
-    description: 'A breathtaking tour of the Albanian Riviera, including beautiful beaches and cultural sites.'
-  },
-  {
-    id: 2,
-    name: 'Historical Sites of Gjirokaster',
-    image: '/images/gjirokaster.jpg',
-    price: 250,
-    duration: 3,
-    description: 'Discover the rich history of Gjirokaster, a UNESCO World Heritage Site.'
+export default async function ToursPage() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+
+  // For static generation, use default caching or 'force-cache'
+  const res = await fetch(`${baseUrl}/api/tours`, { cache: 'force-cache' });
+  if (!res.ok) {
+    return <div>Failed to load tours.</div>;
   }
-];
 
-const TourPage = () => {
-  return <TourList tours={tours} />;
-};
+  const tours = await res.json();
 
-export default TourPage;
+  return (
+    <main>
+      <h1>All Tours</h1>
+      <TourList tours={tours} />
+    </main>
+  );
+}

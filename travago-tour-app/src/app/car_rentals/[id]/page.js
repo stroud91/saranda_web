@@ -1,31 +1,41 @@
-"use client";
-import CarRentalDetail from './CarRentalDetail';
+export async function generateStaticParams() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+  
+  try {
+    const res = await fetch(`${baseUrl}/api/car_rentals`, { cache: 'force-cache' });
+    if (!res.ok) {
+      throw new Error('Failed to fetch car rentals');
+    }
+    // Assume the API returns an object: { car_rentals: [...] }
+    const data = await res.json();
+    const rentals = data.car_rentals || [];
 
-const cars = [
-  {
-    id: 1,
-    model: 'Toyota Corolla',
-    image: '/images/toyota-corolla.jpg',
-    pricePerDay: 45,
-    description: 'A reliable and fuel-efficient compact car, perfect for city driving and longer trips.'
-  },
-  {
-    id: 2,
-    model: 'Jeep Wrangler',
-    image: '/images/jeep-wrangler.jpg',
-    pricePerDay: 90,
-    description: 'A rugged SUV ideal for off-road adventures and exploring the countryside.'
+    // Return an array of objects like [{ id: '1' }, { id: '2' }, ...]
+    return rentals.map((rental) => ({ id: String(rental.id) }));
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error);
+    // Return an empty array if fetching fails, so no pages get generated
+    return [];
   }
-];
+}
 
-const CarRentalDetailPage = ({ params }) => {
-  const car = cars.find((car) => car.id === parseInt(params.id));
+import CarRentalDetail from '../CarRentalDetail';
 
-  if (!car) {
-    return <div>Car not found</div>;
+export default async function CarRentalDetailPage({ params }) {
+  const { id } = params;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+
+  // Use static caching for export
+  const res = await fetch(`${baseUrl}/api/car_rentals/${id}`, { cache: 'force-cache' });
+  if (!res.ok) {
+    return <div>Failed to load car rental.</div>;
   }
 
-  return <CarRentalDetail car={car} />;
-};
+  const rental = await res.json();
 
-export default CarRentalDetailPage;
+  return (
+    <main>
+      <CarRentalDetail rental={rental} />
+    </main>
+  );
+}

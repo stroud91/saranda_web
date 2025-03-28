@@ -1,33 +1,40 @@
-"use client";
-import HotelDetail from './HotelDetail';
+export async function generateStaticParams() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
-const hotels = [
-  {
-    id: 1,
-    name: 'Seaside Hotel',
-    image: '/images/seaside-hotel.jpg',
-    pricePerNight: 120,
-    description: 'A beautiful seaside hotel with stunning views.',
-    location: 'Saranda, Albania'
-  },
-  {
-    id: 2,
-    name: 'Mountain Retreat',
-    image: '/images/mountain-retreat.jpg',
-    pricePerNight: 150,
-    description: 'A peaceful mountain retreat perfect for relaxation.',
-    location: 'Gjirokaster, Albania'
+  try {
+    const res = await fetch(`${baseUrl}/api/hotels`, { cache: 'force-cache' });
+    if (!res.ok) {
+      throw new Error('Failed to fetch hotels');
+    }
+    const hotels = await res.json();
+
+    // Return an array of objects like [{ id: '1' }, { id: '2' }, ...]
+    return hotels.map((hotel) => ({ id: String(hotel.id) }));
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error);
+    // Return an empty array if fetch fails, so no pages get generated
+    return [];
   }
-];
+}
 
-const HotelDetailPage = ({ params }) => {
-  const hotel = hotels.find((hotel) => hotel.id === parseInt(params.id));
+import HotelDetail from '../HotelDetail';
 
-  if (!hotel) {
-    return <div>Hotel not found</div>;
+export default async function HotelDetailPage({ params }) {
+  const { id } = params;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+
+  // For static export, prefer `cache: 'force-cache'` or the default (no 'no-store')
+  const res = await fetch(`${baseUrl}/api/hotels/${id}`, { cache: 'force-cache' });
+
+  if (!res.ok) {
+    return <div>Failed to load hotel.</div>;
   }
 
-  return <HotelDetail hotel={hotel} />;
-};
+  const hotel = await res.json();
 
-export default HotelDetailPage;
+  return (
+    <main>
+      <HotelDetail hotel={hotel} />
+    </main>
+  );
+}

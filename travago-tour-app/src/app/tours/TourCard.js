@@ -1,26 +1,18 @@
-"use client";
-import styles from './TourCard.module.css';
-import Image from 'next/image';
+import React from 'react';
 import Link from 'next/link';
+import styles from './TourCard.module.css';
 
-const TourCard = ({ tour }) => {
+/**
+ * Displays brief info about a tour plus a link to its detail page.
+ * @param {Object} tour - The tour object.
+ */
+export default function TourCard({ tour }) {
   return (
-    <div className={styles.tourCard}>
-      <Image 
-        src={tour.image} 
-        alt={tour.name} 
-        className={styles.tourImage} 
-        width={300} 
-        height={200} 
-      />
-      <div className={styles.cardContent}>
-        <h3>{tour.name}</h3>
-        <p>Price: ${tour.price}</p>
-        <p>{tour.duration} days</p>
-        <Link href={`/tours/${tour.id}`} className={styles.detailsLink}>View Tour</Link>
-      </div>
+    <div className={styles.card}>
+      <h2>{tour.tour_name}</h2>
+      <p>{tour.description}</p>
+      <p>Price: ${tour.price}</p>
+      <Link href={`/tours/${tour.id}`}>View Details</Link>
     </div>
   );
-};
-
-export default TourCard;
+}

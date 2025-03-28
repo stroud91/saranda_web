@@ -1,35 +1,32 @@
 "use client";
 
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import HeroSection from "./components/HeroSection";
 import TourCard from "./tours/TourCard";
 import CarRentalCard from "./car_rentals/CarRentalCard";
 import HotelCard from "./hotels/HotelCard";
 import { useEffect, useState } from "react";
 
-// Mock API calls (replace with real backend API calls)
+// Use the environment variable for the base URL of your Flask API
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getTours() {
-  return [
-    { id: 1, name: "Beach Escape", price: 500, duration: 5, image: "/images/beach-escape.jpg" },
-    { id: 2, name: "Mountain Adventure", price: 800, duration: 7, image: "/images/mountain-adventure.jpg" },
-    { id: 3, name: "City Lights", price: 300, duration: 3, image: "/images/city-lights.jpg" },
-  ];
+  const res = await fetch(`${BASE_URL}/api/tours/`);
+  if (!res.ok) throw new Error("Failed to fetch tours");
+  return await res.json();
 }
 
 async function getCarRentals() {
-  return [
-    { id: 1, model: "Toyota Corolla", pricePerDay: 40, image: "/images/toyota-corolla.jpg" },
-    { id: 2, model: "Tesla Model 3", pricePerDay: 100, image: "/images/tesla-model-3.jpg" },
-    { id: 3, model: "Jeep Wrangler", pricePerDay: 80, image: "/images/jeep-wrangler.jpg" },
-  ];
+  const res = await fetch(`${BASE_URL}/api/car_rentals/`);
+  if (!res.ok) throw new Error("Failed to fetch car rentals");
+  const data = await res.json();
+  return data.car_rentals;
 }
 
 async function getHotels() {
-  return [
-    { id: 1, name: "Luxury Inn", price: 200, location: "Downtown", image: "/images/luxury-inn.jpg" },
-    { id: 2, name: "Seaside Hotel", price: 150, location: "Beachfront", image: "/images/seaside-hotel.jpg" },
-    { id: 3, name: "Mountain Lodge", price: 120, location: "Mountains", image: "/images/mountain-lodge.jpg" },
-  ];
+  const res = await fetch(`${BASE_URL}/api/hotels/`);
+  if (!res.ok) throw new Error("Failed to fetch hotels");
+  return await res.json();
 }
 
 export default function Home() {
@@ -43,7 +40,11 @@ export default function Home() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [toursData, carRentalsData, hotelsData] = await Promise.all([getTours(), getCarRentals(), getHotels()]);
+        const [toursData, carRentalsData, hotelsData] = await Promise.all([
+          getTours(),
+          getCarRentals(),
+          getHotels(),
+        ]);
         setTours(toursData);
         setCarRentals(carRentalsData);
         setHotels(hotelsData);
@@ -102,7 +103,6 @@ export default function Home() {
         <div className="signed-out-container">
           <h2>Please Sign In</h2>
           <p>Sign in to explore our exciting tours, car rentals, and hotels!</p>
-        
         </div>
       </SignedOut> */}
     </main>

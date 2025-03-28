@@ -1,25 +1,21 @@
-"use client";
 import CarRentalList from './CarRentalList';
 
-const cars = [
-  {
-    id: 1,
-    model: 'Toyota Corolla',
-    image: '/images/toyota-corolla.jpg',
-    pricePerDay: 45,
-    description: 'A reliable and fuel-efficient compact car, perfect for city driving and longer trips.'
-  },
-  {
-    id: 2,
-    model: 'Jeep Wrangler',
-    image: '/images/jeep-wrangler.jpg',
-    pricePerDay: 90,
-    description: 'A rugged SUV ideal for off-road adventures and exploring the countryside.'
+export default async function CarRentalsPage() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+
+  const res = await fetch(`${baseUrl}/api/car_rentals`, { cache: 'force-cache' });
+  if (!res.ok) {
+    return <div>Failed to load car rentals.</div>;
   }
-];
 
-const CarRentalPage = () => {
-  return <CarRentalList cars={cars} />;
-};
+  // Assuming the API returns: { car_rentals: [...] }
+  const data = await res.json();
+  const rentals = data.car_rentals || [];
 
-export default CarRentalPage;
+  return (
+    <main>
+      <h1>All Car Rentals</h1>
+      <CarRentalList rentals={rentals} />
+    </main>
+  );
+}

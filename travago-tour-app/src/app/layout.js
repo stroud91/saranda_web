@@ -23,15 +23,12 @@ export default function RootLayout({ children }) {
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
       <html lang="en">
         <body className={inter.className}>
-        
           <Navbar />
           <button className="theme-toggle" onClick={toggleTheme}>
             {theme === "coastal" ? "🌞" : "🌜"}
           </button>
           {children}
-          
           <Footer />
-          
         </body>
       </html>
     </ClerkProvider>

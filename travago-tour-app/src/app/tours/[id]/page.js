@@ -1,33 +1,40 @@
-"use client";
-import TourDetail from './TourDetail';
+export async function generateStaticParams() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
-const tours = [
-  {
-    id: 1,
-    name: 'Explore the Albanian Riviera',
-    image: '/images/albanian-riviera.jpg',
-    price: 350,
-    duration: 5,
-    description: 'A breathtaking tour of the Albanian Riviera, including beautiful beaches and cultural sites.'
-  },
-  {
-    id: 2,
-    name: 'Historical Sites of Gjirokaster',
-    image: '/images/gjirokaster.jpg',
-    price: 250,
-    duration: 3,
-    description: 'Discover the rich history of Gjirokaster, a UNESCO World Heritage Site.'
+  try {
+    const res = await fetch(`${baseUrl}/api/tours`, { cache: 'force-cache' });
+    if (!res.ok) {
+      throw new Error('Failed to fetch tours');
+    }
+    const tours = await res.json();
+
+    // Return an array of objects like [{ id: '1' }, { id: '2' }, ...]
+    return tours.map((tour) => ({ id: String(tour.id) }));
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error);
+    // Return an empty array if fetching fails, so no pages get generated
+    return [];
   }
-];
+}
 
-const TourDetailPage = ({ params }) => {
-  const tour = tours.find((tour) => tour.id === parseInt(params.id));
+import TourDetail from '../TourDetail';
 
-  if (!tour) {
-    return <div>Tour not found</div>;
+export default async function TourDetailPage({ params }) {
+  const { id } = params;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+
+  // For static export, prefer `cache: 'force-cache'` or omit it (default static behavior)
+  const res = await fetch(`${baseUrl}/api/tours/${id}`, { cache: 'force-cache' });
+
+  if (!res.ok) {
+    return <div>Failed to load tour.</div>;
   }
 
-  return <TourDetail tour={tour} />;
-};
+  const tour = await res.json();
 
-export default TourDetailPage;
+  return (
+    <main>
+      <TourDetail tour={tour} />
+    </main>
+  );
+}
