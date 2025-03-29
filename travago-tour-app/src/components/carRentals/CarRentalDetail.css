@@ -1,0 +1,9 @@
+.rentalDetail {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fafafa;
+  }
+  .rentalDetail h1 {
+    margin-bottom: 1rem;
+  }

@@ -2,22 +2,15 @@ deployment:
   tasks:
     - echo "Starting deployment..."
 
-    # Backend: install Python dependencies using pipenv
-    - echo "Setting up backend dependencies"
-    - cd $DEPLOYMENT_SOURCE
-    - pip3 install --user pipenv
-    - ~/.local/bin/pipenv install --deploy --ignore-pipfile
-
-    # Frontend: install, build, and export Next.js app
+    # Frontend: Install dependencies and build React app
     - echo "Setting up frontend"
-    - cd $DEPLOYMENT_SOURCE/travago-tour-app
+    - cd $DEPLOYMENT_SOURCE
     - npm install
     - npm run build
-    - npm run export
 
     # Deploy frontend static files to public_html
     - echo "Deploying frontend to public_html"
     - rm -rf /home/megruhsm/public_html/*
-    - cp -r out/* /home/megruhsm/public_html/
+    - cp -r build/* /home/megruhsm/public_html/
 
     - echo "Deployment finished successfully!"

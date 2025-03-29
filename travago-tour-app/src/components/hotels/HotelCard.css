@@ -1,0 +1,11 @@
+.hotelCard {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  .hotelCard h2 {
+    margin: 0 0 0.5rem;
+  }
+  

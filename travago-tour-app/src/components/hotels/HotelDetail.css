@@ -1,0 +1,10 @@
+.hotelDetail {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fafafa;
+  }
+  .hotelDetail h1 {
+    margin-bottom: 1rem;
+  }
+  
