@@ -5,8 +5,8 @@ import HotelCard from './HotelCard';
 const ListContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${({ theme }) => theme.spacing.lg};
-  padding: ${({ theme }) => theme.spacing.lg};
+  gap: 24px;
+  padding: 24px;
 `;
 
 export default function HotelList({ hotels }) {
