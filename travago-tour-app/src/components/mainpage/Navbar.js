@@ -1,169 +1,215 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FaBars, FaTimes, FaUserCircle, FaSun, FaMoon } from "react-icons/fa";
+import { FaBars, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
+import megLogo from "../../images/megg.png";
 
 const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
-  background-color: ${({ theme }) => theme.colors.navBg || theme.colors.primary};
-  color: ${({ theme }) => theme.colors.navText || theme.colors.text};
-  position: sticky;
+  padding: 0 2rem;
+  height: 70px;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+  ${({ $scrolled }) =>
+    $scrolled
+      ? css`
+          background-color: ${({ theme }) => theme.colors.navBgScrolled};
+          box-shadow: ${({ theme }) => theme.shadow.nav};
+        `
+      : css`
+          background-color: transparent;
+        `}
 `;
 
-const Logo = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
+const Logo = styled(Link)`
+  display: flex;
+  align-items: center;
+
+  img {
+    height: 42px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    transition: opacity 0.2s;
+    &:hover {
+      opacity: 0.85;
+    }
+  }
 `;
 
 const Nav = styled.nav`
   display: flex;
   align-items: center;
-`;
+  gap: 0.25rem;
 
-const NavList = styled.ul`
-  display: flex;
-  gap: 1rem;
-  list-style: none;
-
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     display: none;
   }
 `;
 
-const NavItem = styled.li`
-  a {
-    color: #fff;
-    font-weight: 500;
-    &:hover {
-      color: ${({ theme }) => theme.colors.secondary};
-    }
-  }
-`;
-
-const MobileMenu = styled(motion.ul)`
-  position: absolute;
-  top: 70px;
-  right: 0;
-  background-color: ${({ theme }) => theme.colors.navBg || theme.colors.primary};
-  width: 100%;
-  list-style: none;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  z-index: 999;
-
-  li a {
-    color: #fff;
-    font-weight: 500;
-    &:hover {
-      color: ${({ theme }) => theme.colors.secondary};
-    }
-  }
-`;
-
-const MenuToggle = styled.div`
-  display: none;
-  cursor: pointer;
-  margin-left: 1rem;
+const NavLink = styled(Link)`
   color: #fff;
-  @media (max-width: 768px) {
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: ${({ theme }) => theme.radius.sm};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+`;
+
+const BookNowBtn = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  background-color: ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: ${({ theme }) => theme.radius.pill};
+  margin-left: 0.75rem;
+  transition: background-color 0.2s, transform 0.15s;
+
+  &:hover {
+    background-color: #b8933e;
+    transform: translateY(-1px);
+  }
+`;
+
+const MenuToggle = styled.button`
+  display: none;
+  color: #fff;
+  font-size: 1.4rem;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+
+  @media (max-width: 900px) {
     display: block;
   }
 `;
 
-const ThemeToggleBtn = styled.button`
-  background: none;
+const MobileMenu = styled(motion.div)`
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background-color: ${({ theme }) => theme.colors.primary};
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+`;
+
+const MobileNavLink = styled(Link)`
   color: #fff;
-  font-size: 1.2rem;
-  margin-left: 1rem;
+  font-weight: 500;
+  font-size: 1.05rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: block;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
   &:hover {
-    color: ${({ theme }) => theme.colors.secondary};
+    color: ${({ theme }) => theme.colors.accent};
   }
 `;
 
-const UserIcon = styled.div`
-  margin-left: 1rem;
-  cursor: pointer;
+const MobileBookBtn = styled(Link)`
+  display: block;
+  text-align: center;
+  background-color: ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.85rem;
+  border-radius: ${({ theme }) => theme.radius.pill};
+  margin-top: 1rem;
+
+  &:hover {
+    background-color: #b8933e;
+  }
 `;
 
-const Navbar = ({ isNightMode, toggleTheme }) => {
+const navLinks = [
+  { label: "Apartments", to: "/hotels" },
+  { label: "Tours", to: "/tours" },
+  { label: "Car Rentals", to: "/car-rentals" },
+  { label: "Amenities", to: "/#amenities" },
+  { label: "Reviews", to: "/#reviews" },
+  { label: "Contact", to: "/contact" },
+];
+
+const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const toggleMenu = () => setIsOpen(!isOpen);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const closeMenu = () => setIsOpen(false);
 
   return (
-    <Header>
-      <Logo>Meg Rooms</Logo>
-      <Nav>
-        <NavList>
-          <NavItem>
-            <Link to="/">Home</Link>
-          </NavItem>
-          <NavItem>
-            <Link to="/tours">Tours</Link>
-          </NavItem>
-          <NavItem>
-            <Link to="/hotels">Hotels</Link>
-          </NavItem>
-          <NavItem>
-            <Link to="/car-rentals">Car Rentals</Link>
-          </NavItem>
-          <NavItem>
-            <Link to="/contact">Contact Us</Link>
-          </NavItem>
-        </NavList>
-        <ThemeToggleBtn onClick={toggleTheme}>
-          {isNightMode ? <FaSun /> : <FaMoon />}
-        </ThemeToggleBtn>
-        <UserIcon>
-          <FaUserCircle size={24} />
-        </UserIcon>
-        <MenuToggle onClick={toggleMenu}>
-          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+    <>
+      <Header $scrolled={scrolled}>
+        <Logo to="/" onClick={closeMenu}>
+          <img src={megLogo} alt="Meg'Rooms" />
+        </Logo>
+
+        <Nav>
+          {navLinks.map((link) => (
+            <NavLink key={link.to} to={link.to}>
+              {link.label}
+            </NavLink>
+          ))}
+          <BookNowBtn to="/hotels">Book Now</BookNowBtn>
+        </Nav>
+
+        <MenuToggle
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-label="Toggle menu"
+        >
+          {isOpen ? <FaTimes /> : <FaBars />}
         </MenuToggle>
-      </Nav>
+      </Header>
+
       <AnimatePresence>
         {isOpen && (
           <MobileMenu
-            initial={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
           >
-            <li>
-              <Link to="/" onClick={() => setIsOpen(false)}>
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/tours" onClick={() => setIsOpen(false)}>
-                Tours
-              </Link>
-            </li>
-            <li>
-              <Link to="/hotels" onClick={() => setIsOpen(false)}>
-                Hotels
-              </Link>
-            </li>
-            <li>
-              <Link to="/car-rentals" onClick={() => setIsOpen(false)}>
-                Car Rentals
-              </Link>
-            </li>
-            <li>
-              <Link to="/contact" onClick={() => setIsOpen(false)}>
-                Contact Us
-              </Link>
-            </li>
+            {navLinks.map((link) => (
+              <MobileNavLink key={link.to} to={link.to} onClick={closeMenu}>
+                {link.label}
+              </MobileNavLink>
+            ))}
+            <MobileBookBtn to="/hotels" onClick={closeMenu}>
+              Book Now
+            </MobileBookBtn>
           </MobileMenu>
         )}
       </AnimatePresence>
-    </Header>
+    </>
   );
 };
 

@@ -1,16 +1,24 @@
 deployment:
   tasks:
-    - echo "Starting deployment..."
+    - echo "Starting Meg'Rooms deployment..."
 
-    # Frontend: Install dependencies and build React app
-    - echo "Setting up frontend"
-    - cd $DEPLOYMENT_SOURCE
-    - npm install
-    - npm run build
+    # Build React frontend
+    - echo "Installing frontend dependencies..."
+    - cd $DEPLOYMENT_SOURCE/travago-tour-app && npm ci --production=false
 
-    # Deploy frontend static files to public_html
-    - echo "Deploying frontend to public_html"
+    - echo "Building React app..."
+    - cd $DEPLOYMENT_SOURCE/travago-tour-app && npm run build
+
+    # Deploy React static files to public_html
+    - echo "Deploying frontend to public_html..."
     - rm -rf /home/megruhsm/public_html/*
-    - cp -r build/* /home/megruhsm/public_html/
+    - cp -r $DEPLOYMENT_SOURCE/travago-tour-app/build/* /home/megruhsm/public_html/
 
-    - echo "Deployment finished successfully!"
+    # Deploy Flask backend files
+    - echo "Deploying Flask backend..."
+    - mkdir -p /home/megruhsm/megrooms_flask
+    - cp -r $DEPLOYMENT_SOURCE/app /home/megruhsm/megrooms_flask/
+    - cp $DEPLOYMENT_SOURCE/wsgi.py /home/megruhsm/megrooms_flask/
+    - cp $DEPLOYMENT_SOURCE/requirements.txt /home/megruhsm/megrooms_flask/
+
+    - echo "Deployment complete! Visit https://megrooms.com"

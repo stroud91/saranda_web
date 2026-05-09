@@ -11,10 +11,11 @@ from .api.payment import payment_routes
 from .api.car_rentals_routes import car_rentals_routes
 from .api.tours_routes import tours_routes
 from .api.hotels_routes import hotels_routes
+from .api.bookings_routes import bookings_routes
 from .seeds import seed_commands
 from .config import Config
 
-app = Flask(__name__, static_folder='../react-app/build', static_url_path='/')
+app = Flask(__name__, static_folder='../travago-tour-app/build', static_url_path='/')
 
 # Setup login manager
 login = LoginManager(app)
@@ -36,6 +37,7 @@ app.register_blueprint(tours_routes, url_prefix="/api/tours")
 app.register_blueprint(hotels_routes, url_prefix="/api/hotels")
 app.register_blueprint(car_rentals_routes, url_prefix="/api/car_rentals")
 app.register_blueprint(payment_routes, url_prefix="/api")
+app.register_blueprint(bookings_routes, url_prefix="/api/bookings")
 db.init_app(app)
 Migrate(app, db)
 

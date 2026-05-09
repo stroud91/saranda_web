@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import HotelDetail from './HotelDetail';
-import styled from 'styled-components';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import styled from "styled-components";
+import HotelDetail from "./HotelDetail";
 
-const PageWrapper = styled.main`
-  padding: ${({ theme }) => theme.spacing.lg};
+const LoadingMsg = styled.div`
+  padding: 120px 24px;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 1.1rem;
 `;
 
 export default function HotelDetailPage() {
@@ -12,31 +15,21 @@ export default function HotelDetailPage() {
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const baseUrl = process.env.REACT_APP_BASE_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    async function fetchHotel() {
-      try {
-        const res = await fetch(`${baseUrl}/api/hotels/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch hotel');
-        const data = await res.json();
-        setHotel(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchHotel();
-  }, [id, baseUrl]);
+    fetch(`/api/hotels/${id}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Apartment not found");
+        return r.json();
+      })
+      .then(setHotel)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  if (loading) return <div>Loading hotel...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!hotel) return <div>Hotel not found.</div>;
+  if (loading) return <LoadingMsg>Loading apartment…</LoadingMsg>;
+  if (error) return <LoadingMsg>Error: {error}</LoadingMsg>;
+  if (!hotel) return <LoadingMsg>Apartment not found.</LoadingMsg>;
 
-  return (
-    <PageWrapper>
-      <HotelDetail hotel={hotel} />
-    </PageWrapper>
-  );
+  return <HotelDetail hotel={hotel} />;
 }
