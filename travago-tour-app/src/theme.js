@@ -1,73 +1,56 @@
-export const dayTheme = {
-    name: 'light',
-    colors: {
-      primary: "#F0A500",          // Golden accent
-      secondary: "#F7E9E8",        // Blush accent (optional)
-      background: "#FFFFFF",
-      surface: "#F9F9F9",
-      text: "#333333",
-      textLight: "#FFFFFF",
-      border: "#E0E0E0",
-      navBg: "rgba(85, 148, 219, 0.75)", // A translucent coastal blue
-      navText: "#333333",
-      footerBg: "#4A82C2",
-      footerText: "#FFFFFF"
-    },
-    spacing: {
-      xs: "4px",
-      sm: "8px",
-      md: "16px",
-      lg: "32px",
-      xl: "64px"
-    },
-    font: {
-      family: "'Open Sans', sans-serif",
-      sizes: {
-        body: "1rem",
-        h1: "2rem",
-        h2: "1.5rem",
-        h3: "1.25rem"
-      },
-      weights: {
-        regular: 400,
-        heading: 700
-      }
-    }
-  };
-  
-  export const nightTheme = {
-    name: 'dark',
-    colors: {
-      primary: "#F0A500",          // Same golden accent
-      secondary: "#8B6F68",        // A darker secondary accent
-      background: "#121212",
-      surface: "#1E1E1E",
-      text: "#EAEAEA",
-      textLight: "#FFFFFF",
-      border: "#333333",
-      navBg: "#111111",
-      navText: "#FFFFFF",
-      footerBg: "#000000",
-      footerText: "#CCCCCC"
-    },
-    spacing: {
-      xs: "4px",
-      sm: "8px",
-      md: "16px",
-      lg: "32px",
-      xl: "64px"
-    },
-    font: {
-      family: "'Open Sans', sans-serif",
-      sizes: {
-        body: "1rem",
-        h1: "2rem",
-        h2: "1.5rem",
-        h3: "1.25rem"
-      },
-      weights: {
-        regular: 400,
-        heading: 700
-      }
-    }
-  };
+export const megTheme = {
+  name: 'meg',
+  colors: {
+    primary: '#1B2B4B',
+    primaryHover: '#243a66',
+    accent: '#C9A84C',
+    accentLight: '#F5E6C0',
+    background: '#FAFAF8',
+    surface: '#FFFFFF',
+    surfaceAlt: '#F4F1EB',
+    text: '#1A1A1A',
+    textMuted: '#6B7280',
+    textLight: '#FFFFFF',
+    border: '#E8E4DC',
+    navBg: 'transparent',
+    navBgScrolled: 'rgba(27, 43, 75, 0.97)',
+    footerBg: '#1B2B4B',
+    footerText: '#E8E4DC',
+    whatsapp: '#25D366',
+    whatsappHover: '#1da851',
+    airbnb: '#FF5A5F',
+    bookingCom: '#003580',
+    success: '#10B981',
+    error: '#EF4444',
+    gold: '#C9A84C',
+  },
+  fonts: {
+    display: "'Playfair Display', Georgia, serif",
+    script: "'Great Vibes', cursive",
+    body: "'Inter', system-ui, -apple-system, sans-serif",
+  },
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '32px',
+    xl: '64px',
+    xxl: '96px',
+  },
+  radius: {
+    sm: '6px',
+    md: '12px',
+    lg: '20px',
+    xl: '32px',
+    pill: '999px',
+  },
+  shadow: {
+    card: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08)',
+    elevated: '0 8px 32px rgba(27,43,75,0.15)',
+    nav: '0 2px 20px rgba(0,0,0,0.12)',
+  },
+};
+
+// Keep legacy exports so existing imports don't break
+export const dayTheme = megTheme;
+export const nightTheme = megTheme;

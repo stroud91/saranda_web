@@ -8,7 +8,7 @@ car_rentals_routes = Blueprint("car_rentals", __name__)
 @car_rentals_routes.route("/", methods=["GET"])
 def get_car_rentals():
     car_rentals = CarRental.query.all()
-    return jsonify({"car_rentals": [car_rental.to_dict() for car_rental in car_rentals]}), 200
+    return jsonify([car_rental.to_dict() for car_rental in car_rentals]), 200
 
 @car_rentals_routes.route("/<int:id>", methods=["GET"])
 def get_car_rental(id):

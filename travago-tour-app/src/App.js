@@ -1,49 +1,60 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { GlobalStyles } from "./GlobalStyles";
-import { dayTheme, nightTheme } from "./theme";
+import { megTheme } from "./theme";
 
-// Import your components (adjust paths if needed)
 import Navbar from "./components/mainpage/Navbar";
-import HeroSection from "./components/mainpage/HeroSection";
 import Footer from "./components/mainpage/Footer";
+import WhatsAppButton from "./components/mainpage/WhatsAppButton";
 
-// Import feature pages – these are examples; replace with your actual pages
+import HomePage from "./components/mainpage/HomePage";
+import ContactPage from "./components/mainpage/ContactPage";
+import AboutPage from "./components/mainpage/AboutPage";
+
 import HotelListPage from "./components/hotels/HotelListPage";
 import HotelDetailPage from "./components/hotels/HotelDetailPage";
+
 import TourListPage from "./components/tours/TourListPage";
 import TourDetailPage from "./components/tours/TourDetailPage";
+
 import CarRentalListPage from "./components/carRentals/CarRentalListPage";
 import CarRentalDetailPage from "./components/carRentals/CarRentalDetailPage";
 
+import BookingPage from "./components/booking/BookingPage";
+import BookingConfirmation from "./components/booking/BookingConfirmation";
+
 function App() {
-  const [isNightMode, setIsNightMode] = useState(false);
-
-  const toggleTheme = () => {
-    setIsNightMode(prev => !prev);
-  };
-
-  // Optionally, update the body class for global CSS fallback
-  useEffect(() => {
-    document.body.className = isNightMode ? "black-gold" : "coastal";
-  }, [isNightMode]);
-
   return (
-    <ThemeProvider theme={isNightMode ? nightTheme : dayTheme}>
+    <ThemeProvider theme={megTheme}>
       <GlobalStyles />
       <Router>
-        <Navbar isNightMode={isNightMode} toggleTheme={toggleTheme} />
+        <Navbar />
         <Routes>
-          <Route path="/" element={<HeroSection />} />
-          <Route path="/tours" element={<TourListPage />} />
-          <Route path="/tours/:id" element={<TourDetailPage />} />
+          <Route path="/" element={<HomePage />} />
+
+          {/* Apartments */}
           <Route path="/hotels" element={<HotelListPage />} />
           <Route path="/hotels/:id" element={<HotelDetailPage />} />
+          <Route path="/hotels/:id/book" element={<BookingPage />} />
+
+          {/* Tours */}
+          <Route path="/tours" element={<TourListPage />} />
+          <Route path="/tours/:id" element={<TourDetailPage />} />
+
+          {/* Car Rentals */}
           <Route path="/car-rentals" element={<CarRentalListPage />} />
           <Route path="/car-rentals/:id" element={<CarRentalDetailPage />} />
+
+          {/* Booking confirmation */}
+          <Route path="/booking/confirmation/:id" element={<BookingConfirmation />} />
+
+          {/* Info pages */}
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/about-us" element={<AboutPage />} />
         </Routes>
         <Footer />
+        <WhatsAppButton />
       </Router>
     </ThemeProvider>
   );
