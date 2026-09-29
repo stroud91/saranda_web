@@ -1,0 +1,24 @@
+deployment:
+  tasks:
+    - echo "Starting Saranda Companion (Meg'Rooms) deployment..."
+
+    # Build the React (Vite) frontend into travago-tour-app/build
+    - cd $DEPLOYMENT_SOURCE/travago-tour-app && npm ci
+    - cd $DEPLOYMENT_SOURCE/travago-tour-app && npm run build
+
+    # Deploy static files (includes .htaccess with SPA routing + security headers)
+    - rm -rf /home/megruhsm/public_html/*
+    - cp -r $DEPLOYMENT_SOURCE/travago-tour-app/build/. /home/megruhsm/public_html/
+
+    # Deploy the Flask API
+    - mkdir -p /home/megruhsm/megrooms_flask
+    - rm -rf /home/megruhsm/megrooms_flask/app /home/megruhsm/megrooms_flask/migrations
+    - cp -r $DEPLOYMENT_SOURCE/app /home/megruhsm/megrooms_flask/
+    - cp -r $DEPLOYMENT_SOURCE/migrations /home/megruhsm/megrooms_flask/
+    - cp $DEPLOYMENT_SOURCE/wsgi.py /home/megruhsm/megrooms_flask/
+    - cp $DEPLOYMENT_SOURCE/requirements.txt /home/megruhsm/megrooms_flask/
+
+    # After the first deploy of this version, from the cPanel Python app's virtualenv run:
+    #   pip install -r requirements.txt && FLASK_APP=app flask db upgrade && FLASK_APP=app flask seed all
+    # and set FLASK_ENV=production, SECRET_KEY, DATABASE_URL and CORS_ORIGINS in the app's environment.
+    - echo "Deployment complete! Visit https://megrooms.com"

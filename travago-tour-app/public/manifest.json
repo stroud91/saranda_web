@@ -1,0 +1,22 @@
+{
+  "short_name": "Saranda",
+  "name": "Saranda Companion · Meg'Rooms",
+  "description": "Plan Albania from the Ionian coast: routes, timelines, budgets, guides and stays.",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0B5C7E",
+  "background_color": "#FFFBF4",
+  "categories": ["travel", "navigation"],
+  "shortcuts": [
+    { "name": "Trip planner", "url": "/plan" },
+    { "name": "Map", "url": "/map" },
+    { "name": "Route connector", "url": "/routes" }
+  ]
+}

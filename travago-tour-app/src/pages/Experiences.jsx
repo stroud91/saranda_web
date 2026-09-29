@@ -1,0 +1,75 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Ticket, Car, Clock, MapPin, Users, Settings2 } from "lucide-react";
+import { useApi } from "../lib/useApi";
+import { useDestinations } from "../lib/useDestinations";
+import { euro } from "../lib/format";
+import SceneArt from "../components/art/SceneArt";
+import { PageHeader, Segmented, Skeleton, Alert } from "../components/ui";
+
+const CATS = { all: "All", history: "History", nature: "Nature", boat: "Boat", food: "Food", active: "Active", culture: "Culture" };
+
+export default function Experiences() {
+  const [tab, setTab] = useState("tours");
+  const [cat, setCat] = useState("all");
+  const [type, setType] = useState("all");
+  const { data: tours } = useApi("/tours/");
+  const { data: cars } = useApi("/car_rentals/");
+  const { bySlug } = useDestinations();
+  useEffect(() => { document.title = "Experiences & cars · Saranda Companion"; }, []);
+  const shownTours = useMemo(() => (tours || []).filter((t) => cat === "all" || t.category === cat), [tours, cat]);
+  const shownCars = useMemo(() => (cars || []).filter((c) => type === "all" || c.car_type === type), [cars, type]);
+  return (
+    <div className="page container">
+      <PageHeader eyebrow="Experiences & transport" icon={Ticket} title="Things to do, ways to get there" lead="Day tours around Sarandë and rental cars for the Riviera road. For a private day, pair any of these with a local guide." />
+      <Segmented layoutId="exp" value={tab} onChange={setTab} options={[{ value: "tours", label: "Experiences" }, { value: "cars", label: "Rental cars" }]} />
+      {tab === "tours" ? (
+        <>
+          <div className="chips" style={{ margin: "18px 0" }}>{Object.entries(CATS).map(([k, v]) => <button key={k} className={`chip sm ${cat === k ? "on" : ""}`} onClick={() => setCat(k)}>{v}</button>)}</div>
+          <div className="grid" style={{ "--min": "280px" }}>
+            {!tours && Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} h={320} r={26} />)}
+            {shownTours.map((t, i) => {
+              const d = bySlug[t.destination_slug];
+              return (
+                <motion.article key={t.id} className="exp-card card" initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.05 }}>
+                  <div className="exp-art"><SceneArt scene={d?.scene || "harbor"} seed={`tour-${t.id}`} /><span className="badge glass">{t.category}</span></div>
+                  <div className="exp-body">
+                    <h3>{t.tour_name}</h3>
+                    <p className="small muted clamp-3">{t.description}</p>
+                    <div className="row small muted" style={{ gap: 12 }}>
+                      {t.duration_hours && <span><Clock size={14} /> {t.duration_hours}h</span>}
+                      {d && <Link to={`/explore/${d.slug}`}><MapPin size={14} /> {d.name}</Link>}
+                    </div>
+                    <div className="row between" style={{ marginTop: 10 }}>
+                      <span><b>{euro(t.price)}</b> <span className="small muted">pp</span></span>
+                      <Link className="btn sm" to={`/guides${t.category === "boat" ? "?specialty=Boat" : t.category === "history" ? "?specialty=History" : t.category === "food" ? "?specialty=Food" : ""}`}><Users size={14} /> Find a guide</Link>
+                    </div>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="chips" style={{ margin: "18px 0" }}>{["all", "Hatchback", "Sedan", "SUV"].map((k) => <button key={k} className={`chip sm ${type === k ? "on" : ""}`} onClick={() => setType(k)}>{k === "all" ? "All" : k}</button>)}</div>
+          <Alert kind="info">Rental cars typically cost €30–€70+ per day depending on season, car and insurance. Choose accommodation with parking if you're driving.</Alert>
+          <div className="car-list">
+            {!cars && <Skeleton h={300} r={26} />}
+            {shownCars.map((c) => (
+              <div key={c.id} className="car-row card">
+                <span className="car-icon"><Car size={22} /></span>
+                <div className="car-main"><b>{c.car_model}</b><span className="tiny muted">{c.rental_company} · {c.location}</span></div>
+                <span className="small muted hide-mobile"><Users size={14} /> {c.seats || 5}</span>
+                <span className="small muted hide-mobile"><Settings2 size={14} /> {c.transmission || "manual"}</span>
+                <span className="badge">{c.car_type}</span>
+                <span className="car-price"><b>{euro(c.price_per_day)}</b><span className="tiny muted">/day</span></span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

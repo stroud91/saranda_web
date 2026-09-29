@@ -1,0 +1,57 @@
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { Compass, Map, CalendarRange, Route, Users, BedDouble, BookOpen, Moon, Sun, MonitorSmartphone } from "lucide-react";
+import Logo from "../art/Logo";
+import { useUi } from "../../store/ui";
+
+export const NAV = [
+  { to: "/explore", label: "Explore", icon: Compass },
+  { to: "/plan", label: "Plan", icon: CalendarRange },
+  { to: "/routes", label: "Routes", icon: Route },
+  { to: "/map", label: "Map", icon: Map },
+  { to: "/guides", label: "Guides", icon: Users },
+  { to: "/stays", label: "Stays", icon: BedDouble },
+  { to: "/essentials", label: "Essentials", icon: BookOpen },
+];
+
+const HERO_PAGES = ["/"];
+
+export default function TopBar() {
+  const { pathname } = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+  const { theme, setTheme } = useUi();
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathname]);
+  const next = { system: "light", light: "dark", dark: "system" }[theme];
+  const ThemeIcon = { system: MonitorSmartphone, light: Sun, dark: Moon }[theme];
+  return (
+    <header className={`topbar ${HERO_PAGES.includes(pathname) ? "on-hero" : ""} ${scrolled ? "scrolled" : ""}`}>
+      <div className="topbar-inner">
+        <Link to="/" className="brand" aria-label="Saranda Companion home">
+          <Logo />
+          <span>
+            Saranda
+            <small>Companion · Meg'Rooms</small>
+          </span>
+        </Link>
+        <nav className="nav" aria-label="Main">
+          {NAV.map(({ to, label, icon: Icon }) => (
+            <NavLink key={to} to={to} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              <Icon size={16} />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="topbar-actions">
+          <button className="icon-btn" onClick={() => setTheme(next)} aria-label={`Theme: ${theme}. Switch to ${next}`} title={`Theme: ${theme}`}>
+            <ThemeIcon size={19} />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
