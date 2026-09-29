@@ -12,7 +12,9 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
-img, svg, video { display: block; max-width: 100%; }
+img, video { display: block; max-width: 100%; }
+svg { max-width: 100%; vertical-align: -0.18em; flex-shrink: 0; }
+.route-sketch, .climate-chart, .corfu-art { display: block; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 a { color: var(--accent); text-decoration: none; }
