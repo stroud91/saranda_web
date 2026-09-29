@@ -10,9 +10,9 @@ import os
 import sqlalchemy as sa
 from alembic import op
 
-environment = os.getenv("FLASK_ENV")
-SCHEMA = os.environ.get("SCHEMA")
-SCH = SCHEMA if environment == "production" else None
+from app.models.db import SCHEMA, USE_SCHEMA  # schema only on production PostgreSQL
+
+SCH = SCHEMA if USE_SCHEMA else None
 
 revision = "c3f1a9d27e10"
 down_revision = "a4c8f20d9b3e"
