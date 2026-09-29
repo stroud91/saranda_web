@@ -2,5 +2,13 @@
 __pycache__/
 *.py[cod]
 .venv
+venv/
+.pytest_cache/
 .DS_Store
 .vscode/
+instance/*.db
+!instance/dev.db
+node_modules/
+travago-tour-app/build/
+travago-tour-app/dist/
+*.log

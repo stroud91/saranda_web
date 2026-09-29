@@ -1,5 +1,6 @@
-from app.models import db, Hotel, environment, SCHEMA
-from sqlalchemy.sql import text
+from app.models import Hotel, db
+
+from ._util import truncate
 
 COMMON_AMENITIES = [
     "Free WiFi", "Air Conditioning", "Sea View", "Fully Equipped Kitchen",
@@ -151,8 +152,4 @@ def seed_hotels():
 
 
 def undo_hotels():
-    if environment == "production":
-        db.session.execute(text(f"TRUNCATE table {SCHEMA}.hotels RESTART IDENTITY CASCADE;"))
-    else:
-        db.session.execute(text("DELETE FROM hotels"))
-    db.session.commit()
+    truncate("hotels")

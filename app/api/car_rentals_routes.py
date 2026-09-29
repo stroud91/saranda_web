@@ -1,86 +1,71 @@
-# app/api/car_rentals_routes.py
-from flask import Blueprint, request, jsonify
+"""Rental cars — public listing, admin management."""
+from flask import Blueprint, abort, jsonify, request
+
+from app.auth import require_admin
 from app.models import CarRental, db
-from app.clerk.clerk_auth import clerk_auth_required
+from app.validation import Field, json_body, query_args
 
 car_rentals_routes = Blueprint("car_rentals", __name__)
 
-@car_rentals_routes.route("/", methods=["GET"])
+
+def _car_or_404(car_id):
+    car = db.session.get(CarRental, car_id)
+    if not car:
+        abort(404, description="Car not found")
+    return car
+
+
+@car_rentals_routes.get("/")
 def get_car_rentals():
-    car_rentals = CarRental.query.all()
-    return jsonify([car_rental.to_dict() for car_rental in car_rentals]), 200
+    """Filter with ?type=SUV"""
+    args = query_args({"type": Field(max_len=30)})
+    q = CarRental.query.filter(CarRental.availability_status == "available")
+    if args["type"]:
+        q = q.filter(CarRental.car_type == args["type"])
+    return jsonify([c.to_dict() for c in q.order_by(CarRental.price_per_day).all()])
 
-@car_rentals_routes.route("/<int:id>", methods=["GET"])
-def get_car_rental(id):
-    car_rental = CarRental.query.get(id)
-    if not car_rental:
-        return jsonify({"error": "Car rental not found"}), 404
-    return jsonify(car_rental.to_dict()), 200
 
-@car_rentals_routes.route("/", methods=["POST"])
-@clerk_auth_required
+@car_rentals_routes.get("/<int:car_id>")
+def get_car_rental(car_id):
+    return jsonify(_car_or_404(car_id).to_dict())
+
+
+CAR_SCHEMA = {
+    "car_model": Field(required=True, max_len=255),
+    "car_type": Field(required=True, max_len=50),
+    "price_per_day": Field("float", required=True, min=1, max=5000),
+    "rental_company": Field(required=True, max_len=255),
+    "location": Field(required=True, max_len=255),
+    "availability_status": Field(choices=["available", "unavailable"], default="available"),
+    "seats": Field("int", min=1, max=60),
+    "transmission": Field(choices=["manual", "automatic"]),
+}
+
+
+@car_rentals_routes.post("/")
+@require_admin
 def create_car_rental():
-    data = request.get_json()
-    required_fields = ["car_model", "car_type", "price_per_day", "rental_company", "location"]
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Missing field: {field}"}), 400
-
-    try:
-        price = float(data["price_per_day"])
-    except ValueError:
-        return jsonify({"error": "Invalid price_per_day"}), 400
-
-    new_car_rental = CarRental(
-        car_model=data["car_model"],
-        car_type=data["car_type"],
-        price_per_day=price,
-        availability_status=data.get("availability_status", "available"),
-        rental_company=data["rental_company"],
-        location=data["location"]
-    )
-
-    db.session.add(new_car_rental)
+    car = CarRental(**json_body(CAR_SCHEMA))
+    db.session.add(car)
     db.session.commit()
+    return jsonify(car.to_dict()), 201
 
-    return jsonify(new_car_rental.to_dict()), 201
 
-@car_rentals_routes.route("/<int:id>", methods=["PUT"])
-@clerk_auth_required
-def update_car_rental(id):
-    car_rental = CarRental.query.get(id)
-    if not car_rental:
-        return jsonify({"error": "Car rental not found"}), 404
-
-    data = request.get_json()
-
-    if "car_model" in data:
-        car_rental.car_model = data["car_model"]
-    if "car_type" in data:
-        car_rental.car_type = data["car_type"]
-    if "price_per_day" in data:
-        try:
-            car_rental.price_per_day = float(data["price_per_day"])
-        except ValueError:
-            return jsonify({"error": "Invalid price_per_day"}), 400
-    if "availability_status" in data:
-        car_rental.availability_status = data["availability_status"]
-    if "rental_company" in data:
-        car_rental.rental_company = data["rental_company"]
-    if "location" in data:
-        car_rental.location = data["location"]
-
+@car_rentals_routes.put("/<int:car_id>")
+@require_admin
+def update_car_rental(car_id):
+    car = _car_or_404(car_id)
+    body = request.get_json(silent=True) or {}
+    for k, v in json_body({k: v for k, v in CAR_SCHEMA.items() if k in body}).items():
+        setattr(car, k, v)
     db.session.commit()
-    return jsonify(car_rental.to_dict()), 200
+    return jsonify(car.to_dict())
 
-@car_rentals_routes.route("/<int:id>", methods=["DELETE"])
-@clerk_auth_required
-def delete_car_rental(id):
-    car_rental = CarRental.query.get(id)
-    if not car_rental:
-        return jsonify({"error": "Car rental not found"}), 404
 
-    db.session.delete(car_rental)
+@car_rentals_routes.delete("/<int:car_id>")
+@require_admin
+def delete_car_rental(car_id):
+    car = _car_or_404(car_id)
+    car.availability_status = "unavailable"
     db.session.commit()
-
-    return jsonify({"message": f"Car rental {id} deleted successfully"}), 200
+    return "", 204

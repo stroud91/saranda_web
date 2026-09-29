@@ -34,6 +34,31 @@ def upgrade():
         batch_op.add_column(sa.Column('description', sa.Text(), nullable=True))
         batch_op.add_column(sa.Column('amenities', sa.JSON(), nullable=True))
 
+    # The initial migration never created `bookings`, so create it here when
+    # missing (fresh databases) and only alter it when it already exists.
+    if not sa.inspect(op.get_bind()).has_table('bookings', schema=SCHEMA if environment == 'production' else None):
+        op.create_table('bookings',
+            sa.Column('id', sa.Integer(), primary_key=True),
+            sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id'), nullable=True),
+            sa.Column('tour_id', sa.Integer(), sa.ForeignKey('tours.id'), nullable=True),
+            sa.Column('hotel_id', sa.Integer(), sa.ForeignKey('hotels.id'), nullable=True),
+            sa.Column('car_id', sa.Integer(), sa.ForeignKey('car_rentals.id'), nullable=True),
+            sa.Column('start_date', sa.DateTime(), nullable=False),
+            sa.Column('end_date', sa.DateTime(), nullable=False),
+            sa.Column('total_cost', sa.Numeric(10, 2), nullable=False),
+            sa.Column('created_at', sa.DateTime()),
+            sa.Column('status', sa.String(50)),
+            sa.Column('guest_name', sa.String(255), nullable=True),
+            sa.Column('guest_email', sa.String(255), nullable=True),
+            sa.Column('guest_phone', sa.String(50), nullable=True),
+            sa.Column('guest_count', sa.Integer(), nullable=True),
+            sa.Column('notes', sa.Text(), nullable=True),
+            sa.Column('stripe_payment_intent_id', sa.String(255), nullable=True),
+        )
+        if environment == "production":
+            op.execute(f"ALTER TABLE bookings SET SCHEMA {SCHEMA};")
+        return
+
     # Add guest checkout fields to bookings table + make user_id nullable
     with op.batch_alter_table('bookings', schema=SCHEMA if environment == 'production' else None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=True)

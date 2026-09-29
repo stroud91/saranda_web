@@ -1,45 +1,36 @@
-from .db import db, environment, SCHEMA
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from werkzeug.security import check_password_hash, generate_password_hash
 
-class User(db.Model, UserMixin):
-    __tablename__ = 'users'
+from .db import db, table_args, utcnow
 
-    if environment == "production":
-        __table_args__ = {'schema': SCHEMA}
+
+class User(db.Model):
+    __tablename__ = "users"
+    __table_args__ = table_args()
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(40), nullable=False, unique=True)
+    username = db.Column(db.String(255), nullable=False, unique=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    # profile_picture = db.Column(db.String(255), nullable=True)
-    # bio = db.Column(db.Text, nullable=True)
     phone_number = db.Column(db.String(20))
-    role = db.Column(db.String(50), default='guest')
+    role = db.Column(db.String(50), default="guest")
     is_verified = db.Column(db.Boolean(), default=False)
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    clerk_user_id = db.Column(db.String(64), unique=True, index=True, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
-    # Relationships
-    bookings = db.relationship('Booking', backref='user', lazy=True)
-    tours_created = db.relationship('Tour', backref='creator', lazy=True)
+    bookings = db.relationship("Booking", backref="user", lazy=True)
+    tours_created = db.relationship("Tour", backref="creator", lazy=True)
 
     @property
     def password(self):
-        return self.hashed_password
+        raise AttributeError("password is write-only")
 
     @password.setter
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password, password)
+        return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
-            # 'profile_picture': self.profile_picture,
-            # 'bio': self.bio
-        }
+        return {"id": self.id, "username": self.username, "role": self.role}
