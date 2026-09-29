@@ -4,7 +4,8 @@ import logging
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import pool, text
+import re
 
 from alembic import context
 
@@ -90,14 +91,19 @@ def run_migrations_online():
             process_revision_directives=process_revision_directives,
             **current_app.extensions['migrate'].configure_args
         )
-        # Create a schema (only in production)
-        if environment == "production":
-            connection.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}")
+        # Schemas are a PostgreSQL feature: only use one in production when
+        # SCHEMA is set and the database is PostgreSQL (SQLite has none).
+        from app.models.db import USE_SCHEMA
+        use_schema = USE_SCHEMA and connection.dialect.name == "postgresql"
+        if use_schema:
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", SCHEMA):
+                raise RuntimeError(f"Invalid SCHEMA name: {SCHEMA!r}")
+            connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{SCHEMA}"'))
+            connection.commit()
 
-        # Set search path to your schema (only in production)
         with context.begin_transaction():
-            if environment == "production":
-                context.execute(f"SET search_path TO {SCHEMA}")
+            if use_schema:
+                context.execute(f'SET search_path TO "{SCHEMA}"')
             context.run_migrations()
 
 if context.is_offline_mode():

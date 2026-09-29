@@ -53,6 +53,42 @@ cd travago-tour-app && npm test  # frontend unit tests
 
 For a production-like run, `npm run build` and then `gunicorn "wsgi:app"`. Flask serves the built SPA.
 
+## Deploying to cPanel
+
+The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain root. Flask serves both the website and `/api`.
+
+**First time**
+1. **Create the app** in cPanel → Setup Python App:
+
+   | Field | Value |
+   |---|---|
+   | Python | 3.10+ |
+   | Application root | `megrooms_flask` |
+   | URL | your domain, empty path |
+   | Startup file | `wsgi.py` |
+   | Entry point | `app` |
+
+2. **Create `/home/<user>/megrooms_flask/.env`** (see `.env.example`). With SQLite, use:
+   ```
+   FLASK_ENV=production
+   SECRET_KEY=<long random string>
+   DATABASE_URL=sqlite:////home/<user>/megrooms_flask/instance/saranda.db
+   CORS_ORIGINS=https://yourdomain
+   ```
+   Leave `SCHEMA` unset unless you use PostgreSQL.
+3. **Connect the repository** in cPanel → Git Version Control, then click **Deploy HEAD Commit**.
+4. **Seed the database once**, from cPanel → Terminal inside the app's virtualenv: `flask seed all`.
+5. **Remove the old site files from `public_html`**, but keep its `.htaccess`, which connects the domain to the app.
+
+**Every update:** in Git Version Control, click **Update from Remote**, then **Deploy HEAD Commit**. `deploy/cpanel_deploy.sh` then:
+- syncs the backend (never touching `.env` or the database);
+- installs packages and runs migrations;
+- restarts the app.
+
+It builds the frontend only if the server has Node.js 20.19+/22.12+. Otherwise it keeps the current build: run `npm ci && npm run build` locally and upload `travago-tour-app/build/` to `megrooms_flask/travago-tour-app/build/`.
+
+The account paths are set at the top of `deploy/cpanel_deploy.sh`: `CPANEL_USER`, `APP_ROOT` and `VENV_BASE`.
+
 ## Free mode (current default)
 
 Out of the box the site uses only free services and needs no API keys:

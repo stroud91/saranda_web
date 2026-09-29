@@ -39,3 +39,24 @@ def test_forwarded_host_is_not_trusted():
     app = create_app(Prod)
     r = app.test_client().get("/explore", headers={"X-Forwarded-Proto": "http", "X-Forwarded-Host": "evil.example"})
     assert "evil.example" not in r.headers["Location"]
+
+
+def test_migrations_run_on_sqlite_in_production(tmp_path):
+    """cPanel setup: FLASK_ENV=production with SQLite must migrate cleanly,
+    even if SCHEMA (a PostgreSQL-only setting) is accidentally set."""
+    import os
+    import sqlite3
+    import subprocess
+    import sys
+
+    db = tmp_path / "prod.db"
+    env = {**os.environ, "FLASK_APP": "app", "FLASK_ENV": "production", "SECRET_KEY": "x" * 40,
+           "DATABASE_URL": f"sqlite:///{db}", "SCHEMA": "should_be_ignored"}
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    flask = [sys.executable, "-m", "flask"]
+    for cmd in (["db", "upgrade"], ["db", "upgrade"], ["seed", "all"]):
+        r = subprocess.run(flask + cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, r.stderr[-2000:]
+    con = sqlite3.connect(db)
+    assert con.execute("select version_num from alembic_version").fetchone()[0] == "c3f1a9d27e10"
+    assert con.execute("select count(*) from guides").fetchone()[0] == 8

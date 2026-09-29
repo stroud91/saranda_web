@@ -11,8 +11,7 @@ import sqlalchemy as sa
 import os
 
 # Environment configuration
-environment = os.getenv("FLASK_ENV")
-SCHEMA = os.environ.get("SCHEMA")
+from app.models.db import SCHEMA, USE_SCHEMA  # schema only on production PostgreSQL
 
 # Revision identifiers, used by Alembic
 revision = 'ffdc0a98111c'
@@ -76,7 +75,7 @@ def upgrade():
         sa.Column('location', sa.String(255), nullable=False)
     )
 
-    if environment == "production":
+    if USE_SCHEMA:
         op.execute(f"ALTER TABLE users SET SCHEMA {SCHEMA};")
         op.execute(f"ALTER TABLE tours SET SCHEMA {SCHEMA};")
         op.execute(f"ALTER TABLE hotels SET SCHEMA {SCHEMA};")

@@ -5,8 +5,9 @@
 # What it does:
 #   1. Syncs backend code (app/, migrations/, wsgi.py, requirements.txt) into APP_ROOT.
 #      Never touches APP_ROOT/.env or APP_ROOT/instance/ (your secrets and database).
-#   2. Builds the frontend if Node.js/npm exists on the server; otherwise keeps the
-#      build/ folder you uploaded (build it locally with `npm ci && npm run build`).
+#   2. Builds the frontend if a recent Node.js/npm exists on the server; if not (or the
+#      build fails) it keeps the build/ folder you uploaded. Set SKIP_FRONTEND_BUILD=1
+#      to always upload the build yourself (build locally: npm ci && npm run build).
 #   3. Installs Python packages and runs database migrations inside the app's virtualenv.
 #   4. Restarts the Passenger app.
 set -euo pipefail
@@ -46,20 +47,49 @@ fi
 
 # 2. Frontend
 FRONTEND_DEST="$APP_ROOT/travago-tour-app/build"
-if command -v npm >/dev/null 2>&1; then
-  log "npm found ($(npm --version)); building frontend"
-  (cd "$SRC/travago-tour-app" && npm ci --no-audit --no-fund && npm run build)
-  sync_dir "$SRC/travago-tour-app/build" "$FRONTEND_DEST"
-  log "Frontend built and deployed"
-elif [ -d "$SRC/travago-tour-app/build" ]; then
-  sync_dir "$SRC/travago-tour-app/build" "$FRONTEND_DEST"
-  log "Frontend copied from repository build/"
-elif [ -f "$FRONTEND_DEST/index.html" ]; then
-  log "npm not available: keeping the existing frontend in $FRONTEND_DEST."
-  log "If the frontend changed, build it locally and upload travago-tour-app/build/ there."
+FRONTEND_SRC="$SRC/travago-tour-app"
+
+node_ok() {  # Vite 8 needs Node ^20.19 or >=22.12
+  command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 || return 1
+  node -e 'const [a,b]=process.versions.node.split(".").map(Number);process.exit((a===20&&b>=19)||(a===22&&b>=12)||a>22?0:1)'
+}
+
+build_frontend() {  # returns non-zero on any failure; never aborts the deploy
+  (
+    set -e
+    cd "$FRONTEND_SRC"
+    rm -rf build
+    npm ci --no-audit --no-fund
+    npm run build
+    [ -f build/index.html ]
+  )
+}
+
+keep_existing_frontend() {
+  if [ -f "$FRONTEND_DEST/index.html" ]; then
+    log "Keeping the existing frontend in $FRONTEND_DEST."
+    log "If the frontend changed, build locally (npm ci && npm run build) and upload travago-tour-app/build/ there."
+  else
+    log "WARNING: no frontend installed yet. Build locally (npm ci && npm run build) and upload"
+    log "         travago-tour-app/build/ to $FRONTEND_DEST"
+  fi
+}
+
+if [ "${SKIP_FRONTEND_BUILD:-0}" = "1" ]; then
+  log "SKIP_FRONTEND_BUILD=1: not building the frontend"
+  keep_existing_frontend
+elif node_ok; then
+  log "Node $(node --version) found; building frontend"
+  if build_frontend; then
+    sync_dir "$FRONTEND_SRC/build" "$FRONTEND_DEST"
+    log "Frontend built and deployed"
+  else
+    log "WARNING: frontend build failed (see npm output above)"
+    keep_existing_frontend
+  fi
 else
-  log "WARNING: no frontend build found. Build locally (npm ci && npm run build) and upload"
-  log "         travago-tour-app/build/ to $FRONTEND_DEST"
+  log "Node.js 20.19+/22.12+ with npm not available on this server"
+  keep_existing_frontend
 fi
 
 # 3. Python packages + migrations

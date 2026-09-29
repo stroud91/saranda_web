@@ -9,8 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 import os
 
-environment = os.getenv("FLASK_ENV")
-SCHEMA = os.environ.get("SCHEMA")
+from app.models.db import SCHEMA, USE_SCHEMA  # schema only on production PostgreSQL
 
 revision = 'a4c8f20d9b3e'
 down_revision = 'ffdc0a98111c'
@@ -20,7 +19,7 @@ depends_on = None
 
 def upgrade():
     # Add apartment fields to hotels table
-    with op.batch_alter_table('hotels', schema=SCHEMA if environment == 'production' else None) as batch_op:
+    with op.batch_alter_table('hotels', schema=SCHEMA if USE_SCHEMA else None) as batch_op:
         batch_op.add_column(sa.Column('apartment_number', sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column('apartment_name', sa.String(255), nullable=True))
         batch_op.add_column(sa.Column('bedrooms', sa.Integer(), nullable=True, server_default='1'))
@@ -36,7 +35,7 @@ def upgrade():
 
     # The initial migration never created `bookings`, so create it here when
     # missing (fresh databases) and only alter it when it already exists.
-    if not sa.inspect(op.get_bind()).has_table('bookings', schema=SCHEMA if environment == 'production' else None):
+    if not sa.inspect(op.get_bind()).has_table('bookings', schema=SCHEMA if USE_SCHEMA else None):
         op.create_table('bookings',
             sa.Column('id', sa.Integer(), primary_key=True),
             sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id'), nullable=True),
@@ -55,12 +54,12 @@ def upgrade():
             sa.Column('notes', sa.Text(), nullable=True),
             sa.Column('stripe_payment_intent_id', sa.String(255), nullable=True),
         )
-        if environment == "production":
+        if USE_SCHEMA:
             op.execute(f"ALTER TABLE bookings SET SCHEMA {SCHEMA};")
         return
 
     # Add guest checkout fields to bookings table + make user_id nullable
-    with op.batch_alter_table('bookings', schema=SCHEMA if environment == 'production' else None) as batch_op:
+    with op.batch_alter_table('bookings', schema=SCHEMA if USE_SCHEMA else None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=True)
         batch_op.add_column(sa.Column('guest_name', sa.String(255), nullable=True))
         batch_op.add_column(sa.Column('guest_email', sa.String(255), nullable=True))
@@ -71,7 +70,7 @@ def upgrade():
 
 
 def downgrade():
-    with op.batch_alter_table('bookings', schema=SCHEMA if environment == 'production' else None) as batch_op:
+    with op.batch_alter_table('bookings', schema=SCHEMA if USE_SCHEMA else None) as batch_op:
         batch_op.drop_column('stripe_payment_intent_id')
         batch_op.drop_column('notes')
         batch_op.drop_column('guest_count')
@@ -80,7 +79,7 @@ def downgrade():
         batch_op.drop_column('guest_name')
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
 
-    with op.batch_alter_table('hotels', schema=SCHEMA if environment == 'production' else None) as batch_op:
+    with op.batch_alter_table('hotels', schema=SCHEMA if USE_SCHEMA else None) as batch_op:
         batch_op.drop_column('amenities')
         batch_op.drop_column('description')
         batch_op.drop_column('image_urls')
