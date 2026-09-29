@@ -87,7 +87,7 @@ def seed_hotels():
             "Our most spacious option — a three-bedroom apartment with sweeping 270° panoramic "
             "views of the Albanian Riviera and Corfu Island. Apartment 17 is perfect for larger "
             "families or groups who want the comfort of a real home. Two full bathrooms, a generous "
-            "living space, and a private terrace to enjoy the Adriatic sunsets."
+            "living space, and a private terrace to enjoy the Ionian sunsets."
         ),
         amenities=COMMON_AMENITIES + ["Terrace", "Sea & Mountain Views", "Dining Area"],
         image_urls=[],

@@ -1,0 +1,135 @@
+/* Saranda Companion — Mediterranean design tokens.
+   Ionian blues, Ksamil turquoise, limestone sand, terracotta roofs, lemon sun,
+   olive groves and bougainvillea. Light by default, full dark theme. */
+
+:root {
+  --sea-950: #041f2e;
+  --sea-900: #06324a;
+  --sea-800: #084765;
+  --sea-700: #0b5c7e;
+  --sea-600: #0c769c;
+  --sea-500: #0e8fb0;
+  --lagoon-400: #3fd3cf;
+  --lagoon-500: #19c3c0;
+  --lagoon-600: #10a3a3;
+  --foam: #e6f7f6;
+  --sand-25: #fffdf9;
+  --sand-50: #fffbf4;
+  --sand-100: #fbf3e4;
+  --sand-200: #f2e4cc;
+  --sand-300: #e6cfa7;
+  --terracotta: #d9653b;
+  --terracotta-600: #bf5230;
+  --sun: #f4b63f;
+  --sun-300: #f9d27f;
+  --olive: #6e7f3a;
+  --olive-300: #a9b872;
+  --bougainvillea: #d63c7a;
+  --albania-red: #e41e20;
+
+  --bg: var(--sand-50);
+  --bg-elev: #ffffff;
+  --bg-sunk: var(--sand-100);
+  --surface: #ffffff;
+  --surface-2: var(--sand-100);
+  --glass: rgba(255, 253, 249, 0.72);
+  --glass-strong: rgba(255, 253, 249, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --text: #10212b;
+  --text-2: #3b4d57;
+  --muted: #5f717b;
+  --faint: #8c9aa1;
+  --line: rgba(16, 33, 43, 0.1);
+  --line-strong: rgba(16, 33, 43, 0.18);
+  --accent: var(--sea-700);
+  --accent-2: var(--lagoon-500);
+  --accent-ink: #ffffff;
+  --focus: #1aa7c9;
+  --ok: #1f9d6b;
+  --warn: #c7811a;
+  --danger: #c83d3d;
+
+  --grad-sea: linear-gradient(135deg, #0b5c7e 0%, #0e8fb0 55%, #19c3c0 100%);
+  --grad-sunset: linear-gradient(135deg, #f4b63f 0%, #d9653b 55%, #d63c7a 100%);
+  --grad-sand: linear-gradient(180deg, #fffbf4 0%, #fbf3e4 100%);
+  --grad-olive: linear-gradient(135deg, #6e7f3a 0%, #a9b872 100%);
+  --grad-lagoon: linear-gradient(135deg, #10a3a3 0%, #3fd3cf 100%);
+  --grad-aegean: linear-gradient(135deg, #06324a 0%, #0c769c 100%);
+  --grad-spring: linear-gradient(135deg, #0e8fb0 0%, #3fd3cf 50%, #a9b872 100%);
+  --grad-terracotta: linear-gradient(135deg, #d9653b 0%, #f4b63f 100%);
+
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-xl: 36px;
+  --r-pill: 999px;
+
+  --sh-1: 0 1px 2px rgba(6, 50, 74, 0.06), 0 2px 8px rgba(6, 50, 74, 0.06);
+  --sh-2: 0 4px 14px rgba(6, 50, 74, 0.08), 0 12px 32px rgba(6, 50, 74, 0.08);
+  --sh-3: 0 18px 50px rgba(6, 50, 74, 0.18);
+  --sh-glow: 0 10px 30px rgba(14, 143, 176, 0.35);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --topbar-h: 68px;
+  --tabbar-h: 72px;
+  --gutter: 16px;
+  --maxw: 1240px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #061a26;
+    --bg-elev: #0a2433;
+    --bg-sunk: #04141e;
+    --surface: #0b2433;
+    --surface-2: #0f2d3f;
+    --glass: rgba(8, 32, 46, 0.7);
+    --glass-strong: rgba(8, 32, 46, 0.92);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text: #eaf4f6;
+    --text-2: #c3d4da;
+    --muted: #93a8b1;
+    --faint: #6b818a;
+    --line: rgba(234, 244, 246, 0.1);
+    --line-strong: rgba(234, 244, 246, 0.2);
+    --accent: #3fd3cf;
+    --accent-2: #0e8fb0;
+    --accent-ink: #04141e;
+    --grad-sand: linear-gradient(180deg, #061a26 0%, #082231 100%);
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --sh-2: 0 6px 24px rgba(0, 0, 0, 0.35);
+    --sh-3: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #061a26;
+  --bg-elev: #0a2433;
+  --bg-sunk: #04141e;
+  --surface: #0b2433;
+  --surface-2: #0f2d3f;
+  --glass: rgba(8, 32, 46, 0.7);
+  --glass-strong: rgba(8, 32, 46, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text: #eaf4f6;
+  --text-2: #c3d4da;
+  --muted: #93a8b1;
+  --faint: #6b818a;
+  --line: rgba(234, 244, 246, 0.1);
+  --line-strong: rgba(234, 244, 246, 0.2);
+  --accent: #3fd3cf;
+  --accent-2: #0e8fb0;
+  --accent-ink: #04141e;
+  --grad-sand: linear-gradient(180deg, #061a26 0%, #082231 100%);
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-2: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --sh-3: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}

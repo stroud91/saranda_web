@@ -108,7 +108,8 @@ def build_day(stops, *, start_time="08:30", pace="balanced", travel_date=None, m
     first = routing.place(stops[0])
     path.append([first["lat"], first["lng"]])
     single = len(stops) == 1
-    add("depart", ("Explore " if single else "Start in ") + first["name"], 0, slug=first["slug"])
+    if not single:
+        add("depart", "Start in " + first["name"], 0, slug=first["slug"])
 
     visited = set()
     if single:

@@ -107,7 +107,8 @@ def create_app(config_object=Config):
 
     hops = app.config.get("TRUSTED_PROXY_HOPS", 1)
     if hops:
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=hops, x_proto=hops, x_host=hops)
+        # X-Forwarded-Host is deliberately not trusted (host-header poisoning).
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=hops, x_proto=hops)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -140,6 +141,10 @@ def create_app(config_object=Config):
                         (app.view_functions[rule.endpoint].__doc__ or "").strip()]
             for rule in app.url_map.iter_rules() if rule.rule.startswith("/api/")
         })
+
+    if app.config.get("IS_PRODUCTION"):
+        # Keep the route map out of production (less reconnaissance surface).
+        app.view_functions["api_docs"] = lambda: (jsonify({"error": "Not found"}), 404)
 
     @app.get("/", defaults={"path": ""})
     @app.get("/<path:path>")

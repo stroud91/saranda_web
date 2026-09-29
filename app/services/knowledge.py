@@ -79,15 +79,17 @@ def itinerary_summary(it):
             if not stops or stops[-1] != s:
                 stops.append(s)
     route = routing.route_through(stops)
+    # Departure airports are where the trip ends, not a place you stay.
+    overnights = [d["overnight"] for d in it["days"] if routing.place(d["overnight"])["category"] != "hub"]
     return {
         "slug": it["slug"], "title": it["title"], "days_count": it["days_count"], "tagline": it["tagline"],
         "audience": it["audience"], "pace": it["pace"], "transport": it["transport"], "color": it["color"],
         "recommended": it.get("recommended", False),
-        "bases": sorted({day["overnight"] for day in it["days"]}, key=lambda s: stops.index(s) if s in stops else 99),
+        "bases": sorted(set(overnights), key=lambda s: stops.index(s) if s in stops else 99),
         "stats": {"km_min": route["totals"]["km_min"], "km_max": route["totals"]["km_max"],
                   "drive_minutes_min": route["totals"]["drive_minutes_min"],
                   "drive_minutes_max": route["totals"]["drive_minutes_max"],
-                  "hotel_changes": len({d["overnight"] for d in it["days"]}),
+                  "hotel_changes": len(set(overnights)),
                   "stops": len(set(stops))},
         "path": route["path"],
     }

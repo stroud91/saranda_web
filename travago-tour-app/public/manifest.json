@@ -1,25 +1,22 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Saranda",
+  "name": "Saranda Companion · Meg'Rooms",
+  "description": "Plan Albania from the Ionian coast: routes, timelines, budgets, guides and stays.",
   "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512" }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#0B5C7E",
+  "background_color": "#FFFBF4",
+  "categories": ["travel", "navigation"],
+  "shortcuts": [
+    { "name": "Trip planner", "url": "/plan" },
+    { "name": "Map", "url": "/map" },
+    { "name": "Route connector", "url": "/routes" }
+  ]
 }

@@ -285,7 +285,9 @@ def offline_answer(question):
     if re.search(r"\b(budget|cost|how much|price|expensive|cheap|spend)\b", q):
         days = _num(r"(\d+)\s*(?:day|night)", q, 7)
         people = _num(r"(\d+)\s*(?:people|person|traveller|traveler|adult|of us|pax)", q, 2)
-        style = "premium" if re.search(r"luxur|premium|5 ?star", q) else "budget" if re.search(r"budget|cheap|backpack|hostel", q) else "comfort"
+        style = ("premium" if re.search(r"luxur|premium|5 ?star", q)
+                 else "budget" if re.search(r"on a (tight |small )?budget|budget (style|travel|trip)|cheap|backpack|hostel|low[- ]cost", q)
+                 else "comfort")
         est = budget_svc.estimate(travelers=max(1, min(people, 20)), days=max(1, min(days, 30)), style=style,
                                   month=month, eur_to_all=live.eur_to_all())
         pp = est["per_person_per_day"]

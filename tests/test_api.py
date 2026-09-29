@@ -167,6 +167,8 @@ def test_concierge_offline_engine(client):
     assert route["engine"] == "offline" and "Tirana" in route["text"] and route["cards"][0]["type"] == "route"
     money = ask("Budget for 3 people, 10 days in August, cheap")
     assert "€" in money["text"] and money["cards"][0]["inputs"]["travelers"] == 3
+    assert money["cards"][0]["inputs"]["style"] == "budget"
+    assert ask("Budget for 2 people 7 days in August")["cards"][0]["inputs"]["style"] == "comfort"
     assert "112" in ask("emergency number?")["text"]
     assert ask("Show me local guides")["cards"]
     assert ask("Plan 10 days")["cards"][0]["slug"] == "10-day-explorer"
