@@ -56,7 +56,7 @@ export function WeatherCard({ place = "sarande", compact = false }) {
         <div className="tiny muted row" style={{ gap: 6, marginTop: 10 }}><Sunset size={14} /> Sunset today {data.daily[0].sunset}</div>
       )}
       <div className="tiny faint" style={{ marginTop: 8 }}>
-        {data.live ? `Live · ${data.source}` : `Typical for this month in Sarandë (${data.typical?.air_high}° air / ${data.typical?.sea}° sea)`}
+        {data.live ? <>Live · <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a></> : `Typical for this month in Sarandë (${data.typical?.air_high}° air / ${data.typical?.sea}° sea)`}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Tooltip, useMap, ZoomControl
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { CATEGORY_META, MODE_META } from "../ui";
+import { tileConfig } from "../../lib/mapTiles";
 
 const ALBANIA_BOUNDS = [[39.55, 19.25], [42.55, 20.45]];
 
@@ -107,11 +108,9 @@ function FitTo({ points, padding = 60, maxZoom = 11 }) {
 export default function AlbaniaMap({ nodes = [], edges = [], routes = [], selected, order = {}, onSelect, fit, className = "", showNetwork = true, dimOthers = false, interactive = true }) {
   const dark = useDarkMode();
   const sel = useMemo(() => new Set(Array.isArray(selected) ? selected : selected ? [selected] : []), [selected]);
-  const tiles = dark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  const tiles = tileConfig(dark);
   return (
-    <div className={`map-wrap ${className}`}>
+    <div className={`map-wrap ${tiles.filterDark ? "tiles-dark" : ""} ${className}`}>
       <MapContainer
         bounds={ALBANIA_BOUNDS}
         zoomControl={false}
@@ -123,11 +122,11 @@ export default function AlbaniaMap({ nodes = [], edges = [], routes = [], select
         minZoom={7}
       >
         <TileLayer
-          key={tiles}
-          url={tiles}
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={18}
+          key={tiles.url}
+          url={tiles.url}
+          attribution={tiles.attribution}
+          subdomains={tiles.subdomains}
+          maxZoom={tiles.maxZoom}
         />
         {interactive && <ZoomControl position="bottomright" />}
         {showNetwork && edges.map((e, i) => (
