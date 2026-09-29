@@ -11,7 +11,7 @@ CSP = "; ".join([
     "script-src 'self' https://js.stripe.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://*.stripe.com",
+    "img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://*.stripe.com",
     "media-src 'self' blob:",
     "connect-src 'self' https://api.stripe.com",
     "frame-src https://js.stripe.com https://hooks.stripe.com",

@@ -53,6 +53,20 @@ cd travago-tour-app && npm test  # frontend unit tests
 
 For a production-like run, `npm run build` and then `gunicorn "wsgi:app"`. Flask serves the built SPA.
 
+## Free mode (current default)
+
+Out of the box the site uses only free services and needs no API keys:
+
+| Service | Used for | Terms to keep in mind |
+|---|---|---|
+| Open-Meteo | Weather, sea temperature | Free tier is non-commercial; move to their paid plan before a commercial launch (or set `LIVE_DATA_ENABLED=false`) |
+| ExchangeRate-API (open feed) | EUR → ALL rate | Free with the attribution link shown on the site |
+| OpenStreetMap tiles | Maps | Free with attribution; light use per the OSM tile policy |
+| OSRM public server | Road shapes | Free demo server for light use; self-host for production |
+| Google Fonts | Typography | Free |
+
+Stripe, the Anthropic concierge and Google Places stay switched off until their keys are added. The site falls back to request-to-book, the built-in answer engine, and no ratings. To add them later, fill in the "PAID services" block in `.env`.
+
 ## Configuration
 
 Everything is set through environment variables; see `.env.example`. None of these are required to run the site:

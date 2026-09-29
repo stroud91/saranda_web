@@ -184,3 +184,14 @@ def test_concierge_validates_history(client):
 def test_unknown_api_route_is_json_404(client):
     r = client.get("/api/does-not-exist")
     assert r.status_code == 404 and r.is_json
+
+
+def test_free_mode_defaults(client):
+    cfg = client.get("/api/meta/config").json
+    # Paid integrations stay off until keys are configured.
+    assert cfg["payments"]["enabled"] is False
+    assert cfg["concierge"]["ai"] is False
+    assert cfg["google_places"] is False
+    # Free OpenStreetMap tiles must be allowed by the CSP.
+    csp = client.get("/api/meta/health").headers["Content-Security-Policy"]
+    assert "https://tile.openstreetmap.org" in csp
