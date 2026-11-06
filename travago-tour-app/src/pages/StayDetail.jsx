@@ -6,6 +6,7 @@ import { post } from "../lib/api";
 import { euro, todayIso, addDays, fmtDate } from "../lib/format";
 import { useConfig, whatsappUrl } from "../lib/useConfig";
 import SceneArt from "../components/art/SceneArt";
+import Handoff from "../components/ui/Handoff";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, ErrorState, Field, Sheet, Skeleton, Stepper } from "../components/ui";
 import { WeatherCard } from "../components/live/Weather";
@@ -70,7 +71,9 @@ export default function StayDetail() {
     setErrors({});
     try {
       const res = await post("/bookings/", { ...quoteBody, ...form });
-      if (res.payment_required && cfg.payments?.publishable_key) {
+      if (res.handoff) {
+        setState({ busy: false, error: "", pay: null, handoff: res.handoff });
+      } else if (res.payment_required && cfg.payments?.publishable_key) {
         setState({ busy: false, error: "", pay: { secret: res.clientSecret, ref: res.booking.reference, amount: res.booking.total_cost } });
       } else {
         navigate(`/booking/${res.booking.reference}`);
@@ -148,8 +151,10 @@ export default function StayDetail() {
         </aside>
       </div>
 
-      <Sheet open={open} onClose={() => setOpen(false)} title={state.pay ? "Secure payment" : "Your details"} variant="center">
-        {state.pay ? (
+      <Sheet open={open} onClose={() => { setOpen(false); if (state.handoff) setState({ busy: false, error: "", pay: null }); }} title={state.pay ? "Secure payment" : state.handoff ? "Send your request" : "Your details"} variant="center">
+        {state.handoff ? (
+          <Handoff handoff={state.handoff} title={`${h.hotel_name} · ${fmtDate(checkIn)} → ${fmtDate(checkOut)}`} />
+        ) : state.pay ? (
           <Suspense fallback={<Skeleton h={220} />}>
             <PaymentStep publishableKey={cfg.payments.publishable_key} clientSecret={state.pay.secret} reference={state.pay.ref} amount={state.pay.amount} />
           </Suspense>

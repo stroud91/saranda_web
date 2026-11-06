@@ -8,6 +8,7 @@ import { euro, todayIso, fmtDate } from "../lib/format";
 import { useDestinations } from "../lib/useDestinations";
 import GuideAvatar from "../components/art/GuideAvatar";
 import SceneArt from "../components/art/SceneArt";
+import Handoff from "../components/ui/Handoff";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, CategoryIcon, ErrorState, Field, Segmented, Skeleton, Stepper } from "../components/ui";
 import { useTrip } from "../store/trip";
@@ -54,6 +55,17 @@ function RequestForm({ guide }) {
       setStatus({ busy: false, error: err.message, done: null });
     }
   };
+
+  if (status.done?.handoff) {
+    const r = status.done;
+    return (
+      <motion.div className="success-card" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+        <p className="muted">{fmtDate(r.tour_date, { weekday: "long", day: "numeric", month: "long" })} · {r.duration_label} · {r.group_size} people · estimate <b>{euro(r.quoted_price)}</b></p>
+        <Handoff handoff={r.handoff} title={`Send your request to ${guide.name}`} />
+        <button type="button" className="btn ghost sm" onClick={() => setStatus({ busy: false, error: "", done: null })}>Change details</button>
+      </motion.div>
+    );
+  }
 
   if (status.done) {
     const r = status.done;

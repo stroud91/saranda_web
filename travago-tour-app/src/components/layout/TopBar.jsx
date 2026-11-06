@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Compass, Map, CalendarRange, Route, Users, BedDouble, BookOpen, Moon, Sun, MonitorSmartphone } from "lucide-react";
+import { Box, Compass, Map, CalendarRange, Route, Users, BedDouble, BookOpen, Moon, Sun, MonitorSmartphone, Search } from "lucide-react";
 import Logo from "../art/Logo";
 import { useUi } from "../../store/ui";
 
@@ -9,6 +9,7 @@ export const NAV = [
   { to: "/plan", label: "Plan", icon: CalendarRange },
   { to: "/routes", label: "Routes", icon: Route },
   { to: "/map", label: "Map", icon: Map },
+  { to: "/atlas", label: "3D", icon: Box },
   { to: "/guides", label: "Guides", icon: Users },
   { to: "/stays", label: "Stays", icon: BedDouble },
   { to: "/essentials", label: "Essentials", icon: BookOpen },
@@ -19,7 +20,7 @@ const HERO_PAGES = ["/"];
 export default function TopBar() {
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const { theme, setTheme } = useUi();
+  const { theme, setTheme, openPalette } = useUi();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -47,6 +48,9 @@ export default function TopBar() {
           ))}
         </nav>
         <div className="topbar-actions">
+          <button className="icon-btn search-btn" onClick={openPalette} aria-label="Search (Ctrl K)" title="Search · Ctrl K">
+            <Search size={19} />
+          </button>
           <button className="icon-btn" onClick={() => setTheme(next)} aria-label={`Theme: ${theme}. Switch to ${next}`} title={`Theme: ${theme}`}>
             <ThemeIcon size={19} />
           </button>

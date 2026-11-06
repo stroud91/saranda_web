@@ -14,7 +14,7 @@ CSP = "; ".join([
     "img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://*.stripe.com",
     "media-src 'self' blob:",
     "connect-src 'self' https://api.stripe.com",
-    "frame-src https://js.stripe.com https://hooks.stripe.com",
+    "frame-src https://js.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com",
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",

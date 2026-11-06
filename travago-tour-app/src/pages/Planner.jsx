@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  CalendarRange, Plus, Share2, Download, RotateCcw, LayoutTemplate, Clock, Car, MapPin, CalendarDays, Link2, Check, Sparkles, Users,
+  CalendarRange, Plus, Share2, RotateCcw, LayoutTemplate, Clock, Car, MapPin, CalendarDays, Link2, Check, Sparkles, Users,
 } from "lucide-react";
 import { useTrip, tripPayload } from "../store/trip";
 import { useUi } from "../store/ui";
-import { useApi, useLivePost } from "../lib/useApi";
+import { useApi, useApiMode, useLivePost } from "../lib/useApi";
 import { post, put } from "../lib/api";
 import { useDestinations } from "../lib/useDestinations";
 import { hmRange, kmRange, plural, todayIso } from "../lib/format";
@@ -15,6 +15,7 @@ import Timeline from "../components/planner/Timeline";
 import BudgetPanel from "../components/planner/BudgetPanel";
 import AlbaniaMap from "../components/map/AlbaniaMap";
 import RouteSketch from "../components/art/RouteSketch";
+import CalendarButton from "../components/planner/CalendarButton";
 import { Alert, Segmented, Sheet, Skeleton, Stat, toast } from "../components/ui";
 
 const DAY_COLORS = ["#d9653b", "#0b5c7e", "#19c3c0", "#6e7f3a", "#d63c7a", "#f4b63f", "#0e8fb0", "#8e3b5f"];
@@ -58,6 +59,7 @@ function TemplatePicker({ open, onClose }) {
 
 function ShareSheet({ open, onClose }) {
   const t = useTrip();
+  const mode = useApiMode();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -94,7 +96,9 @@ function ShareSheet({ open, onClose }) {
   return (
     <Sheet open={open} onClose={onClose} title="Save & share your trip" variant="center">
       <div className="stack">
-        <p className="small muted">Saving creates a private link anyone can view. Only this device can edit it (it keeps a secret edit key).</p>
+        <p className="small muted">{mode === "static"
+          ? "The link carries the whole trip inside it — nothing is stored on a server. Save again after changes to get an updated link."
+          : "Saving creates a private link anyone can view. Only this device can edit it (it keeps a secret edit key)."}</p>
         <button className="btn primary" onClick={save} disabled={busy}>{busy ? <span className="spinner" /> : <Share2 size={18} />} {t.shareId ? "Save changes" : "Save & create link"}</button>
         {error && <Alert kind="error">{error}</Alert>}
         {url && (
@@ -106,7 +110,7 @@ function ShareSheet({ open, onClose }) {
             </div>
             {navigator.share && <button className="btn" onClick={() => navigator.share({ title: t.title, url })}><Share2 size={16} /> Share…</button>}
             {t.startDate ? (
-              <a className="btn" href={`/api/trips/${t.shareId}/calendar.ics`}><Download size={16} /> Add to calendar (.ics)</a>
+              <CalendarButton trip={{ title: t.title || "My Albania trip", data: tripPayload(t) }} shareId={t.shareId}>Add to calendar (.ics)</CalendarButton>
             ) : (
               <p className="tiny muted">Set a start date to export the trip to your calendar.</p>
             )}

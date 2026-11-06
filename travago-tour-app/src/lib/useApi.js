@@ -48,3 +48,16 @@ export function useLivePost(path, body, delay = 350) {
   }, [path, json, delay]);
   return state;
 }
+
+/** "server" | "static" | null while the first probe is still running. */
+export function useApiMode() {
+  const [mode, setMode] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    import("./api").then(({ apiMode }) => apiMode()).then((m) => alive && setMode(m));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return mode;
+}

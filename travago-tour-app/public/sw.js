@@ -2,7 +2,7 @@
    - Hashed build assets: cache-first (immutable).
    - Navigations: network-first, falling back to the cached shell.
    - API calls are never cached here (they carry live data and references). */
-const VERSION = "sc-v2";
+const VERSION = "sc-v3";
 const SHELL = ["/", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {

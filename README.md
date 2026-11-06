@@ -12,6 +12,15 @@ An app-like travel companion for Albania, built around *The Ultimate Albania Tra
 
 The design uses a Mediterranean palette (Ionian blues, Ksamil turquoise, sand, terracotta, sun, olive, bougainvillea) with light and dark themes. Every destination gets a procedurally drawn, animated SVG postcard, so the site needs no licensed photos. It has a glass top bar, a mobile bottom tab bar, bottom sheets, page transitions and is installable as a PWA.
 
+**Interactive layer**
+
+- **Live Ionian Sea hero.** A WebGL2 shader of the bay looking out to Corfu. Drag the time dial (it follows the real clock in Sarandë by default) through sunrise, golden hour and night: stars, a moon and the town's lights appear. Tap the water for ripples, or tap the night sky for a shooting star. The sea sound is synthesised in the browser and is off until switched on.
+- **3D atlas** (`/atlas`). three.js relief of Albania with holographic contour lines, a scanner sweep, glowing beacons for every destination and the road/ferry network. Connect two places to draw the route as a light trail, then **Fly it**: the camera follows the route while each leg lights up. Every route result also has a "Fly it in 3D" button.
+- **Albania in motion.** A cinematic reel with chapters that follow the playback, full-screen stories (tap, hold to pause, swipe down to close), video headers on destination pages, and Sarandë films from YouTube that load only when played.
+- **Micro-interactions.** A pointer halo, magnetic buttons, 3D tilt cards with glare, a reading-progress line, and a command palette (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> or <kbd>/</kbd>) that searches places, pages and actions.
+
+All of it respects `prefers-reduced-motion` (still frames, no fly-throughs), pauses when off screen or in a background tab, adapts its resolution to the device, and falls back to the SVG art when WebGL isn't available.
+
 ## Architecture
 
 ```
@@ -27,6 +36,12 @@ app/                    Flask 3 API (Python 3.10+)
 migrations/             Alembic migrations
 tests/                  pytest suite (engines, API, live providers, Claude loop, prod hardening)
 travago-tour-app/       React 19 + Vite frontend (builds to travago-tour-app/build)
+  src/engine/           JS ports of the routing/timeline/budget/concierge engines
+                        + a local API for static hosting (parity-tested)
+  src/components/hero/  WebGL2 ocean      src/components/atlas/  three.js atlas
+  src/components/media/ reel, stories, YouTube facade
+scripts/                export_static.py, edit_videos.py
+deploy/                 cpanel_deploy.sh (Python app), package_static.sh (static zip)
 ```
 
 The planner's knowledge (places, road times, itineraries, advice) lives in code under `app/data/`. It changes seasonally, can be reviewed in pull requests, and is fast to query. Anything transactional (guides, bookings, trips) lives in the database.
@@ -52,6 +67,31 @@ cd travago-tour-app && npm test  # frontend unit tests
 ```
 
 For a production-like run, `npm run build` and then `gunicorn "wsgi:app"`. Flask serves the built SPA.
+
+## Hosting on Namecheap without Python (static upload)
+
+The whole site also runs as plain files, so it can go straight into `public_html` on Namecheap (or any Apache/LiteSpeed host) with no Python app, database or Node on the server.
+
+```bash
+bash deploy/package_static.sh     # → travago-tour-app/dist/saranda-public_html.zip
+```
+
+Then in cPanel → **File Manager** → `public_html`: back up and remove the old site files, **Upload** the zip, **Extract** it, and delete the zip. The zip includes `.htaccess`, which handles HTTPS, app routes, caching, compression and security headers. Each GitHub Actions run also produces this zip as the **namecheap-public_html** artifact.
+
+What happens without a server:
+
+| Feature | Static upload |
+|---|---|
+| Routes, timelines, budgets, quotes, concierge | Same results. JavaScript ports of the Python engines run in the browser, and `src/engine/parity.test.js` checks them against the Python output on every test run |
+| Places, guides, stays, itineraries, essentials | Served from `src/data/static-api.json`, which is generated from the API |
+| Bookings, guide requests, contact form | Become a pre-filled WhatsApp or email message the guest sends. Set the address and number in `travago-tour-app/.env.static` |
+| Shared trips | The trip is compressed into the link itself (no database). Calendar export is built in the browser |
+| Weather, sea, EUR→ALL, road shapes | Fetched by the browser from the same free APIs, with typical values as the fallback |
+| Card payments, AI concierge, Google ratings | Need the Python app (they use secret keys) |
+
+The frontend decides at runtime: if `/api/meta/health` answers, it uses the server; otherwise it uses the built-in engines. `npm run build:static` skips that check.
+
+After changing anything in `app/data/` or the engines, regenerate the static bundle with `python scripts/export_static.py`. `tests/test_static_export.py` fails while it's stale.
 
 ## Deploying to cPanel
 
@@ -103,6 +143,13 @@ Out of the box the site uses only free services and needs no API keys:
 
 Stripe, the Anthropic concierge and Google Places stay switched off until their keys are added. The site falls back to request-to-book, the built-in answer engine, and no ratings. To add them later, fill in the "PAID services" block in `.env`.
 
+## Media and licences
+
+- **Video clips** are from Wikimedia Commons under **CC BY-SA 4.0** (authors Ekki3, Arianit and Leeturtle; Lëkurës and Gjirokastër clips by A.jobs02 are added when present). `scripts/edit_videos.py` trims them, applies the colour grade, turns them into seamless loops, removes the audio and builds the reel. Run `python scripts/edit_videos.py <folder with the originals>` (needs ffmpeg). The script is the record of what was changed, and the edited clips are shared under the same licence. Credits are shown on each clip and on `/credits`.
+- **YouTube films** play in YouTube's own player (youtube-nocookie.com), loaded only when the guest presses play. Rights stay with their creators.
+- **The old hero video** (`saranda-hero.mp4`) was a stock-site preview with a watermark, so it has been removed. Re-add your own or licensed footage if you want a video hero.
+- **3D atlas.** Borders come from Natural Earth (public domain, via `world-atlas`). The relief is a stylised model of Albania's ranges, not survey data. Regenerate it with `npm run atlas`.
+
 ## Configuration
 
 Everything is set through environment variables; see `.env.example`. None of these are required to run the site:
@@ -123,7 +170,7 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
 - **Payments.** Prices are always computed on the server from the stay's nightly rate. Bookings are confirmed only by a signed Stripe webhook or a server-side status check. Overlapping dates are rejected, and unpaid holds expire after 30 minutes.
 - **No enumerable IDs.** Bookings and guide requests use unguessable 60-bit references, and public reads mask contact details. Shared trips have a public share id plus a secret edit key, which is stored hashed and compared in constant time.
 - **Request hardening.** CORS is allow-listed, writes must be JSON (which blocks cross-site form CSRF), bodies are capped at 256 KB, every write is validated against a declared schema, and bot-facing forms have honeypots. Rate limits apply per IP, with stricter ones on booking, contact, trip-saving and concierge endpoints.
-- **Headers.** Strict CSP (Stripe and map tiles only), HSTS, `X-Frame-Options: DENY`, `nosniff`, a restrictive `Permissions-Policy` and COOP. The same set is applied in `.htaccess` for the static host.
+- **Headers.** Strict CSP (Stripe, map tiles and the YouTube player only; the static build also allows the browser's calls to the free weather, rates and routing APIs), HSTS, `X-Frame-Options: DENY`, `nosniff`, a restrictive `Permissions-Policy` and COOP. The same set is applied in `.htaccess` for the static host.
 - **Outbound calls.** HTTPS only, to an explicit host allowlist (an SSRF guard), with timeouts, size caps and negative caching.
 - **Admin authentication.** Clerk RS256 JWTs are verified against JWKS with issuer, expiry and authorized-party checks, and admins come from an allow-list.
 - **Concierge.** Tools are read-only, conversation length is capped, and model output is rendered by a markdown renderer that allows no raw HTML and same-site links only.

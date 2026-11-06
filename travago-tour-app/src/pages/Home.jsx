@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
-  CalendarRange, Route, Map, Users, BedDouble, BookOpen, Sparkles, ArrowRight, MapPin, Clock, Car, Ship, Sun, Star, Waves,
+  Box, CalendarRange, Route, Users, BedDouble, BookOpen, Sparkles, ArrowRight, MapPin, Clock, Car, Ship, Sun, Star, Waves,
 } from "lucide-react";
 import { useApi } from "../lib/useApi";
 import { useDestinations } from "../lib/useDestinations";
@@ -11,6 +11,8 @@ import { WeatherChip, WeatherCard } from "../components/live/Weather";
 import { FxChip } from "../components/live/FxWidget";
 import RouteSketch from "../components/art/RouteSketch";
 import SceneArt from "../components/art/SceneArt";
+import OceanHero from "../components/hero/OceanHero";
+import ReelSection from "../components/media/ReelSection";
 import GuideAvatar from "../components/art/GuideAvatar";
 import { Skeleton } from "../components/ui";
 import { useUi } from "../store/ui";
@@ -19,7 +21,7 @@ import { useTrip } from "../store/trip";
 const QUICK = [
   { to: "/plan", icon: CalendarRange, title: "Plan a trip", text: "Day-by-day timelines", grad: "var(--grad-sea)" },
   { to: "/routes", icon: Route, title: "Connect routes", text: "Any A → B, with times", grad: "var(--grad-sunset)" },
-  { to: "/map", icon: Map, title: "Live map", text: "Every place & road", grad: "var(--grad-lagoon)" },
+  { to: "/atlas", icon: Box, title: "3D atlas", text: "Fly over Albania", grad: "var(--grad-lagoon)" },
   { to: "/guides", icon: Users, title: "Local guides", text: "Pick your expert", grad: "var(--grad-olive)" },
   { to: "/stays", icon: BedDouble, title: "Meg'Rooms", text: "Sea-view apartments", grad: "var(--grad-terracotta)" },
   { to: "/essentials", icon: BookOpen, title: "Essentials", text: "Money, food, safety", grad: "var(--grad-aegean)" },
@@ -55,22 +57,11 @@ function HeroConnector() {
 function Hero() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const openConcierge = useUi((s) => s.openConcierge);
-  const [videoOk, setVideoOk] = useState(true);
-  const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   return (
     <section className="hero" ref={ref}>
-      <motion.div className="hero-media" style={{ y }}>
-        {videoOk && !reduce ? (
-          <video autoPlay muted loop playsInline preload="metadata" onError={() => setVideoOk(false)} aria-hidden="true">
-            <source src="/media/saranda-hero.mp4" type="video/mp4" />
-          </video>
-        ) : (
-          <SceneArt scene="harbor" seed="sarande-hero" variant="sunset" />
-        )}
-      </motion.div>
+      <OceanHero scrollProgress={scrollYProgress} surfaceRef={ref} />
       <div className="hero-overlay" />
       <motion.div className="container hero-content" style={{ opacity: fade }}>
         <motion.div className="eyebrow light" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -315,6 +306,7 @@ export default function Home() {
     <div className="page flush home">
       <Hero />
       <QuickActions />
+      <ReelSection />
       <Itineraries />
       <SarandaBase />
       <section className="container section">
