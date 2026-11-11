@@ -1,11 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Copy, CalendarDays, Download } from "lucide-react";
+import { Copy, CalendarDays } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { useDestinations } from "../lib/useDestinations";
 import { fmtDate, addDays, hmRange } from "../lib/format";
 import Timeline from "../components/planner/Timeline";
 import AlbaniaMap from "../components/map/AlbaniaMap";
+import CalendarButton from "../components/planner/CalendarButton";
 import { ErrorState, Skeleton, toast } from "../components/ui";
 import { useTrip } from "../store/trip";
 
@@ -32,7 +33,7 @@ export default function TripShare() {
         </div>
         <div className="row">
           <button className="btn primary" onClick={() => { loadShared(trip); toast("Copied into your planner"); navigate("/plan"); }}><Copy size={16} /> Copy to my planner</button>
-          {trip.data.start_date && <a className="btn" href={`/api/trips/${shareId}/calendar.ics`}><Download size={16} /> Calendar</a>}
+          {trip.data.start_date && <CalendarButton trip={trip} shareId={shareId}>Calendar</CalendarButton>}
         </div>
       </div>
       <div className="map-card" style={{ height: 360, margin: "18px 0" }}>

@@ -5,9 +5,18 @@ import AppShell from "./components/layout/AppShell";
 import Home from "./pages/Home";
 
 const Explore = lazy(() => import("./pages/Explore"));
+const Credits = lazy(() => import("./pages/Credits"));
 const DestinationDetail = lazy(() => import("./pages/DestinationDetail"));
 const RoutesPage = lazy(() => import("./pages/Routes"));
 const MapPage = lazy(() => import("./pages/MapPage"));
+const Atlas = lazy(() => import("./pages/Atlas"));
+const Account = lazy(() => import("./pages/Account"));
+const authPage = (name) => lazy(() => import("./pages/Auth").then((m) => ({ default: m[name] })));
+const SignIn = authPage("SignIn");
+const SignUp = authPage("SignUp");
+const ForgotPassword = authPage("ForgotPassword");
+const ResetPassword = authPage("ResetPassword");
+const VerifyEmail = authPage("VerifyEmail");
 const Planner = lazy(() => import("./pages/Planner"));
 const Itineraries = lazy(() => import("./pages/Itineraries"));
 const ItineraryDetail = lazy(() => import("./pages/ItineraryDetail"));
@@ -34,6 +43,7 @@ export default function App() {
             <Route path="/explore/:slug" element={<DestinationDetail />} />
             <Route path="/routes" element={<RoutesPage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/atlas" element={<Atlas />} />
             <Route path="/plan" element={<Planner />} />
             <Route path="/itineraries" element={<Itineraries />} />
             <Route path="/itineraries/:slug" element={<ItineraryDetail />} />
@@ -51,6 +61,13 @@ export default function App() {
             <Route path="/trip/:shareId" element={<TripShare />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about-us" element={<Contact />} />
+            <Route path="/credits" element={<Credits />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/account" element={<Account />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppShell>

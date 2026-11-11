@@ -19,7 +19,9 @@ STATIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "trav
 
 
 def _register_blueprints(app):
+    from .api.account_routes import account_routes
     from .api.admin_routes import admin_routes
+    from .api.auth_routes import auth_routes
     from .api.bookings_routes import bookings_routes
     from .api.car_rentals_routes import car_rentals_routes
     from .api.concierge_routes import concierge_routes
@@ -46,6 +48,8 @@ def _register_blueprints(app):
         (concierge_routes, "/api/concierge"),
         (contact_routes, "/api/contact"),
         (admin_routes, "/api/admin"),
+        (auth_routes, "/api/auth"),
+        (account_routes, "/api/account"),
         (webhook_routes, "/api/webhooks"),
     ]:
         app.register_blueprint(bp, url_prefix=prefix)
@@ -131,6 +135,8 @@ def create_app(config_object=Config):
 
     from .seeds import seed_commands
     app.cli.add_command(seed_commands)
+    from .cli import user_commands
+    app.cli.add_command(user_commands)
 
     @app.get("/api/docs")
     def api_docs():

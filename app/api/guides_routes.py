@@ -8,6 +8,7 @@ from app.extensions import limiter
 from app.models import Guide, GuideBooking, db
 from app.models.guide import ACTIVE_REQUEST_STATUSES, DURATIONS
 from app.validation import Field, ValidationError, json_body, query_args
+from app.services import accounts
 
 guides_routes = Blueprint("guides", __name__)
 
@@ -131,6 +132,7 @@ def request_guide(slug):
         group_size=data["group_size"], itinerary_slug=data["itinerary_slug"], stops=stops,
         pickup=data["pickup"], language=data["language"], name=data["name"], email=data["email"].lower(),
         phone=data["phone"], message=data["message"], quoted_price=guide.quote(data["duration"], days),
+        user_id=getattr(accounts.current_user(), "id", None),
     )
     db.session.add(booking)
     db.session.commit()

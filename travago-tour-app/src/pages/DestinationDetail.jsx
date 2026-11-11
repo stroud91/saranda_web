@@ -5,6 +5,8 @@ import { Clock, Sparkles, MapPin, Car, Ship, Sailboat, ExternalLink, Star, Plus,
 import { useApi } from "../lib/useApi";
 import { hmRange, kmRange, euro } from "../lib/format";
 import SceneArt from "../components/art/SceneArt";
+import VideoLoop from "../components/media/VideoLoop";
+import { clipsForPlace } from "../lib/media";
 import GuideAvatar from "../components/art/GuideAvatar";
 import { WeatherCard } from "../components/live/Weather";
 import { CATEGORY_META, CategoryIcon, ErrorState, Sheet, Skeleton, toast } from "../components/ui";
@@ -58,6 +60,7 @@ export default function DestinationDetail() {
   const fav = useTrip((s) => s.favorites.includes(slug));
   const toggle = useTrip((s) => s.toggleFavorite);
   const ask = useUi((s) => s.openConcierge);
+  const clip = clipsForPlace(slug)[0];
 
   useEffect(() => {
     if (d) document.title = `${d.name} · Saranda Companion`;
@@ -72,7 +75,7 @@ export default function DestinationDetail() {
     <div className="page dest-page">
       <div className="container">
         <motion.div className="dest-hero" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}>
-          <SceneArt scene={d.scene} seed={d.slug} title={d.name} />
+          {clip ? <VideoLoop clip={clip} className="dest-hero-video" eager /> : <SceneArt scene={d.scene} seed={d.slug} title={d.name} />}
           <div className="dest-hero-overlay">
             <div className="row" style={{ gap: 8 }}>
               <span className="badge glass"><CategoryIcon category={d.category} size={13} /> {meta.label}</span>
@@ -83,6 +86,11 @@ export default function DestinationDetail() {
             <h1>{d.name}</h1>
             <p className="dest-hero-lead">{d.summary}</p>
           </div>
+          {clip && (
+            <span className="dest-hero-credit tiny">
+              Video: <a href={clip.source} target="_blank" rel="noopener noreferrer">{clip.author}</a> · <a href={clip.license.url} target="_blank" rel="noopener noreferrer license">{clip.license.name}</a> · edited
+            </span>
+          )}
           <button className={`fav-btn big ${fav ? "on" : ""}`} onClick={() => toggle(slug)} aria-pressed={fav} aria-label="Save"><Heart size={22} fill={fav ? "currentColor" : "none"} /></button>
         </motion.div>
 

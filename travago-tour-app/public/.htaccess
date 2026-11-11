@@ -1,24 +1,59 @@
-Options -MultiViews
+# Saranda Companion — Apache / LiteSpeed rules (Namecheap shared hosting, cPanel).
+# Upload the CONTENTS of the build folder (including this file) into public_html.
+Options -MultiViews -Indexes
+DirectoryIndex index.html
 RewriteEngine On
+
+# Force HTTPS (Namecheap's free AutoSSL certificate covers the domain).
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Static hosting has no API: answer /api/* with 404 so the app switches to its
+# built-in engines straight away (instead of receiving the HTML page).
+RewriteRule ^api/ - [R=404,L]
+
+# Never serve dotfiles or source maps.
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+RewriteRule \.map$ - [R=404,L]
 
 # Serve existing files and directories directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Route all other requests to the SPA
+# Everything else is a page of the single-page app
 RewriteRule ^ index.html [QSA,L]
+
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType video/mp4 .mp4
+  AddType text/javascript .js .mjs
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(self \"https://js.stripe.com\")"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()"
   Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://*.stripe.com; media-src 'self' blob:; connect-src 'self' https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  # Static mode talks to free public APIs straight from the browser:
+  # Open-Meteo (weather + sea), ExchangeRate-API (EUR→ALL) and OSRM (road shapes).
+  # YouTube films load from youtube-nocookie.com only after the guest presses play.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org; media-src 'self' blob:; connect-src 'self' https://api.open-meteo.com https://marine-api.open-meteo.com https://open.er-api.com https://router.project-osrm.org; frame-src https://www.youtube-nocookie.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'none'; upgrade-insecure-requests"
   # Only Vite's content-hashed files are safe to cache forever.
   <If "%{REQUEST_URI} =~ m#^/assets/#">
     Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  <If "%{REQUEST_URI} =~ m#^/media/#">
+    Header set Cache-Control "public, max-age=2592000"
   </If>
   <FilesMatch "(index\.html|sw\.js|manifest\.json)$">
     Header set Cache-Control "no-cache"

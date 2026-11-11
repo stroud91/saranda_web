@@ -1,7 +1,7 @@
 """Admin authentication via Clerk session tokens (RS256 JWTs).
 
-Travellers never need an account: bookings and trips use unguessable
-references instead. Only the operator's admin endpoints require a token.
+Admin endpoints accept either a Clerk token (below) or a signed-in host
+account from the site's own login (app/services/accounts.py).
 
 - Keys come from Clerk's JWKS endpoint and are cached by PyJWKClient.
 - ``iss`` must match CLERK_ISSUER; ``azp`` must be an authorized party when
@@ -71,8 +71,19 @@ def _bearer():
 
 
 def require_admin(fn):
+    """Allow a Clerk admin token, or a signed-in host account (see User.is_admin)."""
     @wraps(fn)
     def wrapper(*args, **kwargs):
+        if not request.headers.get("Authorization"):
+            from app.services import accounts  # local import: accounts imports models
+
+            user = accounts.current_user()
+            if not user:
+                return jsonify({"error": "Please sign in"}), 401
+            if not user.is_admin:
+                return jsonify({"error": "Admin access required"}), 403
+            g.claims = {"sub": f"account:{user.id}", "email": user.email}
+            return fn(*args, **kwargs)
         try:
             claims = verify_token(_bearer())
         except AuthError as exc:

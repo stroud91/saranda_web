@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Route, X, Clock, Plus, ArrowRight, MousePointerClick, Layers, Navigation } from "lucide-react";
+import { Box, Route, X, Clock, Plus, ArrowRight, MousePointerClick, Layers, Navigation } from "lucide-react";
 import AlbaniaMap from "../components/map/AlbaniaMap";
 import SceneArt from "../components/art/SceneArt";
 import { useApi } from "../lib/useApi";
@@ -63,6 +63,7 @@ export default function MapPage() {
             <Route size={15} /> {connect ? "Connecting…" : "Connect two places"}
           </button>
           <button className={`chip ${network ? "on" : ""}`} onClick={() => setNetwork(!network)} aria-pressed={network}><Layers size={15} /> Routes</button>
+          <Link className="chip atlas-chip" to="/atlas"><Box size={15} /> 3D atlas</Link>
           {Object.entries(CATEGORY_META).map(([k, m]) => (
             <button key={k} className={`chip ${cats.has(k) ? "on" : ""}`} onClick={() => toggleCat(k)} style={cats.has(k) ? { background: m.color, borderColor: m.color, color: "#fff" } : undefined}>
               <CategoryIcon category={k} size={14} /> {m.label}

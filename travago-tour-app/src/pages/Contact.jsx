@@ -3,6 +3,7 @@ import { Mail, MessageCircle, Send, MapPin } from "lucide-react";
 import { post } from "../lib/api";
 import { useConfig, whatsappUrl } from "../lib/useConfig";
 import { Alert, Field, PageHeader } from "../components/ui";
+import Handoff from "../components/ui/Handoff";
 
 export default function Contact() {
   const cfg = useConfig();
@@ -14,8 +15,8 @@ export default function Contact() {
     e.preventDefault();
     setState({ busy: true, done: false, error: "", fields: {} });
     try {
-      await post("/contact/", form);
-      setState({ busy: false, done: true, error: "", fields: {} });
+      const res = await post("/contact/", form);
+      setState({ busy: false, done: true, error: "", fields: {}, handoff: res?.handoff || null });
     } catch (err) {
       setState({ busy: false, done: false, error: err.message, fields: err.fields || {} });
     }
@@ -29,7 +30,9 @@ export default function Contact() {
         {cfg.contact_email && <a className="btn" href={`mailto:${cfg.contact_email}`}><Mail size={18} /> {cfg.contact_email}</a>}
         <span className="small muted row" style={{ gap: 6 }}><MapPin size={15} /> Sarandë, Albania</span>
       </div>
-      {state.done ? (
+      {state.done && state.handoff ? (
+        <Handoff handoff={state.handoff} title="Your message is ready to send" />
+      ) : state.done ? (
         <Alert kind="ok">Thanks — your message is on its way. We'll reply to {form.email}.</Alert>
       ) : (
         <form className="card pad stack" onSubmit={submit} noValidate>

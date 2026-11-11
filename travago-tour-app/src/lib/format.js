@@ -51,3 +51,16 @@ export const seeded = (seed) => {
     return s / 4294967296;
   };
 };
+
+/** Exact amounts for payments (cents shown), e.g. money(120.5) → "€120.50", money(131, "USD") → "$131.00". */
+export const money = (n, currency = "EUR") =>
+  new Intl.NumberFormat(currency === "USD" ? "en-US" : "en-IE", { style: "currency", currency, minimumFractionDigits: 2 }).format(Number(n) || 0);
+
+/** PayPal's own checkout pages are the only place a payment redirect may go. */
+export function goToPayPal(url) {
+  const u = new URL(url);
+  if (u.protocol !== "https:" || !["www.paypal.com", "www.sandbox.paypal.com"].includes(u.hostname)) {
+    throw new Error("Unexpected payment address");
+  }
+  window.location.assign(u.toString());
+}

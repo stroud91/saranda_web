@@ -1,0 +1,165 @@
+{
+ "clips": [
+  {
+   "key": "blue-eye",
+   "title": "Syri i Kaltër — the Blue Eye",
+   "short": "Blue Eye",
+   "caption": "The spring's water runs glass-clear into the Bistricë.",
+   "place": "blue-eye",
+   "seconds": 3.5,
+   "author": "Ekki3",
+   "author_url": "https://commons.wikimedia.org/wiki/User:Ekki3",
+   "source": "https://commons.wikimedia.org/wiki/File:20260410_Blue_Eye.webm",
+   "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+   },
+   "changes": "Trimmed, colour graded, looped with a cross-fade, audio removed, re-encoded.",
+   "src": {
+    "mp4": "/media/video/blue-eye.mp4",
+    "poster": "/media/video/blue-eye.jpg",
+    "thumb": "/media/video/blue-eye.thumb.jpg"
+   }
+  },
+  {
+   "key": "blue-eye-spring",
+   "title": "Inside the Blue Eye",
+   "short": "The spring",
+   "caption": "Looking straight down into the 50 m deep karst spring.",
+   "place": "blue-eye",
+   "seconds": 5.3,
+   "author": "Ekki3",
+   "author_url": "https://commons.wikimedia.org/wiki/User:Ekki3",
+   "source": "https://commons.wikimedia.org/wiki/File:20260410_Blue_Eye.webm",
+   "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+   },
+   "changes": "Trimmed, colour graded, looped with a cross-fade, audio removed, re-encoded.",
+   "src": {
+    "mp4": "/media/video/blue-eye-spring.mp4",
+    "poster": "/media/video/blue-eye-spring.jpg",
+    "thumb": "/media/video/blue-eye-spring.thumb.jpg"
+   }
+  },
+  {
+   "key": "berat-castle",
+   "title": "Berat Castle from the air",
+   "short": "Berat Castle",
+   "caption": "Kalaja walls wrapping the old quarter — still lived in today.",
+   "place": "berat",
+   "seconds": 11.2,
+   "author": "Arianit",
+   "author_url": "https://commons.wikimedia.org/wiki/User:Arianit",
+   "source": "https://commons.wikimedia.org/wiki/File:Berat_01.webm",
+   "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+   },
+   "changes": "Trimmed, colour graded, looped with a cross-fade, audio removed, re-encoded.",
+   "src": {
+    "mp4": "/media/video/berat-castle.mp4",
+    "poster": "/media/video/berat-castle.jpg",
+    "thumb": "/media/video/berat-castle.thumb.jpg"
+   }
+  },
+  {
+   "key": "berat-town",
+   "title": "Berat, the town of a thousand windows",
+   "short": "Berat valley",
+   "caption": "The Osum valley opening up below the citadel.",
+   "place": "berat",
+   "seconds": 10.2,
+   "author": "Arianit",
+   "author_url": "https://commons.wikimedia.org/wiki/User:Arianit",
+   "source": "https://commons.wikimedia.org/wiki/File:Berat_01.webm",
+   "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+   },
+   "changes": "Trimmed, colour graded, looped with a cross-fade, audio removed, re-encoded.",
+   "src": {
+    "mp4": "/media/video/berat-town.mp4",
+    "poster": "/media/video/berat-town.jpg",
+    "thumb": "/media/video/berat-town.thumb.jpg"
+   }
+  },
+  {
+   "key": "berat-roofs",
+   "title": "Rooftops of Kalaja",
+   "short": "Kalaja roofs",
+   "caption": "Stone slab roofs inside the citadel walls.",
+   "place": "berat",
+   "seconds": 8.2,
+   "author": "Arianit",
+   "author_url": "https://commons.wikimedia.org/wiki/User:Arianit",
+   "source": "https://commons.wikimedia.org/wiki/File:Berat_50.webm",
+   "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+   },
+   "changes": "Trimmed, colour graded, looped with a cross-fade, audio removed, re-encoded.",
+   "src": {
+    "mp4": "/media/video/berat-roofs.mp4",
+    "poster": "/media/video/berat-roofs.jpg",
+    "thumb": "/media/video/berat-roofs.thumb.jpg"
+   }
+  },
+  {
+   "key": "tirana",
+   "title": "Skanderbeg Square, Tirana",
+   "short": "Tirana",
+   "caption": "The capital's square and the Palace of Culture.",
+   "place": "tirana",
+   "seconds": 9.2,
+   "author": "Leeturtle",
+   "author_url": "https://commons.wikimedia.org/wiki/User:Leeturtle",
+   "source": "https://commons.wikimedia.org/wiki/File:Tirana_Skenderbeg_Square_birds_eye_view.webm",
+   "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+   },
+   "changes": "Trimmed, colour graded, looped with a cross-fade, audio removed, re-encoded.",
+   "src": {
+    "mp4": "/media/video/tirana.mp4",
+    "poster": "/media/video/tirana.jpg",
+    "thumb": "/media/video/tirana.thumb.jpg"
+   }
+  }
+ ],
+ "reel": {
+  "chapters": [
+   {
+    "key": "blue-eye",
+    "start": 0.0
+   },
+   {
+    "key": "berat-castle",
+    "start": 3.1
+   },
+   {
+    "key": "tirana",
+    "start": 7.3
+   },
+   {
+    "key": "berat-town",
+    "start": 11.5
+   }
+  ],
+  "src": {
+   "mp4": "/media/video/reel.mp4",
+   "poster": "/media/video/reel.jpg"
+  },
+  "clips": [
+   "blue-eye",
+   "berat-castle",
+   "tirana",
+   "berat-town"
+  ],
+  "changes": "Montage of the edited clips above, joined with cross-fades.",
+  "license": {
+   "name": "CC BY-SA 4.0",
+   "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+  }
+ }
+}

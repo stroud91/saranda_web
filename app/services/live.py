@@ -139,6 +139,8 @@ def fx_rates():
 
 
 def eur_to_all():
+    if not current_app.config.get("LIVE_DATA_ENABLED"):
+        return FALLBACK_EUR_ALL
     return fx_rates()["rates"].get("ALL", FALLBACK_EUR_ALL)
 
 

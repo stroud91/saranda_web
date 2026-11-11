@@ -1,8 +1,9 @@
-"""Operator endpoints (Clerk admin token required)."""
+"""Host endpoints: a signed-in host account, or a Clerk admin token."""
 from flask import Blueprint, abort, g, jsonify, request
 
 from app.auth import require_admin
 from app.models import Booking, ContactMessage, Guide, GuideBooking, db
+from app.services import accounts, mailer
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -21,16 +22,33 @@ def list_bookings():
     q = Booking.query
     if args["status"]:
         q = q.filter_by(status=args["status"])
-    return jsonify([b.to_admin_dict() for b in q.order_by(Booking.start_date.desc()).limit(500)])
+    rows = q.order_by(Booking.created_at.desc()).limit(500).all()
+    stale = [b for b in rows if b.status == "pending" and not b.is_blocking]
+    for b in stale:  # holds that ran out without payment
+        b.status = "expired"
+    if stale:
+        db.session.commit()
+    return jsonify([b.to_admin_dict() for b in rows])
 
 
 @admin_routes.patch("/bookings/<reference>")
 @require_admin
 def update_booking(reference):
     booking = Booking.query.filter_by(reference=reference.upper()).first() or abort(404)
-    data = json_body({"status": Field(required=True, choices=["requested", "confirmed", "cancelled"])})
-    booking.status = data["status"]
+    data = json_body({"status": Field(choices=["requested", "confirmed", "cancelled"]),
+                      "paid": Field("bool")})
+    if not data["status"] and data["paid"] is None:
+        abort(400)
+    was_confirmed = booking.status == "confirmed"
+    if data["paid"]:  # e.g. the bank transfer arrived
+        booking.mark_paid()
+    elif data["status"]:
+        booking.status = data["status"]
+        if data["status"] == "cancelled" and booking.payment_status in ("unpaid", "awaiting_transfer"):
+            booking.payment_status = "cancelled"
     db.session.commit()
+    if booking.status == "confirmed" and not was_confirmed and booking.guest_email and mailer.configured():
+        mailer.deliver(mailer.booking_confirmed, booking.to_public_dict(), booking.guest_email, accounts.site_url())
     return jsonify(booking.to_admin_dict())
 
 

@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import TopBar from "./TopBar";
@@ -7,6 +7,29 @@ import Footer from "./Footer";
 import ConciergeFab from "../concierge/ConciergeFab";
 import { ToastHost } from "../ui";
 import { useUi } from "../../store/ui";
+import Interactions from "../fx/Interactions";
+import { useAuth } from "../../store/auth";
+
+const CommandPalette = lazy(() => import("../fx/CommandPalette"));
+
+/** Ctrl/⌘+K anywhere, or "/" when not typing, opens the search palette. */
+function usePaletteKeys() {
+  const openPalette = useUi((s) => s.openPalette);
+  useEffect(() => {
+    const onKey = (e) => {
+      const typing = e.target instanceof Element && e.target.closest("input, textarea, select, [contenteditable='true']");
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        openPalette();
+      } else if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        openPalette();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openPalette]);
+}
 
 function useTheme() {
   const theme = useUi((s) => s.theme);
@@ -17,16 +40,23 @@ function useTheme() {
   }, [theme]);
 }
 
-const FULLSCREEN = ["/map"];
+const FULLSCREEN = ["/map", "/atlas"];
+// Sign-in pages fill the screen with their own layout (no footer).
+const BARE = ["/signin", "/signup", "/forgot-password", "/reset-password", "/verify-email"];
 
 export default function AppShell({ children }) {
   const location = useLocation();
   useTheme();
+  usePaletteKeys();
+  const loadAuth = useAuth((s) => s.load);
+  useEffect(() => { loadAuth(); }, [loadAuth]);
+  const paletteOpen = useUi((s) => s.paletteOpen);
+  const closePalette = useUi((s) => s.closePalette);
   useEffect(() => {
     if (!location.hash) window.scrollTo({ top: 0, behavior: "instant" });
     else document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
   }, [location.pathname, location.hash]);
-  const full = FULLSCREEN.includes(location.pathname);
+  const full = FULLSCREEN.includes(location.pathname) || BARE.includes(location.pathname);
   return (
     <>
       <a href="#main" className="skip-link">Skip to content</a>
@@ -49,6 +79,12 @@ export default function AppShell({ children }) {
       <TabBar />
       <ConciergeFab />
       <ToastHost />
+      <Interactions />
+      {paletteOpen && (
+        <Suspense fallback={null}>
+          <CommandPalette open={paletteOpen} onClose={closePalette} />
+        </Suspense>
+      )}
     </>
   );
 }

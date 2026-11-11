@@ -52,7 +52,8 @@ export default function Footer() {
             Data: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a> ·{" "}
             <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a> ·{" "}
             Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors ·{" "}
-            Routing by <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a>
+            Routing by <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> ·{" "}
+            <Link to="/credits">Video credits & licences</Link>
           </span>
         </div>
       </div>

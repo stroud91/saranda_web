@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Compass, Map, CalendarRange, Route, Users, BedDouble, BookOpen, Moon, Sun, MonitorSmartphone } from "lucide-react";
+import { Box, Compass, Map, CalendarRange, Route, Users, BedDouble, BookOpen, Moon, Sun, MonitorSmartphone, Search, UserRound } from "lucide-react";
 import Logo from "../art/Logo";
 import { useUi } from "../../store/ui";
+import { useAuth } from "../../store/auth";
 
 export const NAV = [
   { to: "/explore", label: "Explore", icon: Compass },
   { to: "/plan", label: "Plan", icon: CalendarRange },
   { to: "/routes", label: "Routes", icon: Route },
   { to: "/map", label: "Map", icon: Map },
+  { to: "/atlas", label: "3D", icon: Box },
   { to: "/guides", label: "Guides", icon: Users },
   { to: "/stays", label: "Stays", icon: BedDouble },
   { to: "/essentials", label: "Essentials", icon: BookOpen },
@@ -19,7 +21,9 @@ const HERO_PAGES = ["/"];
 export default function TopBar() {
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const { theme, setTheme } = useUi();
+  const { theme, setTheme, openPalette } = useUi();
+  const user = useAuth((s) => s.user);
+  const accounts = useAuth((s) => s.available);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -47,6 +51,16 @@ export default function TopBar() {
           ))}
         </nav>
         <div className="topbar-actions">
+          <button className="icon-btn search-btn" onClick={openPalette} aria-label="Search (Ctrl K)" title="Search · Ctrl K">
+            <Search size={19} />
+          </button>
+          {accounts && (user ? (
+            <Link to="/account" className="account-chip" aria-label={`My account (${user.name || user.email})`} title="My account">
+              <span>{(user.name || user.email)[0].toUpperCase()}</span>
+            </Link>
+          ) : (
+            <Link to="/signin" className="icon-btn" aria-label="Sign in" title="Sign in"><UserRound size={19} /></Link>
+          ))}
           <button className="icon-btn" onClick={() => setTheme(next)} aria-label={`Theme: ${theme}. Switch to ${next}`} title={`Theme: ${theme}`}>
             <ThemeIcon size={19} />
           </button>

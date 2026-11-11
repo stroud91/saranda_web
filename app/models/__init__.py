@@ -1,5 +1,5 @@
 from .db import SCHEMA, db, environment
-from .user import User
+from .user import AuthToken, LoginThrottle, User, UserSession
 from .hotel import Hotel
 from .guide import Guide, GuideBooking
 from .tour import Tour
@@ -8,5 +8,5 @@ from .booking import Booking
 from .trip_plan import TripPlan
 from .contact_message import ContactMessage
 
-__all__ = ["db", "environment", "SCHEMA", "User", "Hotel", "Guide", "GuideBooking", "Tour",
+__all__ = ["db", "environment", "SCHEMA", "User", "UserSession", "AuthToken", "LoginThrottle", "Hotel", "Guide", "GuideBooking", "Tour",
            "CarRental", "Booking", "TripPlan", "ContactMessage"]

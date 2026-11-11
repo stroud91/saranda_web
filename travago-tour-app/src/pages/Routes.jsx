@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, Plus, X, Route as RouteIcon, Navigation, CalendarPlus, Clock, Gauge, Car, Ship, Sailboat, Info, MapPin } from "lucide-react";
+import { ArrowUpDown, Plane, Plus, X, Route as RouteIcon, Navigation, CalendarPlus, Clock, Gauge, Car, Ship, Sailboat, Info, MapPin } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { useDestinations } from "../lib/useDestinations";
 import { hm, hmRange, kmRange } from "../lib/format";
@@ -177,6 +177,7 @@ export default function Routes() {
                     <a href={result.directions_url} target="_blank" rel="noopener noreferrer" className="btn glass sm"><Navigation size={16} /> Google Maps</a>
                   )}
                   <button className="btn glass sm" onClick={addAsDay}><CalendarPlus size={16} /> Add as a trip day</button>
+                  <Link className="btn glass sm" to={`/atlas?from=${result.hops[0]}&to=${result.hops[result.hops.length - 1]}&fly=1`}><Plane size={16} /> Fly it in 3D</Link>
                 </div>
               </div>
               <div className="card pad"><Journey result={result} name={name} /></div>

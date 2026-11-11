@@ -78,6 +78,7 @@ class GuideBooking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reference = db.Column(db.String(20), unique=True, index=True, default=lambda: new_reference("G"))
     guide_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod("guides.id")), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod("users.id")), nullable=True, index=True)
     tour_date = db.Column(db.Date, nullable=False, index=True)
     duration = db.Column(db.String(10), nullable=False)
     days = db.Column(db.Integer, default=1)
