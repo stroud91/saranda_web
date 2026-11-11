@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from app.data import essentials
 from app.models import db
-from app.services import payments
+from app.services import accounts, checkout, mailer, payments
 
 meta_routes = Blueprint("meta", __name__)
 
@@ -24,7 +24,10 @@ def public_config():
     """Feature flags and public keys the frontend needs."""
     cfg = current_app.config
     return jsonify({
-        "payments": {"enabled": payments.enabled(), "publishable_key": cfg.get("STRIPE_PUBLISHABLE_KEY")},
+        "payments": {"enabled": payments.enabled(), "publishable_key": cfg.get("STRIPE_PUBLISHABLE_KEY"),
+                     "methods": checkout.methods(), "deposit_percent": checkout.deposit_percent()},
+        "auth": {"enabled": bool(cfg.get("ACCOUNTS_ENABLED", True)),
+                 "email": mailer.configured() and accounts.site_url() is not None},
         "concierge": {"enabled": cfg.get("CONCIERGE_ENABLED", True), "ai": bool(cfg.get("ANTHROPIC_API_KEY"))},
         "google_places": bool(cfg.get("GOOGLE_MAPS_API_KEY")),
         "road_geometry": bool(cfg.get("OSRM_URL")),

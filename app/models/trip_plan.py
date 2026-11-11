@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import secrets
 
-from .db import db, table_args, utcnow
+from .db import add_prefix_for_prod, db, table_args, utcnow
 
 
 def _hash_key(key):
@@ -23,15 +23,16 @@ class TripPlan(db.Model):
     share_id = db.Column(db.String(32), unique=True, nullable=False, index=True,
                          default=lambda: secrets.token_urlsafe(12))
     edit_key_hash = db.Column(db.String(64), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod("users.id")), nullable=True, index=True)
     title = db.Column(db.String(120), nullable=False)
     data = db.Column(db.JSON, nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     @classmethod
-    def create(cls, title, data):
+    def create(cls, title, data, user_id=None):
         key = secrets.token_urlsafe(24)
-        plan = cls(title=title, data=data, edit_key_hash=_hash_key(key))
+        plan = cls(title=title, data=data, edit_key_hash=_hash_key(key), user_id=user_id)
         return plan, key
 
     def check_key(self, key):

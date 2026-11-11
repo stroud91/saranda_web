@@ -58,5 +58,15 @@ def test_migrations_run_on_sqlite_in_production(tmp_path):
         r = subprocess.run(flask + cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
         assert r.returncode == 0, r.stderr[-2000:]
     con = sqlite3.connect(db)
-    assert con.execute("select version_num from alembic_version").fetchone()[0] == "c3f1a9d27e10"
+    assert con.execute("select version_num from alembic_version").fetchone()[0] == "e5a7c41b9d02"
     assert con.execute("select count(*) from guides").fetchone()[0] == 8
+    tables = {r[0] for r in con.execute("select name from sqlite_master where type='table'")}
+    assert {"user_sessions", "auth_tokens", "login_throttles"} <= tables
+    assert "payment_method" in {r[1] for r in con.execute("pragma table_info(bookings)")}
+    con.close()
+    # The accounts/payments migration must also roll back and re-apply cleanly.
+    for cmd in (["db", "downgrade", "c3f1a9d27e10"], ["db", "upgrade"]):
+        r = subprocess.run(flask + cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, r.stderr[-2000:]
+    con = sqlite3.connect(db)
+    assert con.execute("select version_num from alembic_version").fetchone()[0] == "e5a7c41b9d02"

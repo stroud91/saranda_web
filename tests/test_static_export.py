@@ -25,5 +25,7 @@ def test_static_config_has_no_server_features():
     static_api, _ = export_static.build()
     cfg = static_api["responses"]["/meta/config"]
     assert cfg["mode"] == "static"
-    assert cfg["payments"] == {"enabled": False, "publishable_key": None}
+    assert cfg["payments"]["enabled"] is False and cfg["payments"]["publishable_key"] is None
+    assert [m["id"] for m in cfg["payments"]["methods"]] == ["request"]
+    assert cfg["auth"] == {"enabled": False, "email": False}
     assert cfg["concierge"]["ai"] is False

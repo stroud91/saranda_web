@@ -21,6 +21,9 @@ ALLOWED_HOSTS = {
     "open.er-api.com",
     "places.googleapis.com",
     "router.project-osrm.org",
+    "api.pwnedpasswords.com",        # breached-password check (k-anonymity range API)
+    "api-m.paypal.com",              # PayPal REST API (live)
+    "api-m.sandbox.paypal.com",      # PayPal REST API (sandbox)
 }
 MAX_BYTES = 2_000_000
 TIMEOUT = (3.05, 8)
@@ -61,6 +64,49 @@ def request_json(method, url, *, params=None, json=None, headers=None, timeout=T
         raise UpstreamError(f"{urlparse(url).hostname} unreachable: {exc.__class__.__name__}") from None
     except ValueError:
         raise UpstreamError("Upstream returned invalid JSON") from None
+
+
+def _read(resp):
+    body = resp.raw.read(MAX_BYTES + 1, decode_content=True)
+    if len(body) > MAX_BYTES:
+        raise UpstreamError("Upstream response too large")
+    return body
+
+
+def request_text(method, url, *, headers=None, timeout=TIMEOUT):
+    """Like ``request_json`` for plain-text APIs."""
+    _check_url(url)
+    hdrs = {"User-Agent": USER_AGENT}
+    hdrs.update(headers or {})
+    try:
+        with requests.request(method, url, headers=hdrs, timeout=timeout, stream=True, allow_redirects=False) as resp:
+            if resp.status_code >= 400:
+                raise UpstreamError(f"{urlparse(url).hostname} returned {resp.status_code}")
+            return _read(resp).decode("utf-8", "replace")
+    except requests.RequestException as exc:
+        raise UpstreamError(f"{urlparse(url).hostname} unreachable: {exc.__class__.__name__}") from None
+
+
+def call_api(method, url, *, json=None, data=None, headers=None, auth=None, timeout=TIMEOUT):
+    """For transactional APIs (payments): returns ``(status, body)`` without
+    raising on 4xx, because the error body says what went wrong. Same HTTPS +
+    allowlist + size + no-redirect guards as everything else."""
+    import json as _json
+
+    _check_url(url)
+    hdrs = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    hdrs.update(headers or {})
+    try:
+        with requests.request(method, url, json=json, data=data, headers=hdrs, auth=auth, timeout=timeout,
+                              stream=True, allow_redirects=False) as resp:
+            raw = _read(resp)
+            try:
+                body = _json.loads(raw) if raw else {}
+            except ValueError:
+                body = {}
+            return resp.status_code, body if isinstance(body, dict) else {}
+    except requests.RequestException as exc:
+        raise UpstreamError(f"{urlparse(url).hostname} unreachable: {exc.__class__.__name__}") from None
 
 
 class TTLCache:

@@ -7,7 +7,7 @@ from app.data import DESTINATION_INDEX
 from app.extensions import limiter
 from app.models import TripPlan, db
 from app.services import budget as budget_svc
-from app.services import ics, live, timeline
+from app.services import accounts, ics, live, timeline
 from app.validation import Field, ValidationError, json_body, validate
 
 planner_routes = Blueprint("planner", __name__)
@@ -114,7 +114,7 @@ def _trip_payload():
 def create_trip():
     """Save a trip. Returns a public share id and a private edit key (shown once)."""
     title, data = _trip_payload()
-    plan, key = TripPlan.create(title, data)
+    plan, key = TripPlan.create(title, data, user_id=getattr(accounts.current_user(), "id", None))
     db.session.add(plan)
     db.session.commit()
     return jsonify({**plan.to_dict(), "edit_key": key}), 201
@@ -129,6 +129,14 @@ def _get_plan(share_id):
     return plan
 
 
+def _may_edit(plan):
+    """The secret edit key, or being signed in as the account that saved the trip."""
+    if plan.check_key(request.headers.get("X-Edit-Key", "")):
+        return True
+    user = accounts.current_user()
+    return bool(user and plan.user_id and plan.user_id == user.id)
+
+
 @planner_routes.get("/trips/<share_id>")
 def get_trip(share_id):
     return jsonify(_get_plan(share_id).to_dict())
@@ -138,7 +146,7 @@ def get_trip(share_id):
 @limiter.limit("120 per hour")
 def update_trip(share_id):
     plan = _get_plan(share_id)
-    if not plan.check_key(request.headers.get("X-Edit-Key", "")):
+    if not _may_edit(plan):
         return jsonify({"error": "Edit key required to change this trip"}), 403
     title, data = _trip_payload()
     plan.title, plan.data = title, data
@@ -149,7 +157,7 @@ def update_trip(share_id):
 @planner_routes.delete("/trips/<share_id>")
 def delete_trip(share_id):
     plan = _get_plan(share_id)
-    if not plan.check_key(request.headers.get("X-Edit-Key", "")):
+    if not _may_edit(plan):
         return jsonify({"error": "Edit key required to delete this trip"}), 403
     db.session.delete(plan)
     db.session.commit()

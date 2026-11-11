@@ -48,7 +48,43 @@ class Config:
     ADMIN_USER_IDS = _list("ADMIN_USER_IDS")
     ADMIN_EMAILS = [e.lower() for e in _list("ADMIN_EMAILS")]
 
+    # Guest accounts (the site's own email + password login)
+    ACCOUNTS_ENABLED = _bool("ACCOUNTS_ENABLED", True)
+    # Public address of the site, used for links in e-mails. Required in production
+    # for verification / reset e-mails (never taken from the request's Host header).
+    PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "")
+    PASSWORD_HASH_METHOD = os.environ.get("PASSWORD_HASH_METHOD", "scrypt:32768:8:3")
+    # Reject passwords found in known breaches (Have I Been Pwned range API; only
+    # the first 5 characters of a SHA-1 hash leave the server).
+    PASSWORD_BREACH_CHECK = _bool("PASSWORD_BREACH_CHECK", True)
+    # Outgoing mail (e.g. the mailbox included with the hosting). Empty = no e-mails.
+    SMTP_HOST = os.environ.get("SMTP_HOST", "")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
+    SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "")  # ssl | starttls (default: by port)
+    SMTP_USER = os.environ.get("SMTP_USER", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    SMTP_FROM = os.environ.get("SMTP_FROM", "")
+
     # Payments
+    # Share of the stay paid when booking (the rest is paid on arrival). 100 = pay in full.
+    PAYMENT_DEPOSIT_PERCENT = int(os.environ.get("PAYMENT_DEPOSIT_PERCENT", "100"))
+    # PayPal (also takes cards without a PayPal account). Works for accounts in Albania.
+    PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_CLIENT_ID", "")
+    PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
+    PAYPAL_ENV = os.environ.get("PAYPAL_ENV", "sandbox")  # sandbox | live
+    PAYPAL_WEBHOOK_ID = os.environ.get("PAYPAL_WEBHOOK_ID", "")
+    PAYPAL_CURRENCY = os.environ.get("PAYPAL_CURRENCY", "EUR").upper()  # EUR or USD
+    PAYPAL_FX_MARGIN_PERCENT = float(os.environ.get("PAYPAL_FX_MARGIN_PERCENT", "0"))
+    # Optional fixed EUR→USD rate for PAYPAL_CURRENCY=USD (default: the day's live rate)
+    PAYPAL_EUR_USD_RATE = float(os.environ.get("PAYPAL_EUR_USD_RATE", "0")) or None
+    # Bank transfer (SEPA / SWIFT) to the business account.
+    BANK_IBAN = os.environ.get("BANK_IBAN", "")
+    BANK_BIC = os.environ.get("BANK_BIC", "")
+    BANK_BENEFICIARY = os.environ.get("BANK_BENEFICIARY", "")
+    BANK_NAME = os.environ.get("BANK_NAME", "")
+    BANK_HOLD_HOURS = int(os.environ.get("BANK_HOLD_HOURS", "48"))
+    BANK_CLAIM_HOLD_DAYS = int(os.environ.get("BANK_CLAIM_HOLD_DAYS", "5"))
+    # Stripe (not available to businesses registered in Albania; kept for EU/US entities)
     STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
     STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
     STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
@@ -89,3 +125,18 @@ class TestConfig(Config):
     STRIPE_SECRET_KEY = None
     GOOGLE_MAPS_API_KEY = None
     ADMIN_USER_IDS = ["user_admin"]
+    ADMIN_EMAILS = ["host@megrooms.test"]
+    PASSWORD_HASH_METHOD = "scrypt:1024:8:1"  # fast hashes for tests only
+    PASSWORD_BREACH_CHECK = False
+    PUBLIC_BASE_URL = "https://megrooms.test"
+    SMTP_HOST = ""
+    PAYMENT_DEPOSIT_PERCENT = 100
+    PAYPAL_CLIENT_ID = ""
+    PAYPAL_CLIENT_SECRET = ""
+    PAYPAL_WEBHOOK_ID = ""
+    PAYPAL_CURRENCY = "EUR"
+    PAYPAL_FX_MARGIN_PERCENT = 0.0
+    PAYPAL_EUR_USD_RATE = None
+    BANK_IBAN = ""
+    BANK_BIC = ""
+    BANK_BENEFICIARY = ""

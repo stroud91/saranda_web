@@ -78,7 +78,11 @@ def build():
         responses = {p: get(p) for p in paths}
         # Static hosting has no server-side configuration.
         responses["/meta/config"].update({
-            "payments": {"enabled": False, "publishable_key": None},
+            "payments": {"enabled": False, "publishable_key": None, "deposit_percent": 100,
+                         "methods": [{"id": "request", "label": "Request to book", "currency": "EUR",
+                                      "note": "The host confirms your dates; you pay on arrival."}]},
+            # Accounts and online payments need the Python app (they use a database and secret keys).
+            "auth": {"enabled": False, "email": False},
             "concierge": {"enabled": True, "ai": False},
             "google_places": False,
             "mode": "static",
