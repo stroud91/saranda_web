@@ -22,8 +22,9 @@ BRAND = "Meg'Rooms · Saranda Companion"
 
 
 def configured():
+    """Can e-mail go out? In development, messages are printed to the server log instead."""
     cfg = current_app.config
-    return bool(cfg.get("TESTING") or cfg.get("SMTP_HOST"))
+    return bool(cfg.get("TESTING") or cfg.get("SMTP_HOST") or not cfg.get("IS_PRODUCTION"))
 
 
 def _clean(value, limit=200):
@@ -121,7 +122,7 @@ def _stay_lines(b):
 def booking_for_host(summary, guest, event):
     """Tell the host something needs their attention. ``summary`` is Booking.to_public_dict()."""
     to = current_app.config.get("CONTACT_EMAIL")
-    if not to or not current_app.config.get("SMTP_HOST") and not current_app.config.get("TESTING"):
+    if not to or not configured():
         return False
     headline = {"requested": "New booking request", "transfer": "Guest says a bank transfer was sent",
                 "paid": "Booking paid", "pending": "New booking awaiting payment"}.get(event, "Booking update")

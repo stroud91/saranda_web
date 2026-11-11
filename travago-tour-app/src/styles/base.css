@@ -54,6 +54,8 @@ p { margin: 0 0 0.8em; }
 .small { font-size: 0.875rem; }
 .tiny { font-size: 0.78rem; }
 .center { text-align: center; }
+/* "center" is also a Sheet variant (a centred dialog); its content stays left-aligned. */
+.sheet.center { text-align: left; }
 .mt-0 { margin-top: 0; } .mb-0 { margin-bottom: 0; }
 .eyebrow { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: inline-flex; gap: 8px; align-items: center; }
 .lead { font-size: 1.12rem; color: var(--text-2); max-width: 62ch; }

@@ -1,21 +1,32 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, Clock, XCircle, CalendarDays, Users, Compass } from "lucide-react";
+import { Check, Clock, XCircle, Compass, CreditCard, UserRound } from "lucide-react";
 import { api, post } from "../lib/api";
-import { euro, fmtDate } from "../lib/format";
-import { ErrorState, Skeleton } from "../components/ui";
+import { goToPayPal, money } from "../lib/format";
+import { Alert, ErrorState, Skeleton } from "../components/ui";
+import TicketCard from "../components/account/TicketCard";
+import BankTransferPanel from "../components/account/BankTransferPanel";
+import { useAuth } from "../store/auth";
 
 const LABEL = {
-  confirmed: { icon: Check, title: "You're booked!", tone: "ok", text: "Your stay is confirmed. A receipt is on its way to your inbox." },
+  confirmed: { icon: Check, title: "You're booked!", tone: "ok", text: "Your stay is confirmed. We look forward to welcoming you in Sarandë." },
   requested: { icon: Clock, title: "Request received", tone: "sea", text: "The host will confirm availability by email shortly." },
   pending: { icon: Clock, title: "Awaiting payment", tone: "sun", text: "We're holding these dates for 30 minutes while payment completes." },
+  transfer: { icon: Clock, title: "Almost there — send the transfer", tone: "sun", text: "Your dates are held while the bank transfer is on its way." },
+  processing: { icon: Clock, title: "Payment in review", tone: "sun", text: "PayPal is checking the payment. We're holding your dates and will confirm by email." },
   expired: { icon: XCircle, title: "Hold expired", tone: "danger", text: "The payment wasn't completed in time, so the dates were released." },
   cancelled: { icon: XCircle, title: "Cancelled", tone: "danger", text: "This booking was cancelled." },
 };
 
-export function StatusCard({ status, children, reference }) {
-  const s = LABEL[status] || LABEL.requested;
+const labelFor = (b) => {
+  if (b.status === "pending" && b.payment_status === "processing") return LABEL.processing;
+  if (b.status === "pending" && b.payment_method === "bank") return LABEL.transfer;
+  return LABEL[b.status] || LABEL.requested;
+};
+
+export function StatusCard({ status, label, children, reference }) {
+  const s = label || LABEL[status] || LABEL.requested;
   return (
     <motion.div className={`status-card tone-${s.tone}`} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="success-icon"><s.icon size={30} /></div>
@@ -30,46 +41,109 @@ export function StatusCard({ status, children, reference }) {
 export default function BookingStatus() {
   const { reference } = useParams();
   const [params] = useSearchParams();
+  const user = useAuth((s) => s.user);
+  const authAvailable = useAuth((s) => s.available);
   const [b, setB] = useState(null);
+  const [payment, setPayment] = useState(null);
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const loadPayment = useCallback(async (booking) => {
+    if (booking.status !== "pending" || booking.payment_method !== "bank") return setPayment(null);
+    try {
+      setPayment(await api(`/bookings/${reference}/payment`, { cacheable: false }));
+    } catch {
+      setPayment(null);
+    }
+  }, [reference]);
 
   useEffect(() => {
     let alive = true;
     let tries = 0;
     const fromStripe = params.has("payment_intent");
+    const paypal = params.get("paypal");
+    // Clear payment parameters from the address bar so a refresh or shared link doesn't repeat them.
+    if (fromStripe || paypal) window.history.replaceState(null, "", `/booking/${reference}`);
     const load = async () => {
       try {
         let res = await api(`/bookings/${reference}`, { cacheable: false });
-        if (res.status === "pending" && (fromStripe || tries > 0)) res = await post(`/bookings/${reference}/sync`, {});
+        if (paypal === "return" && res.payment_method === "paypal" && ["pending", "expired"].includes(res.status) && tries === 0) {
+          // Back from PayPal: our server captures the payment and confirms — never the browser.
+          res = await post(`/bookings/${reference}/paypal/capture`, {});
+          if (res.payment_message) setNotice({ kind: "warn", text: res.payment_message });
+        } else if (res.status === "pending" && res.payment_method === "card" && (fromStripe || tries > 0)) {
+          res = await post(`/bookings/${reference}/sync`, {});
+        }
         if (!alive) return;
+        if (paypal === "cancel" && res.status === "pending") setNotice({ kind: "info", text: "You left PayPal before paying — nothing was charged. Your dates are still held for a little while." });
         setB(res);
+        loadPayment(res);
         if (res.status === "pending" && fromStripe && tries++ < 5) setTimeout(load, 2500);
+        else tries++;
       } catch (e) {
-        if (alive) setError(e);
+        if (!alive) return;
+        // A failed capture still leaves a booking to show.
+        if (paypal === "return" && e.status && e.status !== 404) {
+          setNotice({ kind: "error", text: e.message });
+          api(`/bookings/${reference}`, { cacheable: false }).then((res) => alive && setB(res)).catch(() => alive && setError(e));
+        } else setError(e);
       }
     };
     load();
     return () => { alive = false; };
-  }, [reference, params]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reference]);
+
+  const payWithPayPal = async () => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const res = await post(`/bookings/${reference}/paypal/start`, {});
+      goToPayPal(res.approve_url);
+    } catch (e) {
+      setNotice({ kind: "error", text: e.message });
+      setBusy(false);
+    }
+  };
 
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
   if (!b) return <div className="page container"><Skeleton h={360} r={26} /></div>;
+  const label = labelFor(b);
+  const canPayPal = b.status === "pending" && b.payment_method === "paypal" && b.payment_status !== "processing";
+  const chargedOther = b.charge_currency && b.charge_currency !== "EUR" && b.charge_amount;
   return (
-    <div className="page container narrow">
-      <StatusCard status={b.status} reference={b.reference}>
-        <div className="status-facts">
-          <span><b>{b.hotel_name}</b></span>
-          <span><CalendarDays size={15} /> {fmtDate(b.start_date)} → {fmtDate(b.end_date)} · {b.nights} night{b.nights === 1 ? "" : "s"}</span>
-          <span><Users size={15} /> {b.guest_count} guest{b.guest_count === 1 ? "" : "s"}</span>
-          <span>Total <b>{euro(b.total_cost)}</b> · {b.payment_status === "paid" ? "Paid" : "Not yet paid"}</span>
+    <div className="page container narrow booking-status">
+      <StatusCard label={label}>
+        {notice && <Alert kind={notice.kind}>{notice.text}</Alert>}
+      </StatusCard>
+      <TicketCard booking={b}>
+        <div className="row between wrap gap-sm small">
+          <span>
+            {b.payment_status === "paid" ? <><Check size={14} /> Paid {money(b.amount_due)}</> : b.status === "pending" ? <>To pay now: <b>{money(b.amount_due)}</b></> : b.status === "requested" ? "Pay on arrival" : null}
+            {chargedOther && b.status !== "cancelled" && <span className="muted"> · charged as {money(b.charge_amount, b.charge_currency)}</span>}
+          </span>
           {b.guest_email_masked && <span className="tiny muted">Confirmation to {b.guest_email_masked}</span>}
         </div>
-        <p className="tiny muted">Save this reference — you'll need it if you contact us.</p>
-        <div className="row" style={{ justifyContent: "center" }}>
-          <Link to="/plan" className="btn primary"><Compass size={16} /> Plan your days</Link>
-          <Link to="/stays" className="btn">Back to stays</Link>
+      </TicketCard>
+
+      {canPayPal && (
+        <div className="card pad stack">
+          <h3 className="mb-0"><CreditCard size={18} /> Finish paying</h3>
+          <p className="small muted">You'll pay on PayPal's own page — with your PayPal balance, or by card without an account — and come straight back here.</p>
+          <button type="button" className="btn primary lg" onClick={payWithPayPal} disabled={busy}>{busy ? <span className="spinner" /> : null} Continue to PayPal · {money(b.charge_amount || b.amount_due, b.charge_currency || "EUR")}</button>
         </div>
-      </StatusCard>
+      )}
+      {payment?.open && payment.bank && <BankTransferPanel reference={reference} payment={payment} onUpdate={setB} />}
+
+      <p className="tiny muted center">Save your reference <b>{b.reference}</b> — you'll need it if you contact us.</p>
+      <div className="row" style={{ justifyContent: "center" }}>
+        <Link to="/plan" className="btn primary"><Compass size={16} /> Plan your days</Link>
+        {authAvailable && (user
+          ? <Link to="/account" className="btn"><UserRound size={16} /> My bookings</Link>
+          : <Link to={`/signup?next=${encodeURIComponent(`/booking/${reference}`)}`} className="btn"><UserRound size={16} /> Create an account to keep it</Link>)}
+        <Link to="/stays" className="btn">Back to stays</Link>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass } from "lucide-react";
+import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { post } from "../lib/api";
-import { euro, todayIso, addDays, fmtDate } from "../lib/format";
+import { euro, todayIso, addDays, fmtDate, goToPayPal, money } from "../lib/format";
+import { useAuth } from "../store/auth";
 import { useConfig, whatsappUrl } from "../lib/useConfig";
 import SceneArt from "../components/art/SceneArt";
 import Handoff from "../components/ui/Handoff";
@@ -29,6 +30,20 @@ export default function StayDetail() {
   const [form, setForm] = useState({ guest_name: "", guest_email: "", guest_phone: "", notes: "", website: "" });
   const [errors, setErrors] = useState({});
   const [state, setState] = useState({ busy: false, error: "", pay: null });
+  const user = useAuth((s) => s.user);
+  // Ways to pay come from the server; older configs only say whether cards are on.
+  const methods = useMemo(() => cfg.payments?.methods?.length ? cfg.payments.methods
+    : [cfg.payments?.enabled ? { id: "card", label: "Card" } : { id: "request", label: "Request to book" }], [cfg]);
+  const [method, setMethod] = useState(null);
+  const chosen = methods.find((m) => m.id === method) || methods[0];
+  const payable = chosen.id !== "request";
+  const deposit = cfg.payments?.deposit_percent || 100;
+
+  // Signed-in guests don't retype their details.
+  useEffect(() => {
+    if (!user || !open) return;
+    setForm((f) => ({ ...f, guest_name: f.guest_name || user.name || "", guest_email: f.guest_email || user.email || "", guest_phone: f.guest_phone || user.phone || "" }));
+  }, [user, open]);
 
   // Until the guest picks dates, default to the first free window of the minimum stay (3+ nights).
   const [touched, setTouched] = useState(false);
@@ -70,11 +85,13 @@ export default function StayDetail() {
     setState({ busy: true, error: "", pay: null });
     setErrors({});
     try {
-      const res = await post("/bookings/", { ...quoteBody, ...form });
+      const res = await post("/bookings/", { ...quoteBody, ...form, ...(cfg.payments?.methods ? { payment_method: chosen.id } : {}) });
       if (res.handoff) {
         setState({ busy: false, error: "", pay: null, handoff: res.handoff });
+      } else if (res.payment?.approve_url) {
+        goToPayPal(res.payment.approve_url); // pay on PayPal's page, then come back to /booking/<reference>
       } else if (res.payment_required && cfg.payments?.publishable_key) {
-        setState({ busy: false, error: "", pay: { secret: res.clientSecret, ref: res.booking.reference, amount: res.booking.total_cost } });
+        setState({ busy: false, error: "", pay: { secret: res.clientSecret, ref: res.booking.reference, amount: res.booking.amount_due ?? res.booking.total_cost } });
       } else {
         navigate(`/booking/${res.booking.reference}`);
       }
@@ -145,7 +162,7 @@ export default function StayDetail() {
               {!quote.available && <Alert kind="warn">Some of these nights are already booked — try other dates.</Alert>}
             </div>
           )}
-          <button className="btn primary lg block" disabled={!quote || !quote.available} onClick={() => setOpen(true)}><CalendarDays size={18} /> {cfg.payments?.enabled ? "Reserve" : "Request to book"}</button>
+          <button className="btn primary lg block" disabled={!quote || !quote.available} onClick={() => setOpen(true)}><CalendarDays size={18} /> {methods.some((m) => m.id !== "request") ? "Reserve" : "Request to book"}</button>
           {wa && <a className="btn whatsapp block" href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} /> Ask on WhatsApp</a>}
           <p className="tiny muted center"><ShieldCheck size={12} /> Price calculated by our server — no hidden fees.</p>
         </aside>
@@ -168,9 +185,33 @@ export default function StayDetail() {
             <Field label="Phone / WhatsApp (optional)" error={errors.guest_phone}><input className="input" type="tel" value={form.guest_phone} onChange={up("guest_phone")} autoComplete="tel" maxLength={40} /></Field>
             <Field label="Arrival time, requests… (optional)" error={errors.notes}><textarea className="textarea" value={form.notes} onChange={up("notes")} maxLength={1500} /></Field>
             <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
-            {state.error && <Alert kind="error">{state.error}</Alert>}
-            <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : null} {cfg.payments?.enabled ? "Continue to payment" : "Send booking request"}</button>
-            {!cfg.payments?.enabled && <p className="tiny muted">We'll confirm availability by email within a few hours. Payment is arranged directly with the host.</p>}
+            {payable && (
+              <fieldset className="pay-methods">
+                <legend className="label">How would you like to pay?</legend>
+                {methods.map((m) => {
+                  const Icon = { paypal: Wallet, card: CreditCard, bank: Landmark, request: Clock }[m.id] || CreditCard;
+                  return (
+                    <label key={m.id} className={`pay-method ${chosen.id === m.id ? "on" : ""}`}>
+                      <input type="radio" name="payment_method" value={m.id} checked={chosen.id === m.id} onChange={() => setMethod(m.id)} />
+                      <Icon size={20} aria-hidden="true" />
+                      <span><b>{m.label}</b><span className="tiny muted">{m.note}</span></span>
+                    </label>
+                  );
+                })}
+                {quote && (
+                  <p className="tiny muted pay-due">
+                    {deposit < 100
+                      ? <>Pay a {deposit}% deposit now (<b>{money(quote.total * deposit / 100)}</b>); the rest ({money(quote.total * (100 - deposit) / 100)}) on arrival.</>
+                      : <>You pay <b>{money(quote.total)}</b> now.</>}
+                    {chosen.id === "paypal" && chosen.currency === "USD" && " PayPal charges the US-dollar equivalent at today's rate."}
+                  </p>
+                )}
+              </fieldset>
+            )}
+            {errors.payment_method && <Alert kind="warn">{errors.payment_method}</Alert>}
+            {state.error && !errors.payment_method && <Alert kind="error">{state.error}</Alert>}
+            <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : null} {{ paypal: "Continue to PayPal", card: "Continue to payment", bank: "Get bank details", request: "Send booking request" }[chosen.id]}</button>
+            {!payable && <p className="tiny muted">We'll confirm availability by email within a few hours. Payment is arranged directly with the host.</p>}
           </form>
         )}
       </Sheet>

@@ -12,6 +12,7 @@ import Handoff from "../components/ui/Handoff";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, CategoryIcon, ErrorState, Field, Segmented, Skeleton, Stepper } from "../components/ui";
 import { useTrip } from "../store/trip";
+import { useAuth } from "../store/auth";
 
 function RequestForm({ guide }) {
   const trip = useTrip();
@@ -27,6 +28,10 @@ function RequestForm({ guide }) {
   const [language, setLanguage] = useState(guide.languages[0]);
   const [useTripStops, setUseTripStops] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", pickup: "", message: "", website: "" });
+  const user = useAuth((s) => s.user);
+  useEffect(() => {  // signed-in guests don't retype their details
+    if (user) setForm((f) => ({ ...f, name: f.name || user.name || "", email: f.email || user.email || "", phone: f.phone || user.phone || "" }));
+  }, [user]);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ busy: false, error: "", done: null });
 

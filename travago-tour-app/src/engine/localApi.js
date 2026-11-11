@@ -309,6 +309,8 @@ export function createLocalApi(staticApi, { contactEmail, whatsapp, liveData = t
   const ROUTES = [
     ["GET", /^\/meta\/health$/, () => ({ status: "ok", database: false, mode: "static" })],
     ["GET", /^\/meta\/config$/, () => config],
+    // Accounts and online payments need the Python app; here everyone is a visitor.
+    ["GET", /^\/auth\/me$/, () => ({ user: null, email_delivery: false })],
     ["GET", /^\/destinations$/, (m, q) => filterDestinations(q)],
     ["GET", /^\/destinations\/([a-z0-9-]+)\/place$/, () => ({ configured: false })],
     ["GET", /^\/destinations\/([a-z0-9-]+)\/links$/, (m) => responses[`/destinations/${m[1]}/links`] || Promise.reject(notFound("Destination not found"))],

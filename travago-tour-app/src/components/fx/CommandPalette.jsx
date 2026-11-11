@@ -22,6 +22,7 @@ const PAGES = [
   { id: "p-explore", label: "Explore destinations", hint: "Beaches, castles, villages", icon: Compass, to: "/explore", words: "places beaches" },
   { id: "p-itins", label: "Ready-made itineraries", hint: "7, 10 and 14 days", icon: CalendarRange, to: "/itineraries", words: "week ideas" },
   { id: "p-films", label: "Films & video credits", hint: "Clips and licences", icon: Clapperboard, to: "/credits", words: "video credits licence" },
+  { id: "p-account", label: "My account", hint: "Bookings, trips and security", icon: Users, to: "/account", words: "sign in login account profile password bookings" },
   { id: "p-contact", label: "Contact us", hint: "WhatsApp or email", icon: MessageCircle, to: "/contact", words: "email whatsapp help" },
 ];
 
