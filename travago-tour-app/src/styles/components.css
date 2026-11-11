@@ -323,3 +323,4 @@
 .cmdk-empty { padding: 18px; cursor: default !important; }
 .cmdk-foot { display: flex; gap: 14px; justify-content: flex-end; padding: 8px 14px; border-top: 1px solid var(--line); }
 @media (max-width: 640px) { .cmdk-foot { display: none; } .cmdk-backdrop { padding-top: 70px; } }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1250; pointer-events: none; }

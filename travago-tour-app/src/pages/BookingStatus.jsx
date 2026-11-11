@@ -8,6 +8,7 @@ import { Alert, ErrorState, Skeleton } from "../components/ui";
 import TicketCard from "../components/account/TicketCard";
 import BankTransferPanel from "../components/account/BankTransferPanel";
 import { useAuth } from "../store/auth";
+import Confetti from "../components/fx/Confetti";
 
 const LABEL = {
   confirmed: { icon: Check, title: "You're booked!", tone: "ok", text: "Your stay is confirmed. We look forward to welcoming you in Sarandë." },
@@ -48,6 +49,20 @@ export default function BookingStatus() {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
+
+  // Celebrate a confirmed stay once per browser session, not on every revisit.
+  useEffect(() => {
+    if (b?.status !== "confirmed") return;
+    const key = `celebrated:${b.reference}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      /* private mode: celebrate anyway */
+    }
+    setCelebrate(true);
+  }, [b?.status, b?.reference]);
 
   const loadPayment = useCallback(async (booking) => {
     if (booking.status !== "pending" || booking.payment_method !== "bank") return setPayment(null);
@@ -114,6 +129,7 @@ export default function BookingStatus() {
   const chargedOther = b.charge_currency && b.charge_currency !== "EUR" && b.charge_amount;
   return (
     <div className="page container narrow booking-status">
+      <Confetti fire={celebrate} />
       <StatusCard label={label}>
         {notice && <Alert kind={notice.kind}>{notice.text}</Alert>}
       </StatusCard>

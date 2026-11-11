@@ -70,3 +70,28 @@ def test_migrations_run_on_sqlite_in_production(tmp_path):
         assert r.returncode == 0, r.stderr[-2000:]
     con = sqlite3.connect(db)
     assert con.execute("select version_num from alembic_version").fetchone()[0] == "e5a7c41b9d02"
+
+
+def test_seeding_never_silently_deletes_bookings(app, client):
+    """`flask seed all` used to wipe every booking in production. It must refuse on a
+    database that already has data, and ask before deleting bookings on a reset."""
+    from app.models import Booking
+
+    stay = client.get("/api/hotels/").get_json()[0]
+    r = client.post("/api/bookings/", json={"hotel_id": stay["id"], "start_date": "2031-06-10", "end_date": "2031-06-13",
+                                           "guest_count": 2, "guest_name": "Ana", "guest_email": "ana@example.com"})
+    assert r.status_code == 201
+    runner = app.test_cli_runner()
+    refused = runner.invoke(args=["seed", "all"])
+    assert refused.exit_code != 0 and "already has data" in refused.output
+    declined = runner.invoke(args=["seed", "all", "--reset"], input="n\n")
+    assert declined.exit_code != 0 and "permanently deletes 1 booking" in declined.output
+    with app.app_context():
+        assert Booking.query.count() == 1
+    assert runner.invoke(args=["seed", "undo"], input="n\n").exit_code != 0
+    with app.app_context():
+        assert Booking.query.count() == 1
+    wiped = runner.invoke(args=["seed", "all", "--reset", "--yes"])
+    assert wiped.exit_code == 0, wiped.output
+    with app.app_context():
+        assert Booking.query.count() == 0

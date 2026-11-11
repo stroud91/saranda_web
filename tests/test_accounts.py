@@ -275,6 +275,28 @@ def test_cross_site_writes_are_blocked(client):
     assert same.status_code == 200
 
 
+def test_same_site_requests_work_behind_a_tls_proxy(client, app):
+    """The app may see http while the browser used https; the host is what counts."""
+    register(client)
+    ok = client.post("/api/auth/logout", json={}, headers={"Origin": "https://localhost"})
+    assert ok.status_code == 200
+    register(client, email="ben@example.com")
+    configured = client.post("/api/auth/logout", json={}, headers={"Origin": "https://megrooms.test"})
+    assert configured.status_code == 200                              # PUBLIC_BASE_URL is trusted
+    lookalike = client.post("/api/auth/login", json={"email": "ben@example.com", "password": GOOD},
+                            headers={"Origin": "https://localhost.evil.example"})
+    assert lookalike.status_code == 403
+
+
+def test_accounts_can_be_switched_off_completely(client, app):
+    app.config["ACCOUNTS_ENABLED"] = False
+    assert client.get("/api/meta/config").get_json()["auth"]["enabled"] is False
+    assert client.get("/api/auth/me").get_json()["user"] is None
+    assert register(client).status_code == 404
+    assert client.post("/api/auth/login", json={"email": "ana@example.com", "password": GOOD}).status_code == 404
+    assert client.get("/api/account/overview").status_code == 404
+
+
 def test_form_posts_cannot_log_in(client):
     r = client.post("/api/auth/login", data={"email": "ana@example.com", "password": GOOD})
     assert r.status_code == 415

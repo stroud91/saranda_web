@@ -61,7 +61,7 @@ export default function TicketCard({ booking: b, to, children }) {
     </>
   );
   return (
-    <div className={`ticket tone-${tone}`}>
+    <div className={`ticket tone-${tone} ${to ? "tilt" : ""}`}>
       {to ? <Link to={to} className="ticket-body" aria-label={`Booking ${b.reference}, ${label}`}>{body}</Link> : <div className="ticket-body">{body}</div>}
       {children && <div className="ticket-extra">{children}</div>}
     </div>

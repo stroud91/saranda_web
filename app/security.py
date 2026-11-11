@@ -1,6 +1,7 @@
 """HTTP security layer: headers, CSP, HTTPS, JSON-only writes, request ids."""
 import logging
 import secrets
+from urllib.parse import urlparse
 
 from flask import current_app, g, jsonify, redirect, request
 
@@ -41,10 +42,13 @@ def _cross_site_write():
     """
     origin = request.headers.get("Origin")
     if origin and origin != "null":
-        own = request.host_url.rstrip("/")
-        if origin.rstrip("/") == own or origin in current_app.config.get("CORS_ORIGINS", []):
+        # Compare hosts, not schemes: behind a TLS-terminating proxy the app may see
+        # "http" for a page served over https, and HSTS already rules out downgrade.
+        if urlparse(origin).netloc.lower() == request.host.lower():
             return False
-        return True
+        allowed = set(current_app.config.get("CORS_ORIGINS", []))
+        allowed.add((current_app.config.get("PUBLIC_BASE_URL") or "").rstrip("/"))
+        return origin.rstrip("/") not in allowed
     if origin == "null":
         return True
     return request.headers.get("Sec-Fetch-Site") == "cross-site"

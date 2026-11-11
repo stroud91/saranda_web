@@ -13,6 +13,15 @@ from app.services import accounts
 account_routes = Blueprint("account", __name__)
 
 
+@account_routes.before_request
+def _accounts_switch():
+    from flask import current_app
+
+    if not current_app.config.get("ACCOUNTS_ENABLED", True):
+        return jsonify({"error": "Not found"}), 404
+    return None
+
+
 def _mine(model, email_column, user):
     """Rows created while signed in, plus earlier ones made with the same address —
     but only once that address is verified, so registering with someone else's

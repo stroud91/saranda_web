@@ -13,6 +13,16 @@ auth_routes = Blueprint("auth", __name__)
 GENERIC_LOGIN_ERROR = "Email or password is incorrect"
 
 
+@auth_routes.before_request
+def _accounts_switch():
+    """ACCOUNTS_ENABLED=false turns the whole feature off, not just its buttons."""
+    if current_app.config.get("ACCOUNTS_ENABLED", True):
+        return None
+    if request.endpoint == "auth.me":
+        return jsonify({"user": None, "email_delivery": False})
+    return jsonify({"error": "Not found"}), 404
+
+
 def _password(body, key="password"):
     """Passwords are taken verbatim: never trimmed, truncated or normalised."""
     value = (body or {}).get(key)
