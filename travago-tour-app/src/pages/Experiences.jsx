@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Ticket, Car, Clock, MapPin, Users, Settings2 } from "lucide-react";
 import { useApi } from "../lib/useApi";
+import { useGuidesOn } from "../lib/useConfig";
 import { useDestinations } from "../lib/useDestinations";
 import { euro } from "../lib/format";
 import SceneArt from "../components/art/SceneArt";
@@ -14,6 +15,7 @@ export default function Experiences() {
   const [tab, setTab] = useState("tours");
   const [cat, setCat] = useState("all");
   const [type, setType] = useState("all");
+  const guides = useGuidesOn();
   const { data: tours } = useApi("/tours/");
   const { data: cars } = useApi("/car_rentals/");
   const { bySlug } = useDestinations();
@@ -22,7 +24,7 @@ export default function Experiences() {
   const shownCars = useMemo(() => (cars || []).filter((c) => type === "all" || c.car_type === type), [cars, type]);
   return (
     <div className="page container">
-      <PageHeader eyebrow="Experiences & transport" icon={Ticket} title="Things to do, ways to get there" lead="Day tours around Sarandë and rental cars for the Riviera road. For a private day, pair any of these with a local guide." />
+      <PageHeader eyebrow="Experiences & transport" icon={Ticket} title="Things to do, ways to get there" lead={`Day tours around Sarandë and rental cars for the Riviera road.${guides ? " For a private day, pair any of these with a local guide." : ""}`} />
       <Segmented layoutId="exp" value={tab} onChange={setTab} options={[{ value: "tours", label: "Experiences" }, { value: "cars", label: "Rental cars" }]} />
       {tab === "tours" ? (
         <>
@@ -43,7 +45,7 @@ export default function Experiences() {
                     </div>
                     <div className="row between" style={{ marginTop: 10 }}>
                       <span><b>{euro(t.price)}</b> <span className="small muted">pp</span></span>
-                      <Link className="btn sm" to={`/guides${t.category === "boat" ? "?specialty=Boat" : t.category === "history" ? "?specialty=History" : t.category === "food" ? "?specialty=Food" : ""}`}><Users size={14} /> Find a guide</Link>
+                      {guides && <Link className="btn sm" to={`/guides${t.category === "boat" ? "?specialty=Boat" : t.category === "history" ? "?specialty=History" : t.category === "food" ? "?specialty=Food" : ""}`}><Users size={14} /> Find a guide</Link>}
                     </div>
                   </div>
                 </motion.article>

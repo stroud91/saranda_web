@@ -122,7 +122,7 @@ function RequestForm({ guide }) {
         <div><span className="tiny muted">Estimated for your group</span><div className="quote-amount">{euro(price)}</div></div>
         <button className="btn primary lg" disabled={status.busy}>{status.busy ? <span className="spinner" /> : <CalendarCheck size={18} />} Request {guide.name.split(" ")[0]}</button>
       </div>
-      <p className="tiny muted"><ShieldCheck size={12} /> No payment now. Your contact details are shared only with this guide.</p>
+      <p className="tiny muted"><ShieldCheck size={12} /> No payment now. Your details go only to Meg'Rooms and this guide — see our <Link to="/privacy">privacy policy</Link>.</p>
     </form>
   );
 }

@@ -97,6 +97,8 @@ After changing anything in `app/data/` or the engines, regenerate the static bun
 
 ## Deploying to cPanel
 
+For the full launch checklist (mailbox, `.env`, payments, cron job, backups), follow **[docs/GO-LIVE.md](docs/GO-LIVE.md)**. The short version:
+
 The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain root. Flask serves both the website and `/api`.
 
 **First time**
@@ -164,7 +166,6 @@ Out of the box the site uses only free services and needs no API keys:
 | ExchangeRate-API (open feed) | EUR → ALL rate | Free with the attribution link shown on the site |
 | OpenStreetMap tiles | Maps | Free with attribution; light use per the OSM tile policy |
 | OSRM public server | Road shapes | Free demo server for light use; self-host for production |
-| Google Fonts | Typography | Free |
 
 Stripe, the Anthropic concierge and Google Places stay switched off until their keys are added. The site falls back to request-to-book, the built-in answer engine, and no ratings. To add them later, fill in the "PAID services" block in `.env`.
 
@@ -190,6 +191,8 @@ Everything is set through environment variables; see `.env.example`. None of the
 | Road geometry | `OSRM_URL` (self-host for production traffic) | Straight segments |
 | Affiliate links | `BOOKING_AFFILIATE_ID`, `GYG_PARTNER_ID`, `VIATOR_PARTNER_ID` | Plain search links |
 | Admin API with Clerk tokens | `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTIES`, `ADMIN_USER_IDS` | Use a host account instead |
+| Sample guide profiles | `SHOW_SAMPLE_GUIDES=true` (demos only) | Hidden; guide pages appear once a real guide is added |
+| Message retention | `MESSAGE_RETENTION_MONTHS` (default 24) | Old contact messages and unconfirmed guide requests are deleted by `flask users cleanup` |
 
 Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `payment_intent.succeeded`, `payment_intent.processing` and `payment_intent.canceled`.
 
@@ -217,7 +220,8 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
 
 ## Content notes
 
-- The guide profiles in `app/seeds/guides.py` are **samples**, labelled "Sample profile" in the UI and seeded with no ratings or reviews. Replace them with real, vetted guides through `POST /api/admin/guides` before launch.
+- The guide profiles in `app/seeds/guides.py` are **samples** with no ratings or reviews. Guests don't see them: until a real guide is added (through `POST /api/admin/guides`), the guide links are hidden and `/guides` says guides are on their way. `SHOW_SAMPLE_GUIDES=true` shows the samples, labelled "Sample profile", for demos.
+- The privacy policy (`/privacy`) and booking terms (`/terms`) read your business details and cancellation rules from `travago-tour-app/src/data/business.json`, and the live configuration decides which payment methods and features they describe.
 - Rental cars and experiences are sample seed data too.
 - Distances, times and prices are planning estimates. Legs from the planner are labelled "Planner data" and everything else "Estimate". Ferry schedules are never shown as fixed; the site always tells travellers to check the operator.
 - Update `app/data/` each season: ferry notes, budget ranges and attraction details (see `LAST_REVIEWED` in `app/data/essentials.py`).

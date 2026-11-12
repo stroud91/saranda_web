@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { api, post } from "../lib/api";
 import { useAuth } from "../store/auth";
+import { useGuidesOn } from "../lib/useConfig";
 import { euro, fmtDate } from "../lib/format";
 import { Alert, Field, Segmented, Skeleton, toast } from "../components/ui";
 import TicketCard from "../components/account/TicketCard";
@@ -233,6 +234,7 @@ export default function Account() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const tab = params.get("tab") || "stays";
+  const guidesOn = useGuidesOn();
 
   useEffect(() => { document.title = "My account · Saranda Companion"; }, []);
   useEffect(() => {
@@ -251,7 +253,8 @@ export default function Account() {
 
   const options = [
     { value: "stays", label: "Trips & stays" },
-    { value: "guides", label: "Guides" },
+    // Without listed guides the tab only appears for people who already sent a request.
+    ...(guidesOn || data?.guide_requests?.length || tab === "guides" ? [{ value: "guides", label: "Guides" }] : []),
     { value: "security", label: "Security" },
     ...(user.is_admin ? [{ value: "host", label: "Host desk" }] : []),
   ];

@@ -7,6 +7,7 @@ import { post } from "../../lib/api";
 import { Markdown } from "../../lib/markdown";
 import { useUi } from "../../store/ui";
 import { useDestinations } from "../../lib/useDestinations";
+import { useGuidesOn } from "../../lib/useConfig";
 
 const SUGGESTIONS = [
   "How long from Tirana to Ksamil?",
@@ -51,6 +52,7 @@ function ActionCard({ card, name }) {
 
 export default function ConciergeSheet() {
   const { conciergeOpen, closeConcierge, conciergeDraft } = useUi();
+  const guidesOn = useGuidesOn();
   const { name } = useDestinations();
   const [messages, setMessages] = useState(load);
   const [input, setInput] = useState(conciergeDraft || "");
@@ -117,7 +119,7 @@ export default function ConciergeSheet() {
             <h3>Mirëdita! 👋</h3>
             <p className="muted">I know every road time, beach and budget in the 2027 planner. Ask me anything about your Albania trip.</p>
             <div className="chips">
-              {SUGGESTIONS.map((s) => (
+              {SUGGESTIONS.filter((s) => guidesOn || !s.includes("guides")).map((s) => (
                 <button key={s} className="chip sm" onClick={() => send(s)}>{s}</button>
               ))}
             </div>

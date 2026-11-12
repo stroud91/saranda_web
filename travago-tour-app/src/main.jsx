@@ -1,6 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+// Fonts are bundled with the site, so visitors' browsers never contact a font CDN.
+import "@fontsource-variable/fraunces/opsz.css";
+import "@fontsource-variable/fraunces/opsz-italic.css";
+import "@fontsource-variable/manrope/wght.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/components.css";

@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Mail, MessageCircle, Send, MapPin } from "lucide-react";
 import { post } from "../lib/api";
 import { useConfig, whatsappUrl } from "../lib/useConfig";
 import { Alert, Field, PageHeader } from "../components/ui";
 import Handoff from "../components/ui/Handoff";
 
+const TOPICS = ["stay", "guide", "trip", "general"];
+
 export default function Contact() {
   const cfg = useConfig();
-  const [form, setForm] = useState({ name: "", email: "", topic: "stay", message: "", website: "" });
+  const [params] = useSearchParams();
+  const [form, setForm] = useState(() => ({ name: "", email: "", topic: TOPICS.includes(params.get("topic")) ? params.get("topic") : "stay", message: "", website: "" }));
   const [state, setState] = useState({ busy: false, done: false, error: "", fields: {} });
   const up = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   useEffect(() => { document.title = "Contact · Meg'Rooms"; }, []);
@@ -45,6 +49,7 @@ export default function Contact() {
           <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
           {state.error && <Alert kind="error">{state.error}</Alert>}
           <button className="btn primary" disabled={state.busy}>{state.busy ? <span className="spinner" /> : <Send size={16} />} Send message</button>
+          <p className="tiny muted">We use your details only to reply to you. See our <Link to="/privacy">privacy policy</Link>.</p>
         </form>
       )}
     </div>

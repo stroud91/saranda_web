@@ -212,6 +212,7 @@ export default function StayDetail() {
             {state.error && !errors.payment_method && <Alert kind="error">{state.error}</Alert>}
             <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : null} {{ paypal: "Continue to PayPal", card: "Continue to payment", bank: "Get bank details", request: "Send booking request" }[chosen.id]}</button>
             {!payable && <p className="tiny muted">We'll confirm availability by email within a few hours. Payment is arranged directly with the host.</p>}
+            <p className="tiny muted">By booking you accept our <Link to="/terms#cancel">booking and cancellation terms</Link>. See how we use your details in the <Link to="/privacy">privacy policy</Link>.</p>
           </form>
         )}
       </Sheet>

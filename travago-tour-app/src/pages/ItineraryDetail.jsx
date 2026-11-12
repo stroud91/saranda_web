@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CalendarRange, Car, MapPin, BedDouble, Lightbulb, Users, Moon, ChevronDown } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
+import { useGuidesOn } from "../lib/useConfig";
 import { useDestinations } from "../lib/useDestinations";
 import { hmRange } from "../lib/format";
 import AlbaniaMap from "../components/map/AlbaniaMap";
@@ -19,6 +20,7 @@ export default function ItineraryDetail() {
   const [open, setOpen] = useState(0);
   const body = useMemo(() => (it ? { days: it.days.map((d) => ({ stops: d.stops, start_time: d.start_time })) } : null), [it]);
   const { data: tl } = useLivePost("/planner/timeline", body, 0);
+  const guides = useGuidesOn();
   useEffect(() => { if (it) document.title = `${it.title} · Saranda Companion`; }, [it]);
 
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
@@ -35,7 +37,7 @@ export default function ItineraryDetail() {
           <p className="lead light">{it.why}</p>
           <div className="row">
             <button className="btn dark" onClick={() => { load(it); navigate("/plan"); }}>Use this plan</button>
-            <Link className="btn glass" to="/guides">Add a guide</Link>
+            {guides && <Link className="btn glass" to="/guides">Add a guide</Link>}
           </div>
         </div>
         <div className="stats itin-hero-stats">
@@ -80,7 +82,7 @@ export default function ItineraryDetail() {
               showNetwork={false}
             />
           </div>
-          <div className="card pad small"><Users size={16} /> Prefer not to drive? <Link to="/guides?vehicle=true">Driver-guides</Link> can handle the long legs.</div>
+          {guides && <div className="card pad small"><Users size={16} /> Prefer not to drive? <Link to="/guides?vehicle=true">Driver-guides</Link> can handle the long legs.</div>}
         </aside>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { useUi } from "../store/ui";
 import { useApi, useApiMode, useLivePost } from "../lib/useApi";
 import { post, put } from "../lib/api";
 import { useDestinations } from "../lib/useDestinations";
+import { useGuidesOn } from "../lib/useConfig";
 import { hmRange, kmRange, plural, todayIso } from "../lib/format";
 import DayCard from "../components/planner/DayCard";
 import Timeline from "../components/planner/Timeline";
@@ -156,6 +157,7 @@ export default function Planner() {
   const [tab, setTab] = useState(params.get("tab") || "timeline");
   const [mobileView, setMobileView] = useState(params.get("tab") === "budget" ? "budget" : "days");
   const [templates, setTemplates] = useState(false);
+  const guides = useGuidesOn();
   const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
@@ -238,7 +240,7 @@ export default function Planner() {
           <div className="card pad helper">
             <Sparkles size={18} />
             <div className="small">
-              Not sure where to go next? <button className="linklike" onClick={() => openConcierge(`I'm planning ${t.days.length} days starting in ${name(t.days[0]?.stops[0])}. What should I add?`)}>Ask the concierge</button>, browse <Link to="/itineraries">itineraries</Link>, or <Link to="/guides">book a guide</Link> for a day.
+              Not sure where to go next? <button className="linklike" onClick={() => openConcierge(`I'm planning ${t.days.length} days starting in ${name(t.days[0]?.stops[0])}. What should I add?`)}>Ask the concierge</button>, browse <Link to="/itineraries">itineraries</Link>{guides ? <>, or <Link to="/guides">book a guide</Link> for a day</> : null}.
             </div>
           </div>
         </section>

@@ -629,3 +629,21 @@ a.ticket-body:hover .ticket-title { color: var(--accent); }
 .host-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .pay-methods, .pay-method { text-align: left; }
 .pay-methods legend { margin-bottom: 6px; }
+
+/* ---------- Privacy policy & booking terms ---------- */
+.legal .legal-toc { margin-bottom: 26px; }
+.legal .legal-toc ol { margin: 8px 0 0; padding-left: 20px; columns: 2 220px; column-gap: 24px; }
+.legal .legal-toc li { margin: 3px 0; break-inside: avoid; }
+.legal-section { margin: 0 0 30px; scroll-margin-top: 90px; }
+.legal-section p, .legal-section li, .legal-section dd { line-height: 1.65; }
+.legal-section ul { padding-left: 20px; }
+.legal-section li { margin: 6px 0; }
+.legal-business { display: flex; flex-direction: column; gap: 3px; font-style: normal; margin: 12px 0; }
+.legal-list dt { font-weight: 700; margin-top: 14px; }
+.legal-list dd { margin: 4px 0 0; }
+.legal-note { padding: 12px 14px; border-radius: var(--r-md, 14px); background: var(--surface-2, rgba(11, 92, 126, 0.08)); }
+.legal-table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 0.95rem; }
+.legal-table th, .legal-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-strong); vertical-align: top; }
+.legal-table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.legal code { font-size: 0.85em; overflow-wrap: anywhere; }
+.coming-soon { margin-top: 8px; }

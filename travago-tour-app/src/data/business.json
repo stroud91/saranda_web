@@ -1,0 +1,18 @@
+{
+  "_readme": "Your business details for the Privacy policy and Booking terms pages. Fill in the empty fields before going live, then rebuild. Empty fields are simply left off the pages. Have a local lawyer or accountant read both pages once.",
+  "trading_name": "Meg'Rooms",
+  "legal_name": "",
+  "nipt": "",
+  "address": "Rruga Gjergj Araniti, Sarandë, Albania",
+  "email": "",
+  "phone": "",
+  "hosting": "Namecheap, Inc. (website hosting and email)",
+  "check_in_from": "",
+  "check_out_by": "",
+  "cancellation": {
+    "full_refund_days": 14,
+    "partial_refund_days": 7,
+    "partial_refund_percent": 50
+  },
+  "policies_updated": "2026-11-12"
+}

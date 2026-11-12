@@ -13,6 +13,9 @@ This script produces two files from the real Flask app:
   engines' outputs; the frontend test suite checks the JS ports match exactly.
 
 Run from the repository root:  python scripts/export_static.py
+
+The seeded sample guides are left out unless SHOW_SAMPLE_GUIDES=true is set,
+exactly like the live site; the fixtures always carry them for the tests.
 ``tests/test_static_export.py`` fails if the committed files are out of date.
 """
 import json
@@ -29,10 +32,11 @@ FIXTURES = os.path.join(ROOT, "travago-tour-app", "src", "engine", "parity.fixtu
 
 def _app():
     from app import create_app
-    from app.config import TestConfig
+    from app.config import TestConfig, _bool
 
     class ExportConfig(TestConfig):
         LIVE_DATA_ENABLED = False
+        SHOW_SAMPLE_GUIDES = _bool("SHOW_SAMPLE_GUIDES", False)
         WHATSAPP_NUMBER = ""
         CONTACT_EMAIL = "bookings@megrooms.com"
 
@@ -234,8 +238,21 @@ def build():
             r = post("/concierge/", {"messages": [{"role": "user", "content": q}]})
             concierge_cases.append({"input": q, **r})
 
+        # The guide directory with the sample profiles switched on, so the frontend
+        # tests cover filtering, requests and the concierge's answer either way.
+        shown = app.config["SHOW_SAMPLE_GUIDES"]
+        app.config["SHOW_SAMPLE_GUIDES"] = True
+        sample_list = get("/guides/")
+        sample_guides = {
+            "responses": {"/guides/": sample_list,
+                          **{f"/guides/{g['slug']}": get(f"/guides/{g['slug']}") for g in sample_list["guides"]}},
+            "concierge": {"input": "Show me local guides",
+                          **post("/concierge/", {"messages": [{"role": "user", "content": "Show me local guides"}]})},
+        }
+        app.config["SHOW_SAMPLE_GUIDES"] = shown
+
         fixtures = {"connect": connect_cases, "timeline": timeline_cases, "budget": budget_cases,
-                    "quote": quote_cases, "concierge": concierge_cases}
+                    "quote": quote_cases, "concierge": concierge_cases, "sample_guides": sample_guides}
         db.session.remove()
         db.drop_all()
     return static_api, fixtures

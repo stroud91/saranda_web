@@ -100,7 +100,7 @@ export function SignUp() {
         {state.error && !Object.keys(state.fields).length && <Alert kind="error">{state.error}</Alert>}
         {state.fields.email === "Already registered" && <Alert kind="info">That email already has an account. <Link to="/signin">Sign in</Link> or <Link to="/forgot-password">reset the password</Link>.</Alert>}
         <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : <UserPlus size={18} />} Create account</button>
-        <p className="tiny muted">We only use your details for your bookings and account. You can export or delete your data at any time.</p>
+        <p className="tiny muted">By creating an account you accept our <Link to="/terms">booking terms</Link>. We only use your details for your bookings and account — see the <Link to="/privacy">privacy policy</Link>. You can export or delete your data at any time.</p>
       </form>
     </AuthShell>
   );

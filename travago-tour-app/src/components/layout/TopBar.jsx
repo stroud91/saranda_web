@@ -4,6 +4,7 @@ import { Box, Compass, Map, CalendarRange, Route, Users, BedDouble, BookOpen, Mo
 import Logo from "../art/Logo";
 import { useUi } from "../../store/ui";
 import { useAuth } from "../../store/auth";
+import { useGuidesOn } from "../../lib/useConfig";
 
 export const NAV = [
   { to: "/explore", label: "Explore", icon: Compass },
@@ -24,6 +25,7 @@ export default function TopBar() {
   const { theme, setTheme, openPalette } = useUi();
   const user = useAuth((s) => s.user);
   const accounts = useAuth((s) => s.available);
+  const guides = useGuidesOn();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -43,7 +45,7 @@ export default function TopBar() {
           </span>
         </Link>
         <nav className="nav" aria-label="Main">
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {NAV.filter((n) => guides || n.to !== "/guides").map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
               <Icon size={16} />
               {label}

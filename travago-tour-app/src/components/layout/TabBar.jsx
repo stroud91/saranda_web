@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Compass, CalendarRange, Map, Users } from "lucide-react";
+import { Home, Compass, CalendarRange, Map, Users, BedDouble } from "lucide-react";
+import { useGuidesOn } from "../../lib/useConfig";
 
 const TABS = [
   { to: "/", label: "Today", icon: Home, end: true },
@@ -9,11 +10,15 @@ const TABS = [
   { to: "/map", label: "Map", icon: Map },
   { to: "/guides", label: "Guides", icon: Users },
 ];
+// Until there are real guides the last tab goes to the apartments instead.
+const STAYS_TAB = { to: "/stays", label: "Stays", icon: BedDouble };
 
 export default function TabBar() {
+  const guides = useGuidesOn();
+  const tabs = guides ? TABS : [...TABS.slice(0, -1), STAYS_TAB];
   return (
     <nav className="tabbar" aria-label="App">
-      {TABS.map(({ to, label, icon: Icon, end }) => (
+      {tabs.map(({ to, label, icon: Icon, end }) => (
         <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>
           {({ isActive }) => (
             <>

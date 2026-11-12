@@ -29,3 +29,13 @@ def test_static_config_has_no_server_features():
     assert [m["id"] for m in cfg["payments"]["methods"]] == ["request"]
     assert cfg["auth"] == {"enabled": False, "email": False}
     assert cfg["concierge"]["ai"] is False
+
+
+def test_static_bundle_hides_sample_guides():
+    static_api, fixtures = export_static.build()
+    responses = static_api["responses"]
+    assert responses["/meta/config"]["guides"] is False
+    assert responses["/guides/"]["guides"] == []
+    assert not [p for p in responses if p.startswith("/guides/") and p != "/guides/"]
+    # The tests still get the sample directory to exercise the guide flow.
+    assert fixtures["sample_guides"]["responses"]["/guides/"]["guides"]

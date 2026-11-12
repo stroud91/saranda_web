@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
-  Box, CalendarRange, Route, Users, BedDouble, BookOpen, Sparkles, ArrowRight, MapPin, Clock, Car, Ship, Sun, Star, Waves,
+  Box, CalendarRange, Compass, Route, Users, BedDouble, BookOpen, Sparkles, ArrowRight, MapPin, Clock, Car, Ship, Sun, Star, Waves,
 } from "lucide-react";
 import { useApi } from "../lib/useApi";
+import { useGuidesOn } from "../lib/useConfig";
 import { useDestinations } from "../lib/useDestinations";
 import { hm, hmRange, euro } from "../lib/format";
 import { WeatherChip, WeatherCard } from "../components/live/Weather";
@@ -26,6 +27,8 @@ const QUICK = [
   { to: "/stays", icon: BedDouble, title: "Meg'Rooms", text: "Sea-view apartments", grad: "var(--grad-terracotta)" },
   { to: "/essentials", icon: BookOpen, title: "Essentials", text: "Money, food, safety", grad: "var(--grad-aegean)" },
 ];
+// Takes the guides tile's place until real guides are listed.
+const EXPLORE_TILE = { to: "/explore", icon: Compass, title: "Explore", text: "Beaches, castles, towns", grad: "var(--grad-olive)" };
 
 function HeroConnector() {
   const { list } = useDestinations();
@@ -59,6 +62,7 @@ function Hero() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const openConcierge = useUi((s) => s.openConcierge);
+  const guides = useGuidesOn();
   return (
     <section className="hero" ref={ref}>
       <OceanHero scrollProgress={scrollYProgress} surfaceRef={ref} />
@@ -71,7 +75,7 @@ function Hero() {
           Albania, planned from <em>the Ionian coast.</em>
         </motion.h1>
         <motion.p className="hero-lead" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
-          Connect any two places with real drive times, build day-by-day timelines, estimate your budget, pick a local guide — and come home to a sea-view apartment.
+          Connect any two places with real drive times, build day-by-day timelines, estimate your budget{guides ? ", pick a local guide" : ""} — and come home to a sea-view apartment.
         </motion.p>
         <motion.div className="row hero-chips" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
           <WeatherChip />
@@ -94,9 +98,11 @@ function Hero() {
 }
 
 function QuickActions() {
+  const guides = useGuidesOn();
+  const tiles = guides ? QUICK : QUICK.map((q) => (q.to === "/guides" ? EXPLORE_TILE : q));
   return (
     <section className="container quick-grid" aria-label="Quick actions">
-      {QUICK.map((q, i) => (
+      {tiles.map((q, i) => (
         <motion.div key={q.to} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
           <Link to={q.to} className="quick card hover">
             <span className="quick-icon" style={{ background: q.grad }}><q.icon size={22} /></span>
@@ -226,8 +232,10 @@ function SeasonStrip() {
 }
 
 function GuidesPreview() {
-  const { data } = useApi("/guides/");
+  const on = useGuidesOn();
+  const { data } = useApi(on ? "/guides/" : null);
   const guides = (data?.guides || []).slice(0, 4);
+  if (!on) return null;
   return (
     <section className="section container">
       <div className="section-head">

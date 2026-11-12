@@ -58,8 +58,8 @@
   --grad-spring: linear-gradient(135deg, #0e8fb0 0%, #3fd3cf 50%, #a9b872 100%);
   --grad-terracotta: linear-gradient(135deg, #d9653b 0%, #f4b63f 100%);
 
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces Variable", "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "Manrope Variable", "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --r-xs: 8px;
   --r-sm: 12px;

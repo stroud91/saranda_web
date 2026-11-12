@@ -8,6 +8,7 @@ import {
 import { useDestinations } from "../../lib/useDestinations";
 import { CategoryIcon } from "../ui";
 import { useUi } from "../../store/ui";
+import { useGuidesOn } from "../../lib/useConfig";
 
 const fold = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/\p{Mn}/gu, "");
 
@@ -45,15 +46,17 @@ export default function CommandPalette({ open, onClose }) {
     return () => before?.focus?.();
   }, [open]);
 
+  const guidesOn = useGuidesOn();
   const items = useMemo(() => {
+    const pages = guidesOn ? PAGES : PAGES.filter((p) => p.to !== "/guides");
     const actions = [
       { id: "a-ask", label: q ? `Ask the concierge: “${q}”` : "Ask the concierge", hint: "Offline travel assistant", icon: Sparkles, run: () => openConcierge(q || undefined), words: "ask question help" , always: Boolean(q) },
       ...(toggleTheme ? [{ id: "a-theme", label: "Switch light / dark theme", hint: "Appearance", icon: Moon, run: toggleTheme, words: "dark light theme night" }] : []),
     ];
     const places = list.map((d) => ({ id: `d-${d.slug}`, label: d.name, hint: regions[d.region]?.name || regions[d.region] || d.region, category: d.category, to: `/explore/${d.slug}`, words: `${d.tags?.join(" ") || ""} ${d.category}` }));
-    const all = [...PAGES, ...places, ...actions];
+    const all = [...pages, ...places, ...actions];
     const terms = fold(q).split(/\s+/).filter(Boolean);
-    if (!terms.length) return [...PAGES.slice(0, 7), ...actions.filter((a) => !a.always)];
+    if (!terms.length) return [...pages.slice(0, 7), ...actions.filter((a) => !a.always)];
     const scored = all
       .map((it) => {
         const label = fold(it.label), hay = `${label} ${fold(it.hint)} ${fold(it.words)}`;
@@ -65,7 +68,7 @@ export default function CommandPalette({ open, onClose }) {
       .sort((a, b) => b.score - a.score)
       .map((x) => x.it);
     return scored.slice(0, 12);
-  }, [q, list, regions, openConcierge, toggleTheme]);
+  }, [q, list, regions, openConcierge, toggleTheme, guidesOn]);
 
   useEffect(() => setActive(0), [q]);
   useEffect(() => {

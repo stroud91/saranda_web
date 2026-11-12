@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Languages, Car, BadgeCheck, Award, UsersRound } from "lucide-react";
+import { Users, Languages, Car, BadgeCheck, Award, UsersRound, Mail, MessageCircle, CalendarRange } from "lucide-react";
 import { useApi } from "../lib/useApi";
+import { useConfig, whatsappUrl } from "../lib/useConfig";
 import { euro } from "../lib/format";
 import GuideAvatar from "../components/art/GuideAvatar";
 import { PageHeader, Skeleton, Alert } from "../components/ui";
@@ -12,6 +13,7 @@ export default function Guides() {
   const qs = params.toString();
   const { data, loading } = useApi(`/guides/${qs ? `?${qs}` : ""}`);
   const { data: all } = useApi("/guides/");
+  const cfg = useConfig();
   const facets = all?.facets || { languages: [], specialties: [] };
   const set = (k, v) => {
     const next = new URLSearchParams(params);
@@ -21,6 +23,7 @@ export default function Guides() {
   };
   useEffect(() => { document.title = "Local guides · Saranda Companion"; }, []);
   const hasSample = data?.guides?.some((g) => g.is_sample);
+  if (all && !all.guides.length) return <ComingSoon whatsapp={cfg.whatsapp} />;
   return (
     <div className="page container">
       <PageHeader eyebrow="Local guides" icon={Users} title="Travel with someone who's from here" lead="Archaeologists for Butrint, skippers for the hidden bays, chefs, hikers and driver-guides. Request a date — the guide confirms before anything is paid." />
@@ -67,6 +70,27 @@ export default function Guides() {
         ))}
       </div>
       {data && !data.guides.length && <div className="empty">No guides match those filters yet.</div>}
+    </div>
+  );
+}
+
+/** Shown until the host lists real guides (sample profiles are hidden from guests). */
+function ComingSoon({ whatsapp }) {
+  const wa = whatsappUrl(whatsapp, "Hello Meg'Rooms! I'd like a local guide for my trip.");
+  return (
+    <div className="page container narrow">
+      <PageHeader eyebrow="Local guides" icon={Users} title="Local guides are on their way" lead="We're choosing licensed guides, skippers and driver-guides we'd send our own family with. Until their profiles are here, tell us what you'd like to do and we'll put you in touch." />
+      <div className="card pad stack coming-soon">
+        <div className="row">
+          <Link className="btn primary" to="/contact?topic=guide"><Mail size={16} /> Ask us for a guide</Link>
+          {wa && <a className="btn whatsapp" href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> WhatsApp</a>}
+        </div>
+        <p className="small muted">Meanwhile, plan the days yourself: every road time, ferry and boat trip is in the planner.</p>
+        <div className="row">
+          <Link className="btn sm" to="/itineraries"><CalendarRange size={15} /> Ready-made itineraries</Link>
+          <Link className="btn sm" to="/experiences">Day tours & car hire</Link>
+        </div>
+      </div>
     </div>
   );
 }
