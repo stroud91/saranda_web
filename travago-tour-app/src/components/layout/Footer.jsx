@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { useConfig, useGuidesOn, whatsappUrl } from "../../lib/useConfig";
+import { useConfig, useGuidesOn, usePartnersOn, whatsappUrl } from "../../lib/useConfig";
 
 export default function Footer() {
   const cfg = useConfig();
   const guides = useGuidesOn();
+  const partners = usePartnersOn();
   const wa = whatsappUrl(cfg.whatsapp, "Hello Meg'Rooms! I'm planning a trip to Sarandë.");
   return (
     <footer className="footer">
@@ -33,7 +34,8 @@ export default function Footer() {
             <ul>
               <li><Link to="/explore">Destinations</Link></li>
               {guides && <li><Link to="/guides">Local guides</Link></li>}
-              <li><Link to="/experiences">Experiences & cars</Link></li>
+              <li><Link to="/experiences">Experiences & rentals</Link></li>
+              {partners && <li><Link to="/partners">Local businesses</Link></li>}
               <li><Link to="/essentials">Know before you go</Link></li>
             </ul>
           </div>
@@ -42,6 +44,7 @@ export default function Footer() {
             <ul>
               <li><Link to="/stays">Our apartments</Link></li>
               <li><Link to="/contact">Contact</Link></li>
+              {partners && <li><Link to="/business">List your business</Link></li>}
               <li><Link to="/essentials#emergency">Emergency numbers</Link></li>
               <li><Link to="/terms">Booking terms</Link></li>
               <li><Link to="/privacy">Privacy policy</Link></li>

@@ -6,13 +6,15 @@ from flask import Blueprint, abort, jsonify, request
 from app.auth import require_admin
 from app.models import Booking, Hotel, db
 from app.models.booking import ACTIVE_STATUSES
+from app.services import partners
 from app.validation import Field, json_body, query_args
 
 hotels_routes = Blueprint("hotels", __name__)
 
 
 def _hotel_or_404(hotel_id):
-    hotel = db.session.get(Hotel, hotel_id)
+    """A stay guests may see: switched on, approved, and from an approved business (or our own)."""
+    hotel = Hotel.query.filter(Hotel.id == hotel_id, partners.public_filter(Hotel)).first()
     if not hotel or hotel.is_active is False:
         abort(404, description="Stay not found")
     return hotel
@@ -32,7 +34,9 @@ def blocking_bookings(hotel_id, start, end, lock=False):
 
 @hotels_routes.get("/")
 def list_hotels():
-    hotels = Hotel.query.filter(Hotel.is_active.isnot(False)).order_by(Hotel.price_per_night).all()
+    # The site's own apartments first, then partners', each by price.
+    hotels = (Hotel.query.filter(Hotel.is_active.isnot(False), partners.public_filter(Hotel))
+              .order_by(Hotel.business_id.isnot(None), Hotel.price_per_night).all())
     return jsonify([h.to_dict() for h in hotels])
 
 
@@ -91,10 +95,18 @@ def create_hotel():
     return jsonify(hotel.to_dict()), 201
 
 
+def _house_hotel_or_404(hotel_id):
+    """Admin edits here are for the site's own stays; partners' go through review instead."""
+    hotel = db.session.get(Hotel, hotel_id)
+    if not hotel or hotel.business_id is not None:
+        abort(404, description="Stay not found")
+    return hotel
+
+
 @hotels_routes.put("/<int:hotel_id>")
 @require_admin
 def update_hotel(hotel_id):
-    hotel = _hotel_or_404(hotel_id)
+    hotel = _house_hotel_or_404(hotel_id)
     body = request.get_json(silent=True) or {}
     # Partial update: validate only the fields that were sent.
     data = json_body({k: v for k, v in HOTEL_SCHEMA.items() if k in body})
@@ -107,7 +119,7 @@ def update_hotel(hotel_id):
 @hotels_routes.delete("/<int:hotel_id>")
 @require_admin
 def delete_hotel(hotel_id):
-    hotel = _hotel_or_404(hotel_id)
+    hotel = _house_hotel_or_404(hotel_id)
     hotel.is_active = False  # soft delete keeps booking history intact
     db.session.commit()
     return "", 204

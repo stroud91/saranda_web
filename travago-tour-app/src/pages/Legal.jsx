@@ -67,6 +67,7 @@ export function Privacy() {
   const accounts = cfg.auth?.enabled;
   const isStatic = cfg.mode === "static";
   const months = cfg.retention_months ?? 24;
+  const partners = cfg.partners === true;
   useEffect(() => { document.title = "Privacy policy · Meg'Rooms"; }, []);
   return (
     <div className="page container narrow legal">
@@ -90,6 +91,14 @@ export function Privacy() {
           <dd>Your name, email, phone if given, the date, group size, pickup point, language and your message — to arrange the day with the guide.</dd>
           <dt>Messages to us</dt>
           <dd>Your name, email, topic and message, so we can reply.</dd>
+          {partners && (
+            <>
+              <dt>Booking with, or asking, a local business</dt>
+              <dd>Some stays, rentals and activities are offered by independent local businesses. When you request one or send them a question, we store your name, email, phone if given, dates, group size and message, and pass them to that business so it can answer you.</dd>
+              <dt>Business accounts</dt>
+              <dd>If you list a business here: the profile you write (name, description, address and public contact details) and your listings, which are published once we've approved them, and the account details below. We use them to run the directory and to contact you about it.</dd>
+            </>
+          )}
           {accounts && (
             <>
               <dt>Your account</dt>
@@ -119,6 +128,7 @@ export function Privacy() {
           {methods.includes("card") && <li><b>Stripe</b> handles card payments. We never see your full card number.</li>}
           {methods.includes("bank") && <li><b>Banks</b> — for a bank transfer, your bank and ours process the payment details (such as the account holder's name and IBAN), which then appear on our bank statement.</li>}
           {cfg.concierge?.ai && <li><b>Anthropic</b> (United States) processes concierge messages to write the answers.</li>}
+          {partners && <li><b>The local business you book with or ask</b> receives your request and contact details, by email and in its dashboard here. It is responsible for how it uses them from then on.</li>}
           {cfg.guides && <li><b>The guide you request</b> receives your name, contact details and the trip details so they can confirm and meet you.</li>}
           <li><b>Maps, weather and exchange rates.</b> Your browser loads map images from OpenStreetMap and CARTO, and may fetch weather from Open-Meteo, exchange rates from ExchangeRate-API and road shapes from OSRM. Like any website, they see your IP address; we send them no personal details.</li>
           <li><b>Videos</b> load from YouTube's privacy-enhanced domain (youtube-nocookie.com) only when you press play; from then on Google's terms apply.</li>
@@ -144,7 +154,8 @@ export function Privacy() {
         <ul>
           <li><b>Bookings and payments:</b> as long as Albanian tax and accounting law requires us to keep business records.</li>
           <li><b>Guide requests:</b> the same as bookings when they lead to a paid service; otherwise up to {months} months.</li>
-          <li><b>Messages to us:</b> up to {months} months, then deleted.</li>
+          <li><b>Messages to us{partners ? " and questions to local businesses" : ""}:</b> up to {months} months, then deleted.</li>
+          {partners && <li><b>Business profiles and listings:</b> until the owner removes them or deletes the account; the page then comes down and its contact details are erased.</li>}
           {accounts && <li><b>Your account:</b> until you delete it. Sign-in sessions and email links expire on their own and are cleared out regularly. If you delete your account, your saved trips go with it; bookings stay with us as business records but are no longer linked to an account.</li>}
           <li><b>Server logs:</b> as long as our web host keeps them for security.</li>
         </ul>
@@ -171,6 +182,7 @@ export function Terms() {
   const { cfg, email, methods, mailto } = useBusiness();
   const accounts = cfg.auth?.enabled;
   const deposit = cfg.payments?.deposit_percent ?? 100;
+  const partners = cfg.partners === true;
   const online = methods.some((m) => m !== "request");
   useEffect(() => { document.title = "Booking terms · Meg'Rooms"; }, []);
   return (
@@ -178,7 +190,7 @@ export function Terms() {
       <PageHeader eyebrow="Booking terms" icon={FileText} title="Booking terms" lead="The agreement between you and us when you book one of our apartments — what you pay, when, and what happens if plans change.">
         <p className="tiny muted">Last updated {updated}</p>
       </PageHeader>
-      <Contents items={[["us", "Who you book with"], ["booking", "How booking works"], ["cancel", "Cancelling and changes"], ["stay", "During your stay"], ["guides", "Guides and tours"], ["info", "Travel information"], ["other", "Everything else"]]} />
+      <Contents items={[["us", "Who you book with"], ["booking", "How booking works"], ["cancel", "Cancelling and changes"], ["stay", "During your stay"], ["guides", "Guides and tours"], ...(partners ? [["partners", "Local businesses"]] : []), ["info", "Travel information"], ["other", "Everything else"]]} />
 
       <Section id="us" title="Who you book with">
         <BusinessCard email={email} mailto={mailto} />
@@ -227,6 +239,23 @@ export function Terms() {
       <Section id="guides" title="Local guides and tours">
         <p>A request for a guide is not a booking until it is confirmed. Guides are local professionals who set their own prices; the price shown is an estimate for your group. Nothing is charged on this website for guides — how and when you pay is confirmed with the booking. Entry tickets, fuel and meals are usually extra.</p>
       </Section>
+
+      {partners && (
+        <Section id="partners" title="Listings from local businesses">
+          <p>Stays, rentals and activities marked with a business's name are offered by that independent business, not by {business.trading_name}. We check each business and listing before it appears, but we don't run them.</p>
+          <ul>
+            <li>Your booking or enquiry is a request to that business. The agreement, the price, payment, cancellation and any refund are between you and them. Nothing is charged through this website, and the cancellation table above applies only to {business.trading_name}'s own apartments.</li>
+            <li>If something about a business here seems wrong, tell us at {mailto} and we'll look into it; we can take a business offline.</li>
+          </ul>
+          <p><b>If you list a business here</b>, you agree to these rules:</p>
+          <ul>
+            <li>List only what you really offer and are allowed to offer, with accurate descriptions and prices, and keep it up to date. You're responsible for your own licences, taxes and insurance.</li>
+            <li>Answer guests promptly, honour what you confirm, and use guests' details only to handle their request, in line with data protection law.</li>
+            <li>We review every profile and listing before it goes live, including later changes to their text. We may decline, edit for clarity, or take down a listing or business that breaks these rules or draws justified complaints.</li>
+            <li>Listing is free. You can pause or remove a listing, or delete your account, at any time.</li>
+          </ul>
+        </Section>
+      )}
 
       <Section id="info" title="Travel information">
         <p>Drive times, routes, budgets, weather, exchange rates and prices of places we don't run are planning estimates from public sources. They change, so please check before you rely on them. Ferries, buses, boats and other services are run by other companies under their own terms.</p>

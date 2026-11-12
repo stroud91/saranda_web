@@ -23,6 +23,7 @@ def _register_blueprints(app):
     from .api.admin_routes import admin_routes
     from .api.auth_routes import auth_routes
     from .api.bookings_routes import bookings_routes
+    from .api.business_routes import business_routes
     from .api.car_rentals_routes import car_rentals_routes
     from .api.concierge_routes import concierge_routes
     from .api.contact_routes import contact_routes
@@ -31,6 +32,7 @@ def _register_blueprints(app):
     from .api.knowledge_routes import knowledge_routes
     from .api.live_routes import live_routes
     from .api.meta_routes import meta_routes
+    from .api.partner_routes import partner_routes
     from .api.planner_routes import planner_routes
     from .api.tours_routes import tours_routes
     from .api.webhooks import webhook_routes
@@ -50,6 +52,8 @@ def _register_blueprints(app):
         (admin_routes, "/api/admin"),
         (auth_routes, "/api/auth"),
         (account_routes, "/api/account"),
+        (partner_routes, "/api/partner"),
+        (business_routes, "/api/businesses"),
         (webhook_routes, "/api/webhooks"),
     ]:
         app.register_blueprint(bp, url_prefix=prefix)

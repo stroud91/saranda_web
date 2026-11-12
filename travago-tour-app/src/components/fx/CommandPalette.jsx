@@ -3,12 +3,12 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BedDouble, BookOpen, Box, CalendarRange, Clapperboard, Compass, CornerDownLeft, Map, MessageCircle, Moon, Route, Search, Sparkles, Users,
+  BedDouble, BookOpen, Box, CalendarRange, Clapperboard, Compass, CornerDownLeft, Map, MessageCircle, Moon, Route, Search, Sparkles, Store, Users,
 } from "lucide-react";
 import { useDestinations } from "../../lib/useDestinations";
 import { CategoryIcon } from "../ui";
 import { useUi } from "../../store/ui";
-import { useGuidesOn } from "../../lib/useConfig";
+import { useGuidesOn, usePartnersOn } from "../../lib/useConfig";
 
 const fold = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/\p{Mn}/gu, "");
 
@@ -23,6 +23,8 @@ const PAGES = [
   { id: "p-explore", label: "Explore destinations", hint: "Beaches, castles, villages", icon: Compass, to: "/explore", words: "places beaches" },
   { id: "p-itins", label: "Ready-made itineraries", hint: "7, 10 and 14 days", icon: CalendarRange, to: "/itineraries", words: "week ideas" },
   { id: "p-films", label: "Films & video credits", hint: "Clips and licences", icon: Clapperboard, to: "/credits", words: "video credits licence" },
+  { id: "p-partners", label: "Local businesses", hint: "Hosts, rentals and tours", icon: Store, to: "/partners", words: "business partner rental shop host operator", partners: true },
+  { id: "p-business", label: "List your business", hint: "Business dashboard", icon: Store, to: "/business", words: "business owner partner add listing dashboard", partners: true },
   { id: "p-account", label: "My account", hint: "Bookings, trips and security", icon: Users, to: "/account", words: "sign in login account profile password bookings" },
   { id: "p-contact", label: "Contact us", hint: "WhatsApp or email", icon: MessageCircle, to: "/contact", words: "email whatsapp help" },
 ];
@@ -47,8 +49,9 @@ export default function CommandPalette({ open, onClose }) {
   }, [open]);
 
   const guidesOn = useGuidesOn();
+  const partnersOn = usePartnersOn();
   const items = useMemo(() => {
-    const pages = guidesOn ? PAGES : PAGES.filter((p) => p.to !== "/guides");
+    const pages = PAGES.filter((p) => (guidesOn || p.to !== "/guides") && (partnersOn || !p.partners));
     const actions = [
       { id: "a-ask", label: q ? `Ask the concierge: “${q}”` : "Ask the concierge", hint: "Offline travel assistant", icon: Sparkles, run: () => openConcierge(q || undefined), words: "ask question help" , always: Boolean(q) },
       ...(toggleTheme ? [{ id: "a-theme", label: "Switch light / dark theme", hint: "Appearance", icon: Moon, run: toggleTheme, words: "dark light theme night" }] : []),
@@ -68,7 +71,7 @@ export default function CommandPalette({ open, onClose }) {
       .sort((a, b) => b.score - a.score)
       .map((x) => x.it);
     return scored.slice(0, 12);
-  }, [q, list, regions, openConcierge, toggleTheme, guidesOn]);
+  }, [q, list, regions, openConcierge, toggleTheme, guidesOn, partnersOn]);
 
   useEffect(() => setActive(0), [q]);
   useEffect(() => {

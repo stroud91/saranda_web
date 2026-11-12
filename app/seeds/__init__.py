@@ -11,19 +11,25 @@ seed_commands = AppGroup("seed")
 
 
 def _counts():
-    from app.models import Booking, Guide, GuideBooking, Hotel
+    from app.models import Booking, CarRental, Enquiry, Guide, GuideBooking, Hotel, Tour
 
+    partner = sum(m.query.filter(m.business_id.isnot(None)).count() for m in (Hotel, Tour, CarRental))
     return {"stays": Hotel.query.count(), "guides": Guide.query.count(),
-            "bookings": Booking.query.count(), "guide requests": GuideBooking.query.count()}
+            "bookings": Booking.query.count(), "guide requests": GuideBooking.query.count(),
+            "partner listings": partner, "enquiries": Enquiry.query.count()}
 
 
 def _confirm_wipe(yes):
     """Never delete real bookings without the operator saying so explicitly."""
     counts = _counts()
-    real = counts["bookings"] + counts["guide requests"]
+    real = counts["bookings"] + counts["guide requests"] + counts["partner listings"] + counts["enquiries"]
     if real and not yes:
+        extra = ""
+        if counts["partner listings"] or counts["enquiries"]:
+            extra = (f" It also deletes {counts['partner listings']} listing(s) added by partner businesses "
+                     f"and {counts['enquiries']} enquiry(ies).")
         click.confirm(f"This permanently deletes {counts['bookings']} booking(s) and "
-                      f"{counts['guide requests']} guide request(s), including paid ones. Continue?", abort=True)
+                      f"{counts['guide requests']} guide request(s), including paid ones.{extra} Continue?", abort=True)
 
 
 @seed_commands.command("all")
@@ -55,6 +61,10 @@ def undo_command(yes):
 
 
 def undo():
+    from app.models import Enquiry, db
+
+    Enquiry.query.delete()  # they point at experiences and rentals
+    db.session.commit()
     undo_bookings()
     undo_tours()
     undo_guides()

@@ -1,7 +1,8 @@
+from .business import Reviewable
 from .db import db, table_args, utcnow
 
 
-class CarRental(db.Model):
+class CarRental(Reviewable, db.Model):
     __tablename__ = "car_rentals"
     __table_args__ = table_args()
 
@@ -16,6 +17,7 @@ class CarRental(db.Model):
     location = db.Column(db.String(255), nullable=False)
     seats = db.Column(db.Integer, nullable=True)
     transmission = db.Column(db.String(20), nullable=True)
+    description = db.Column(db.Text, nullable=True)
 
     bookings = db.relationship("Booking", backref="car_rental", lazy=True)
 
@@ -26,8 +28,11 @@ class CarRental(db.Model):
             "car_type": self.car_type,
             "price_per_day": float(self.price_per_day),
             "availability_status": self.availability_status,
-            "rental_company": self.rental_company,
+            # A partner's rentals always carry the business's current name.
+            "rental_company": self.business.name if self.business else self.rental_company,
             "location": self.location,
             "seats": self.seats,
             "transmission": self.transmission,
+            "description": self.description,
+            "business": self.business_brief(),
         }

@@ -156,6 +156,19 @@ Both need the Python app (they use the database and secret keys); the static upl
 - For a bank transfer the guest sees your IBAN, the exact amount and the booking reference. Dates are held for 48 hours, or 5 days once the guest reports the transfer. You press **Money received** in the Host desk when it lands.
 - Stripe remains in the code for a business registered in the EU or USA.
 
+## Business portal (partners)
+
+Local businesses can add themselves at **/business**: one profile, then their apartments, rentals and activities, all managed from one dashboard. It needs the Python app with accounts and outgoing email (owners must confirm their address).
+
+- **Nothing is public until you approve it.** New businesses and listings appear in *My account → Host desk → Partners*, with every submitted field. Approve, or send it back with a note that is emailed to the owner.
+- **Edits are reviewed too.** On an approved profile or listing, prices, capacity and the on/off switch change at once. Names, descriptions and contact details wait for approval while the approved version stays live. The Host desk shows the old and new text side by side.
+- **Guests deal with the business directly.** A partner's stay is always request-to-book: the site never takes money for another business, even if PayPal or bank transfer is set up for your own apartments. Rentals and activities get an enquiry form. Requests go to the owner's confirmed account email and to their dashboard, where they confirm or decline.
+- **Public pages.** `/partners` lists approved businesses and `/partners/<slug>` shows one with its listings. Partner stays appear on `/stays` under "More places to stay"; activities and rentals appear on `/experiences` with the business's name.
+- **Taking things down.** *Take offline* in the Host desk hides a business and everything it lists, and *Put back online* restores it. An owner can pause or remove a listing, and deleting their account closes the business and erases its contact details.
+- **Limits and switch.** `PARTNER_MAX_LISTINGS` (default 40 per business); `PARTNERS_ENABLED=false` hides the portal and every partner listing.
+
+Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`). Photo uploads aren't supported yet; partner listings use the site's illustrations.
+
 ## Free mode (current default)
 
 Out of the box the site uses only free services and needs no API keys:
@@ -191,6 +204,7 @@ Everything is set through environment variables; see `.env.example`. None of the
 | Road geometry | `OSRM_URL` (self-host for production traffic) | Straight segments |
 | Affiliate links | `BOOKING_AFFILIATE_ID`, `GYG_PARTNER_ID`, `VIATOR_PARTNER_ID` | Plain search links |
 | Admin API with Clerk tokens | `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTIES`, `ADMIN_USER_IDS` | Use a host account instead |
+| Business portal | `PARTNERS_ENABLED` (default on), `PARTNER_MAX_LISTINGS` | On when accounts are on; businesses need a confirmed email, so set up `SMTP_*` |
 | Sample guide profiles | `SHOW_SAMPLE_GUIDES=true` (demos only) | Hidden; guide pages appear once a real guide is added |
 | Message retention | `MESSAGE_RETENTION_MONTHS` (default 24) | Old contact messages and unconfirmed guide requests are deleted by `flask users cleanup` |
 

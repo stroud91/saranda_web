@@ -3,6 +3,8 @@ import { Banknote, BedDouble, Check, Inbox, Landmark, Mail, RefreshCw, Users, X 
 import { api } from "../../lib/api";
 import { euro, fmtDate, money } from "../../lib/format";
 import { Alert, Segmented, Skeleton, toast } from "../ui";
+import { usePartnersOn } from "../../lib/useConfig";
+import PartnerReview from "./PartnerReview";
 
 const patch = (path, body) => api(path, { method: "PATCH", body });
 const fresh = (path) => api(path, { cacheable: false });
@@ -94,15 +96,19 @@ export default function HostDesk() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [view, setView] = useState("todo");
+  const partnersOn = usePartnersOn();
   const load = useCallback(async () => {
     setError("");
     try {
-      const [bookings, guides, messages] = await Promise.all([fresh("/admin/bookings"), fresh("/admin/guide-requests"), fresh("/admin/messages")]);
-      setData({ bookings, guides, messages });
+      const [bookings, guides, messages, partners] = await Promise.all([
+        fresh("/admin/bookings"), fresh("/admin/guide-requests"), fresh("/admin/messages"),
+        partnersOn ? fresh("/admin/partners") : null,
+      ]);
+      setData({ bookings, guides, messages, partners });
     } catch (e) {
       setError(e.message);
     }
-  }, []);
+  }, [partnersOn]);
   useEffect(() => { load(); }, [load]);
 
   const replace = (key) => (row) => setData((d) => ({ ...d, [key]: d[key].map((x) => (x.reference === row.reference ? row : x)) }));
@@ -119,10 +125,16 @@ export default function HostDesk() {
   return (
     <div className="stack host-desk" style={{ "--gap": "22px" }}>
       <div className="row between wrap gap-sm">
-        <Segmented options={[{ value: "todo", label: `Needs you (${count})` }, { value: "all", label: "Everything" }, { value: "messages", label: `Messages (${data.messages.length})` }]} value={view} onChange={setView} layoutId="host-tabs" />
+        <Segmented
+          options={[{ value: "todo", label: `Needs you (${count})` }, { value: "all", label: "Everything" }, { value: "messages", label: `Messages (${data.messages.length})` },
+            ...(data.partners ? [{ value: "partners", label: `Partners (${data.partners.queue.length})` }] : [])]}
+          value={view} onChange={setView} layoutId="host-tabs"
+        />
         <button type="button" className="btn sm" onClick={load}><RefreshCw size={15} /> Refresh</button>
       </div>
-      {view === "messages" ? (
+      {view === "partners" && data.partners ? (
+        <PartnerReview data={data.partners} onReload={load} />
+      ) : view === "messages" ? (
         <section className="stack">
           <h2 className="h3"><Inbox size={18} /> Messages from the contact form</h2>
           {!data.messages.length && <p className="muted">No messages yet.</p>}

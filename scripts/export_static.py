@@ -87,6 +87,8 @@ def build():
                                       "note": "The host confirms your dates; you pay on arrival."}]},
             # Accounts and online payments need the Python app (they use a database and secret keys).
             "auth": {"enabled": False, "email": False},
+            # The business portal needs accounts and a database too.
+            "partners": False,
             "concierge": {"enabled": True, "ai": False},
             "google_places": False,
             "mode": "static",

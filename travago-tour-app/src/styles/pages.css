@@ -647,3 +647,48 @@ a.ticket-body:hover .ticket-title { color: var(--accent); }
 .legal-table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
 .legal code { font-size: 0.85em; overflow-wrap: anywhere; }
 .coming-soon { margin-top: 8px; }
+
+/* ---------- Business portal ---------- */
+.biz-fields { display: grid; gap: 14px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.biz-fields > .full { grid-column: span 6; }
+.biz-fields > .half { grid-column: span 3; }
+.biz-fields > .third { grid-column: span 2; }
+@media (max-width: 560px) { .biz-fields > .half { grid-column: span 6; } .biz-fields > .third { grid-column: span 3; } }
+.biz-form-note { flex: 1 1 220px; }
+.biz-steps { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 4px 0 22px; }
+.biz-steps .card { display: grid; gap: 4px; }
+.biz .account-head .avatar-svg, .biz .account-head svg:first-child { flex: none; }
+.biz-foot { margin-top: 26px; }
+.account-biz { margin-left: auto; flex: none; }
+@media (max-width: 560px) {
+  .account-head { flex-wrap: wrap; }
+  .account-head > div:not(.account-avatar) { flex: 1 1 55%; min-width: 0; }
+  .account-head h1 { overflow-wrap: anywhere; }
+  .account-biz { margin-left: 0; }
+  .biz .account-head > svg { width: 56px; height: 56px; }
+}
+.biz-card { display: grid; gap: 10px; height: 100%; }
+.biz-card h3 { margin: 0; overflow-wrap: anywhere; }
+.biz-cta { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 26px; }
+.biz-profile { display: grid; gap: 26px; }
+.biz-hero { display: flex; gap: 22px; align-items: flex-start; }
+.biz-hero h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.8rem); overflow-wrap: anywhere; }
+@media (max-width: 640px) { .biz-hero { flex-direction: column; } }
+.biz-about { white-space: pre-wrap; line-height: 1.7; max-width: 70ch; margin: 0; overflow-wrap: anywhere; }
+.by-biz { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.partner-stays { margin-top: 40px; }
+.partner-stays h2 { margin: 4px 0; }
+.car-row .btn.sm { flex: none; }
+/* Host desk: what a business submitted, field by field */
+.review-row { align-items: flex-start; }
+.review-diff { margin: 8px 0 0; display: grid; gap: 6px; font-size: 0.88rem; }
+.review-diff > div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 10px; }
+.review-diff dt { color: var(--muted); font-weight: 700; }
+.review-diff dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-diff del { display: block; color: var(--muted); text-decoration: line-through; }
+.review-diff ins { display: block; text-decoration: none; background: color-mix(in srgb, var(--olive) 16%, transparent); border-radius: 6px; padding: 1px 6px; }
+@media (max-width: 560px) { .review-diff > div { grid-template-columns: 1fr; gap: 0; } }
+/* An h2 that should read as a small section title (dashboards, legal pages, credits). */
+h2.h3 { font-size: 1.25rem; }
+.legal-section h2.h3 { font-size: 1.5rem; }
+.biz-profile h2.h3 { font-size: 1.5rem; display: flex; align-items: center; gap: 8px; margin: 0; }

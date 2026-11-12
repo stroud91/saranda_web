@@ -13,7 +13,7 @@ export default function Contact() {
   const [params] = useSearchParams();
   const [form, setForm] = useState(() => ({ name: "", email: "", topic: TOPICS.includes(params.get("topic")) ? params.get("topic") : "stay", message: "", website: "" }));
   const [state, setState] = useState({ busy: false, done: false, error: "", fields: {} });
-  const up = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const up = (k) => (e) => { const v = e.target.value; setForm((f) => ({ ...f, [k]: v })); };
   useEffect(() => { document.title = "Contact · Meg'Rooms"; }, []);
   const submit = async (e) => {
     e.preventDefault();

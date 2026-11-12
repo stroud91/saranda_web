@@ -5,6 +5,7 @@ from flask import Blueprint, abort, jsonify, request
 
 from app.auth import require_admin
 from app.models import Tour, db
+from app.services import partners
 from app.validation import Field, json_body
 
 tours_routes = Blueprint("tours", __name__)
@@ -12,20 +13,23 @@ tours_routes = Blueprint("tours", __name__)
 
 def _tour_or_404(tour_id):
     tour = db.session.get(Tour, tour_id)
-    if not tour:
+    if not tour or tour.business_id is not None:  # admin edits are for the site's own experiences
         abort(404, description="Experience not found")
     return tour
 
 
 @tours_routes.get("/")
 def get_tours():
-    tours = Tour.query.filter(Tour.is_available.isnot(False)).order_by(Tour.price).all()
+    tours = Tour.query.filter(Tour.is_available.isnot(False), partners.public_filter(Tour)).order_by(Tour.price).all()
     return jsonify([t.to_dict() for t in tours])
 
 
 @tours_routes.get("/<int:tour_id>")
 def get_tour(tour_id):
-    return jsonify(_tour_or_404(tour_id).to_dict())
+    tour = Tour.query.filter(Tour.id == tour_id, partners.public_filter(Tour)).first()
+    if not tour:
+        abort(404, description="Experience not found")
+    return jsonify(tour.to_dict())
 
 
 TOUR_SCHEMA = {

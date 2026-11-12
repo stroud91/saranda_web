@@ -72,7 +72,8 @@ export function SignUp() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "", website: "" });
   const [state, setState] = useState({ busy: false, error: "", fields: {} });
-  const up = (k) => (e) => setForm({ ...form, [k]: e?.target ? e.target.value : e });
+  // Functional update: autofill sets several fields in the same tick and all must be kept.
+  const up = (k) => (e) => { const v = e?.target ? e.target.value : e; setForm((f) => ({ ...f, [k]: v })); };
 
   if (!ready) return <div className="page container"><Skeleton h={420} r={26} /></div>;
   if (!available) return <Unavailable />;

@@ -124,7 +124,11 @@ export default function BookingStatus() {
 
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
   if (!b) return <div className="page container"><Skeleton h={360} r={26} /></div>;
-  const label = labelFor(b);
+  const host = b.hosted_by;
+  const base = labelFor(b);
+  // A partner business hosts this stay: say who confirms and who is paid.
+  const label = host && b.status === "requested" ? { ...base, text: `${host.name} will confirm your dates by email. You pay them directly; nothing has been charged.` }
+    : host && b.status === "confirmed" ? { ...base, text: `Your stay is confirmed by ${host.name}. You pay them directly.` } : base;
   const canPayPal = b.status === "pending" && b.payment_method === "paypal" && b.payment_status !== "processing";
   const chargedOther = b.charge_currency && b.charge_currency !== "EUR" && b.charge_amount;
   return (
@@ -141,6 +145,7 @@ export default function BookingStatus() {
           </span>
           {b.guest_email_masked && <span className="tiny muted">Confirmation to {b.guest_email_masked}</span>}
         </div>
+        {host && <p className="tiny muted" style={{ margin: "8px 0 0" }}>Hosted by <Link to={`/partners/${host.slug}`}>{host.name}</Link>, an independent local business.</p>}
       </TicketCard>
 
       {canPayPal && (

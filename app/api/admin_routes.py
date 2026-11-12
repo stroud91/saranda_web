@@ -2,8 +2,8 @@
 from flask import Blueprint, abort, g, jsonify, request
 
 from app.auth import require_admin
-from app.models import Booking, ContactMessage, Guide, GuideBooking, db
-from app.services import accounts, mailer
+from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, db
+from app.services import accounts, mailer, partners
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -19,7 +19,8 @@ def me():
 @require_admin
 def list_bookings():
     args = query_args({"status": Field(max_len=20)})
-    q = Booking.query
+    # The host's own stays only: a partner's bookings are theirs to confirm in their dashboard.
+    q = Booking.query.outerjoin(Hotel, Booking.hotel_id == Hotel.id).filter(Hotel.business_id.is_(None))
     if args["status"]:
         q = q.filter_by(status=args["status"])
     rows = q.order_by(Booking.created_at.desc()).limit(500).all()
@@ -35,11 +36,13 @@ def list_bookings():
 @require_admin
 def update_booking(reference):
     booking = Booking.query.filter_by(reference=reference.upper()).first() or abort(404)
+    if booking.hotel and booking.hotel.business_id:
+        abort(404)  # belongs to a partner business
     data = json_body({"status": Field(choices=["requested", "confirmed", "cancelled"]),
                       "paid": Field("bool")})
     if not data["status"] and data["paid"] is None:
         abort(400)
-    was_confirmed = booking.status == "confirmed"
+    was_confirmed, was_cancelled = booking.status == "confirmed", booking.status == "cancelled"
     if data["paid"]:  # e.g. the bank transfer arrived
         booking.mark_paid()
     elif data["status"]:
@@ -49,6 +52,9 @@ def update_booking(reference):
     db.session.commit()
     if booking.status == "confirmed" and not was_confirmed and booking.guest_email and mailer.configured():
         mailer.deliver(mailer.booking_confirmed, booking.to_public_dict(), booking.guest_email, accounts.site_url())
+    if (booking.status == "cancelled" and not was_cancelled and booking.guest_email and mailer.configured()
+            and booking.payment_status != "paid"):
+        mailer.deliver(mailer.booking_cancelled, booking.to_public_dict(), booking.guest_email, accounts.site_url())
     return jsonify(booking.to_admin_dict())
 
 
@@ -121,3 +127,84 @@ def update_guide(slug):
 def list_messages():
     rows = ContactMessage.query.order_by(ContactMessage.created_at.desc()).limit(500).all()
     return jsonify([m.to_admin_dict() for m in rows])
+
+
+# ---- partner businesses: review what they submit ------------------------------
+def _owner_email(business):
+    owner = business.owner
+    return owner.email if owner and owner.email_verified else None
+
+
+def _business_row(business):
+    out = business.to_owner_dict()
+    out.update({"slug": business.slug, "owner_email": business.owner.email if business.owner else None,
+                "listings": partners.listing_count(business),
+                "created_at": business.created_at.isoformat() + "Z" if business.created_at else None})
+    return out
+
+
+@admin_routes.get("/partners")
+@require_admin
+def list_partners():
+    """The review queue, plus every business for an overview."""
+    businesses = Business.query.filter(Business.status != "closed").order_by(Business.created_at.desc()).limit(500).all()
+    return jsonify({"queue": partners.review_queue(), "businesses": [_business_row(b) for b in businesses]})
+
+
+REVIEW_SCHEMA = {"action": Field(required=True, choices=["approve", "reject", "suspend", "reinstate"]),
+                 "note": Field("text", max_len=600)}
+
+
+@admin_routes.patch("/partners/businesses/<int:business_id>")
+@require_admin
+def review_business(business_id):
+    business = db.session.get(Business, business_id)
+    if not business or business.status == "closed":
+        abort(404)
+    data = json_body(REVIEW_SCHEMA)
+    action, note, to, base = data["action"], data["note"], _owner_email(business), accounts.site_url()
+    waiting = business.status in ("pending", "rejected") or bool(business.pending_changes)
+    if action in ("approve", "reject") and not waiting:
+        return jsonify({"error": "Nothing is waiting for review on this business"}), 409
+    if action == "approve":
+        partners.approve(business, status_attr="status")
+        db.session.commit()
+        mailer.deliver(mailer.partner_decision, to, business.name, True, None, base)
+    elif action == "reject":
+        if not note:
+            return jsonify({"error": "Say what needs to change", "fields": {"note": "Add a short note for the business"}}), 400
+        partners.reject(business, note, status_attr="status")
+        db.session.commit()
+        mailer.deliver(mailer.partner_decision, to, business.name, False, note, base)
+    else:
+        wanted = "suspended" if action == "suspend" else "approved"
+        if business.status not in ("approved", "suspended"):
+            return jsonify({"error": "Only an approved business can be suspended or reinstated"}), 409
+        if business.status != wanted:
+            business.status = wanted
+            business.review_note = note if wanted == "suspended" else None
+            db.session.commit()
+            mailer.deliver(mailer.partner_status, to, business.name, wanted, note, base)
+    return jsonify(_business_row(business))
+
+
+@admin_routes.patch("/partners/listings/<kind_key>/<int:listing_id>")
+@require_admin
+def review_listing(kind_key, listing_id):
+    kind = partners.KINDS.get(kind_key) or abort(404)
+    obj = db.session.get(kind.model, listing_id)
+    if not obj or not obj.business_id or obj.review_status == "removed":
+        abort(404)
+    data = json_body({"action": Field(required=True, choices=["approve", "reject"]), "note": Field("text", max_len=600)})
+    if obj.review_status not in ("pending", "rejected") and not obj.pending_changes:
+        return jsonify({"error": "Nothing is waiting for review on this listing"}), 409
+    name, to, base = kind.name(obj), _owner_email(obj.business), accounts.site_url()
+    if data["action"] == "approve":
+        partners.approve(obj)
+    else:
+        if not data["note"]:
+            return jsonify({"error": "Say what needs to change", "fields": {"note": "Add a short note for the business"}}), 400
+        partners.reject(obj, data["note"])
+    db.session.commit()
+    mailer.deliver(mailer.partner_decision, to, name, data["action"] == "approve", data["note"], base)
+    return jsonify(partners.owner_view(kind, obj))

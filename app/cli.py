@@ -12,7 +12,7 @@ import click
 from flask import current_app
 from flask.cli import AppGroup
 
-from app.models import AuthToken, ContactMessage, GuideBooking, LoginThrottle, User, UserSession, db
+from app.models import AuthToken, ContactMessage, Enquiry, GuideBooking, LoginThrottle, User, UserSession, db
 from app.models.db import utcnow
 from app.services import accounts
 
@@ -89,7 +89,8 @@ def list_users():
 @user_commands.command("cleanup")
 def cleanup():
     """Delete expired sessions, used or expired tokens and stale sign-in counters, plus
-    contact messages and unconfirmed guide requests older than MESSAGE_RETENTION_MONTHS."""
+    contact messages, enquiries to partner businesses and unconfirmed guide requests older
+    than MESSAGE_RETENTION_MONTHS."""
     now = utcnow()
     n = UserSession.query.filter(UserSession.expires_at < now).delete(synchronize_session=False)
     n += AuthToken.query.filter(AuthToken.expires_at < now).delete(synchronize_session=False)
@@ -98,6 +99,7 @@ def cleanup():
     if months > 0:
         cutoff = now - timedelta(days=round(months * 30.44))
         n += ContactMessage.query.filter(ContactMessage.created_at < cutoff).delete(synchronize_session=False)
+        n += Enquiry.query.filter(Enquiry.created_at < cutoff).delete(synchronize_session=False)
         # Accepted guide requests are business records and are kept like stay bookings.
         n += GuideBooking.query.filter(GuideBooking.status != "accepted",
                                        GuideBooking.created_at < cutoff).delete(synchronize_session=False)

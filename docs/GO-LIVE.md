@@ -159,13 +159,23 @@ The guest sees your details, the exact amount, the booking reference and a QR co
 - **Tours and rental cars** on /experiences are sample data too. Replace them, or ask for that page to be hidden.
 - **Apartments:** check every name, photo and nightly price on /stays, and get anything wrong corrected before you take bookings.
 
+### Local businesses (the business portal)
+
+Other businesses can list their own apartments, rentals and activities at `https://yourdomain/business`. Nothing they add is visible until you approve it:
+
+1. You get an email each time something is waiting ("Review needed").
+2. Open **My account → Host desk → Partners**. Read what was submitted, then **Approve** or **Ask for changes** (your note is emailed to them).
+3. To remove a business later, press **Take offline** next to it.
+
+Guests book and pay those businesses directly; no money for them passes through your PayPal or bank account. Read the "Listings from local businesses" section on **/terms** and adjust it with your lawyer if you want different rules. To switch the whole feature off, put `PARTNERS_ENABLED=false` in `.env`.
+
 ## 11. Daily clean-up and backups
 
 **Cron job.** cPanel → **Cron Jobs** → *Once Per Day*. Take the `source …/bin/activate` command from step 3, drop `source ` from the front and change `activate` at the end to `flask`. That gives the full path of the app's `flask`, for example `/home/<user>/virtualenv/megrooms_flask/3.11/bin/flask`. The command is then:
 ```bash
 cd /home/<user>/megrooms_flask && /home/<user>/virtualenv/megrooms_flask/3.11/bin/flask --app app users cleanup >/dev/null 2>&1
 ```
-It removes expired sign-ins and email links. It also removes contact messages and unconfirmed guide requests older than 24 months, as the privacy policy promises (`MESSAGE_RETENTION_MONTHS`).
+It removes expired sign-ins and email links. It also removes contact messages, questions sent to partner businesses and unconfirmed guide requests older than 24 months, as the privacy policy promises (`MESSAGE_RETENTION_MONTHS`).
 
 **Backups.** At least weekly, download `megrooms_flask/instance/saranda.db` (your bookings and accounts) and `megrooms_flask/.env`, and keep them somewhere private. Or use cPanel → **Backup** / **JetBackup** if your plan has it.
 

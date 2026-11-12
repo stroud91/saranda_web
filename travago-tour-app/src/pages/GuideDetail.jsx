@@ -38,7 +38,7 @@ function RequestForm({ guide }) {
   const tripDayIdx = Math.min(trip.activeDay, trip.days.length - 1);
   const tripStops = trip.days[tripDayIdx]?.stops || [];
   const price = duration === "half" ? guide.price_half_day : duration === "full" ? guide.price_full_day : guide.price_full_day * days;
-  const up = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const up = (k) => (e) => { const v = e.target.value; setForm((f) => ({ ...f, [k]: v })); };
 
   const submit = async (e) => {
     e.preventDefault();

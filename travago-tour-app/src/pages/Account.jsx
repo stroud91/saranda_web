@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { api, post } from "../lib/api";
 import { useAuth } from "../store/auth";
-import { useGuidesOn } from "../lib/useConfig";
+import { useGuidesOn, usePartnersOn } from "../lib/useConfig";
 import { euro, fmtDate } from "../lib/format";
 import { Alert, Field, Segmented, Skeleton, toast } from "../components/ui";
 import TicketCard from "../components/account/TicketCard";
@@ -209,7 +209,7 @@ function Security({ user, onUser }) {
 
       <div className="card pad stack">
         <h2 className="h3"><ShieldCheck size={18} /> Your data</h2>
-        <p className="small muted">Download everything this account holds, or delete the account. Bookings stay with the host as business records but are unlinked from you; saved trips are erased.</p>
+        <p className="small muted">Download everything this account holds, or delete the account. Bookings stay with the host as business records but are unlinked from you; saved trips are erased. If you list a business here, its page and listings are taken down.</p>
         <a className="btn" href="/api/account/export"><Download size={16} /> Download my data (JSON)</a>
         {!del.open ? (
           <button type="button" className="btn danger-outline" onClick={() => setDel({ ...del, open: true })}><Trash2 size={16} /> Delete my account…</button>
@@ -235,6 +235,7 @@ export default function Account() {
   const [error, setError] = useState("");
   const tab = params.get("tab") || "stays";
   const guidesOn = useGuidesOn();
+  const partnersOn = usePartnersOn();
 
   useEffect(() => { document.title = "My account · Saranda Companion"; }, []);
   useEffect(() => {
@@ -268,6 +269,7 @@ export default function Account() {
           <h1>Mirë se erdhe{first ? `, ${first}` : ""}</h1>
           <p className="muted small">{user.email}</p>
         </div>
+        {partnersOn && <Link className="btn sm account-biz" to="/business"><Store size={15} /> {data?.has_business ? "Business dashboard" : "List your business"}</Link>}
       </header>
       <VerifyBanner user={user} emailDelivery={emailDelivery} />
       <Segmented options={options} value={tab} onChange={(v) => setParams(v === "stays" ? {} : { tab: v }, { replace: true })} layoutId="account-tabs" />

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock } from "lucide-react";
+import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock, Store } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { post } from "../lib/api";
 import { euro, todayIso, addDays, fmtDate, goToPayPal, money } from "../lib/format";
@@ -32,8 +32,11 @@ export default function StayDetail() {
   const [state, setState] = useState({ busy: false, error: "", pay: null });
   const user = useAuth((s) => s.user);
   // Ways to pay come from the server; older configs only say whether cards are on.
-  const methods = useMemo(() => cfg.payments?.methods?.length ? cfg.payments.methods
-    : [cfg.payments?.enabled ? { id: "card", label: "Card" } : { id: "request", label: "Request to book" }], [cfg]);
+  // A partner business's stay is always request-to-book: the guest pays that business directly.
+  const partner = h?.business || null;
+  const methods = useMemo(() => partner ? [{ id: "request", label: "Request to book" }]
+    : cfg.payments?.methods?.length ? cfg.payments.methods
+      : [cfg.payments?.enabled ? { id: "card", label: "Card" } : { id: "request", label: "Request to book" }], [cfg, partner]);
   const [method, setMethod] = useState(null);
   const chosen = methods.find((m) => m.id === method) || methods[0];
   const payable = chosen.id !== "request";
@@ -65,7 +68,7 @@ export default function StayDetail() {
   const quoteBody = useMemo(() => (h && checkOut > checkIn ? { hotel_id: h.id, start_date: checkIn, end_date: checkOut, guest_count: guests } : null), [h, checkIn, checkOut, guests]);
   const { data: quote, error: quoteError } = useLivePost("/bookings/quote", quoteBody, 250);
 
-  useEffect(() => { if (h) document.title = `${h.apartment_name || h.hotel_name} · Meg'Rooms`; }, [h]);
+  useEffect(() => { if (h) document.title = `${h.apartment_name || h.hotel_name} · ${h.business?.name || "Meg'Rooms"}`; }, [h]);
 
   const pick = (iso) => {
     setTouched(true);
@@ -79,7 +82,7 @@ export default function StayDetail() {
     }
   };
 
-  const up = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const up = (k) => (e) => { const v = e.target.value; setForm((f) => ({ ...f, [k]: v })); };
   const book = async (e) => {
     e.preventDefault();
     setState({ busy: true, error: "", pay: null });
@@ -103,7 +106,7 @@ export default function StayDetail() {
 
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
   if (!h) return <div className="page container"><Skeleton h={420} r={26} /></div>;
-  const wa = whatsappUrl(cfg.whatsapp, `Hello! I'm interested in ${h.hotel_name} from ${checkIn} to ${checkOut} for ${guests} guests.`);
+  const wa = partner ? null : whatsappUrl(cfg.whatsapp, `Hello! I'm interested in ${h.hotel_name} from ${checkIn} to ${checkOut} for ${guests} guests.`);
   const nights = quote?.nights;
 
   return (
@@ -120,7 +123,7 @@ export default function StayDetail() {
       <div className="split wide-left" style={{ marginTop: 24 }}>
         <div className="stack" style={{ "--gap": "18px" }}>
           <div>
-            <div className="eyebrow">Meg'Rooms · {h.city}</div>
+            <div className="eyebrow">{partner ? <><Store size={14} /> Hosted by <Link to={`/partners/${partner.slug}`}>{partner.name}</Link></> : "Meg'Rooms"} · {h.city}</div>
             <h1 style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)" }}>{h.hotel_name}</h1>
             <div className="stay-facts">
               <span><BedDouble size={16} /> {h.bedrooms} bedroom{h.bedrooms === 1 ? "" : "s"} · {h.beds} bed{h.beds === 1 ? "" : "s"}</span>
@@ -137,10 +140,24 @@ export default function StayDetail() {
           <div className="card pad">
             <h3>Where you'll be</h3>
             <p className="small muted">{h.address}</p>
-            <p className="small">Butrint 30–45 min · Ksamil 25–40 min · Blue Eye 45–60 min · Himarë 1¼–1¾ h · Corfu by ferry.</p>
-            <Link to="/itineraries/sarande-3-day-base" className="btn sm"><Compass size={16} /> 3-day Sarandë base plan</Link>
+            {partner ? (
+              <Link to="/routes" className="btn sm"><Compass size={16} /> Check drive times from here</Link>
+            ) : (
+              <>
+                <p className="small">Butrint 30–45 min · Ksamil 25–40 min · Blue Eye 45–60 min · Himarë 1¼–1¾ h · Corfu by ferry.</p>
+                <Link to="/itineraries/sarande-3-day-base" className="btn sm"><Compass size={16} /> 3-day Sarandë base plan</Link>
+              </>
+            )}
           </div>
-          <div className="card pad"><h3>Sarandë weather</h3><WeatherCard compact /></div>
+          {partner ? (
+            <div className="card pad">
+              <h3><Store size={18} /> Your host</h3>
+              <p className="small muted">This stay is offered by <b>{partner.name}</b>, an independent local business we've checked. They confirm your dates and you pay them directly.</p>
+              <Link to={`/partners/${partner.slug}`} className="btn sm">About {partner.name}</Link>
+            </div>
+          ) : (
+            <div className="card pad"><h3>Sarandë weather</h3><WeatherCard compact /></div>
+          )}
         </div>
         <aside className="card pad sticky-col booking-widget">
           <div className="row between">
@@ -211,7 +228,7 @@ export default function StayDetail() {
             {errors.payment_method && <Alert kind="warn">{errors.payment_method}</Alert>}
             {state.error && !errors.payment_method && <Alert kind="error">{state.error}</Alert>}
             <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : null} {{ paypal: "Continue to PayPal", card: "Continue to payment", bank: "Get bank details", request: "Send booking request" }[chosen.id]}</button>
-            {!payable && <p className="tiny muted">We'll confirm availability by email within a few hours. Payment is arranged directly with the host.</p>}
+            {!payable && <p className="tiny muted">{partner ? `${partner.name} will confirm your dates by email. You pay them directly; nothing is charged now.` : "We'll confirm availability by email within a few hours. Payment is arranged directly with the host."}</p>}
             <p className="tiny muted">By booking you accept our <Link to="/terms#cancel">booking and cancellation terms</Link>. See how we use your details in the <Link to="/privacy">privacy policy</Link>.</p>
           </form>
         )}

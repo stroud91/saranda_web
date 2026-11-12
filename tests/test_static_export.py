@@ -28,6 +28,7 @@ def test_static_config_has_no_server_features():
     assert cfg["payments"]["enabled"] is False and cfg["payments"]["publishable_key"] is None
     assert [m["id"] for m in cfg["payments"]["methods"]] == ["request"]
     assert cfg["auth"] == {"enabled": False, "email": False}
+    assert cfg["partners"] is False
     assert cfg["concierge"]["ai"] is False
 
 

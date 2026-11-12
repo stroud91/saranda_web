@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { cloneElement, lazy, Suspense, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import TopBar from "./TopBar";
@@ -40,6 +40,22 @@ function useTheme() {
   }, [theme]);
 }
 
+/**
+ * Keeps a page wrapper showing the route it was created for.
+ *
+ * While the old page fades out, the router already reports the new address.
+ * Without this the old wrapper would render the new page for a moment, and the
+ * page would then be mounted a second time in its own wrapper — running its
+ * requests twice and wiping anything typed (or autofilled) in between.
+ * Query-string and hash changes on the same page still come through.
+ */
+function RouteFreeze({ pathname, children }) {
+  const location = useLocation();
+  const shown = useRef(location);
+  if (location.pathname === pathname) shown.current = location;
+  return cloneElement(children, { location: shown.current });
+}
+
 const FULLSCREEN = ["/map", "/atlas"];
 // Sign-in pages fill the screen with their own layout (no footer).
 const BARE = ["/signin", "/signup", "/forgot-password", "/reset-password", "/verify-email"];
@@ -71,7 +87,7 @@ export default function AppShell({ children }) {
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         >
           <Suspense fallback={<div className="page container"><div className="skeleton" style={{ height: 320, marginTop: 40 }} /></div>}>
-            {children}
+            <RouteFreeze pathname={location.pathname}>{children}</RouteFreeze>
           </Suspense>
         </motion.main>
       </AnimatePresence>

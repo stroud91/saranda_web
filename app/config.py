@@ -115,6 +115,11 @@ class Config:
     # Business contact
     WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "")
     CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "bookings@megrooms.com")
+    # Business portal: local businesses add their own profile and listings, which
+    # stay hidden until the host approves them. Needs accounts and outgoing e-mail.
+    PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
+    PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
+
     # Contact messages and guide requests that never became a booking are deleted
     # after this many months by `flask users cleanup` (the privacy policy says so).
     MESSAGE_RETENTION_MONTHS = int(os.environ.get("MESSAGE_RETENTION_MONTHS", "24"))
