@@ -399,3 +399,27 @@ def test_portal_can_be_switched_off(app, owner, host, client):
     assert all(h["business"] is None for h in client.get("/api/hotels/").get_json())
     app.config["PARTNERS_ENABLED"] = True
     assert client.get("/api/meta/config").get_json()["partners"] is True
+
+
+# ---- page style -----------------------------------------------------------------------
+def test_page_style_is_a_set_of_known_options_and_applies_at_once(owner, host, client):
+    business = make_business(owner)
+    assert business["style"] == {"background": "plain", "scene": "harbor", "variant": "golden", "cards": "soft"}
+    approve(host, "business", business["id"])
+    mailer.outbox.clear()
+    look = {"background": "scene", "scene": "castle", "variant": "sunset", "cards": "outline"}
+    saved = owner.put("/api/partner/business", json={"palette": "terracotta", "style": {**look, "css": "body{display:none}"}}).get_json()
+    assert saved["style"] == look and saved["palette"] == "terracotta" and not saved["has_pending_changes"]
+    # Cosmetic choices need no review and don't mail the host.
+    public = client.get("/api/businesses/blue-bay-rentals").get_json()["business"]
+    assert public["style"] == look and public["palette"] == "terracotta"
+    assert mailer.outbox == []
+    # A partial style keeps the defaults for the rest.
+    assert owner.put("/api/partner/business", json={"style": {"background": "waves"}}).get_json()["style"]["scene"] == "harbor"
+    # Anything that isn't one of the listed options is refused: no CSS, colours or URLs.
+    for bad in ({"background": "url(https://evil.example/x.png)"}, {"background": "red;} body{display:none"},
+                {"scene": "<script>"}, {"variant": ["day"]}, {"cards": 7}, "plain", ["plain"]):
+        r = owner.put("/api/partner/business", json={"style": bad})
+        assert r.status_code == 400 and "style" in r.get_json()["fields"], bad
+    assert client.get("/api/businesses/blue-bay-rentals").get_json()["business"]["style"]["background"] == "waves"
+    assert owner.get("/api/partner/").get_json()["options"]["style"]["background"] == ["plain", "gradient", "waves", "dots", "scene"]

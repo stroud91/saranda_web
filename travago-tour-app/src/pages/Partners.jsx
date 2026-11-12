@@ -9,6 +9,7 @@ import { euro } from "../lib/format";
 import GuideAvatar from "../components/art/GuideAvatar";
 import SceneArt from "../components/art/SceneArt";
 import EnquirySheet from "../components/business/EnquirySheet";
+import { BusinessHero, BusinessLook } from "../components/business/BusinessLook";
 import { ErrorState, PageHeader, Skeleton } from "../components/ui";
 
 const COUNT_LABEL = { stays: ["stay", BedDouble], rentals: ["rental", Car], experiences: ["activity", Ticket] };
@@ -76,23 +77,15 @@ export function PartnerProfile() {
   const brief = { slug: b.slug, name: b.name };
   const wa = whatsappUrl(b.whatsapp, `Hello ${b.name}! I found you on Saranda Companion.`);
   return (
-    <div className="page container biz-profile">
-      <header className="card pad biz-hero">
-        <GuideAvatar name={b.name} palette={b.palette} size={88} />
-        <div className="stack" style={{ "--gap": "8px", minWidth: 0 }}>
-          <div className="eyebrow"><Store size={14} /> Local business{b.since ? ` · on Saranda Companion since ${b.since}` : ""}</div>
-          <h1>{b.name}</h1>
-          {b.tagline && <p className="lead" style={{ margin: 0 }}>{b.tagline}</p>}
-          <span className="small muted"><MapPin size={14} /> {[b.address, b.city].filter(Boolean).join(", ")}</span>
-          <div className="row">
-            <button type="button" className="btn primary" onClick={() => setAsk({ business: brief, kind: "general" })}><MessageSquare size={16} /> Ask a question</button>
-            {wa && <a className="btn whatsapp" href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> WhatsApp</a>}
-            {b.phone && <a className="btn" href={`tel:${b.phone.replace(/[^\d+]/g, "")}`}><Phone size={16} /> {b.phone}</a>}
-            {b.email && <a className="btn" href={`mailto:${b.email}`}><Mail size={16} /> Email</a>}
-            {b.website && <a className="btn" href={b.website} target="_blank" rel="noopener noreferrer nofollow ugc"><Globe size={16} /> Website</a>}
-          </div>
-        </div>
-      </header>
+    <BusinessLook palette={b.palette} look={b.style} className="page biz-page">
+      <div className="container biz-profile">
+      <BusinessHero business={b}>
+        <button type="button" className="btn primary" onClick={() => setAsk({ business: brief, kind: "general" })}><MessageSquare size={16} /> Ask a question</button>
+        {wa && <a className="btn whatsapp" href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> WhatsApp</a>}
+        {b.phone && <a className="btn" href={`tel:${b.phone.replace(/[^\d+]/g, "")}`}><Phone size={16} /> {b.phone}</a>}
+        {b.email && <a className="btn" href={`mailto:${b.email}`}><Mail size={16} /> Email</a>}
+        {b.website && <a className="btn" href={b.website} target="_blank" rel="noopener noreferrer nofollow ugc"><Globe size={16} /> Website</a>}
+      </BusinessHero>
       {b.description && <p className="biz-about">{b.description}</p>}
 
       {stays.length > 0 && (
@@ -155,7 +148,8 @@ export function PartnerProfile() {
 
       {!stays.length && !rentals.length && !experiences.length && <div className="empty">This business hasn't listed anything yet. You can still ask them a question.</div>}
       <p className="small muted"><ShieldCheck size={14} /> {b.name} is an independent business. You arrange and pay with them directly; see our <Link to="/terms#partners">booking terms</Link>.</p>
+      </div>
       <EnquirySheet target={ask} onClose={() => setAsk(null)} />
-    </div>
+    </BusinessLook>
   );
 }

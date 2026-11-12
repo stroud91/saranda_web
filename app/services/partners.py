@@ -18,7 +18,7 @@ from sqlalchemy import and_, or_, select
 
 from app.data import DESTINATION_INDEX
 from app.models import Business, CarRental, Hotel, Tour, db
-from app.models.business import PALETTES
+from app.models.business import PALETTES, STYLE_DEFAULT, STYLE_OPTIONS
 from app.models.db import utcnow
 from app.validation import Field, ValidationError
 
@@ -37,8 +37,26 @@ BUSINESS_SCHEMA = {
     "whatsapp": Field("phone", max_len=40, label="WhatsApp number"),
     "website": Field(max_len=255, pattern=URL_PATTERN, label="Website (must start with https://)"),
     "palette": Field(choices=list(PALETTES), default="sea"),
+    "style": Field("dict"),
 }
-BUSINESS_LIVE = {"palette"}
+# Looks are picked from fixed lists, so they apply at once; everything else on a live profile is reviewed.
+BUSINESS_LIVE = {"palette", "style"}
+
+
+def clean_style(raw):
+    """A page style made only of known options. Unknown keys are dropped and unknown
+    values refused, so nothing a business sends can reach the page as CSS or a URL."""
+    if raw is None:
+        return dict(STYLE_DEFAULT)
+    if not isinstance(raw, dict):
+        raise ValidationError({"style": "Style must be a set of options"})
+    out = {}
+    for key, allowed in STYLE_OPTIONS.items():
+        value = raw.get(key, STYLE_DEFAULT[key])
+        if not isinstance(value, str) or value not in allowed:
+            raise ValidationError({"style": f"Unknown {key} option"})
+        out[key] = value
+    return out
 
 
 class Kind:

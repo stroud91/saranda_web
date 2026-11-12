@@ -13,6 +13,7 @@ import GuideAvatar from "../components/art/GuideAvatar";
 import ProfileForm from "../components/business/ProfileForm";
 import ListingSheet from "../components/business/ListingSheet";
 import Requests from "../components/business/Requests";
+import LookEditor from "../components/business/LookEditor";
 
 function Welcome({ unavailable }) {
   return (
@@ -193,10 +194,11 @@ export default function Business() {
       {!data.email_verified && <VerifyFirst email={user.email} emailDelivery={emailDelivery} />}
       <Segmented
         layoutId="biz-tabs" value={tab} onChange={(v) => setParams(v === "listings" ? {} : { tab: v }, { replace: true })}
-        options={[{ value: "listings", label: "What you offer" }, { value: "requests", label: `Requests${data.new_requests ? ` (${data.new_requests})` : ""}` }, { value: "profile", label: "Profile" }]}
+        options={[{ value: "listings", label: "What you offer" }, { value: "requests", label: `Requests${data.new_requests ? ` (${data.new_requests})` : ""}` }, { value: "look", label: "Page style" }, { value: "profile", label: "Profile" }]}
       />
       <div className="account-body">
         {tab === "requests" ? <Requests onCount={setCount} />
+          : tab === "look" ? <LookEditor business={business} listings={data.listings} onSaved={(saved) => setData((d) => ({ ...d, business: saved }))} />
           : tab === "profile" ? <ProfileForm business={business} onSaved={(saved) => setData((d) => ({ ...d, business: saved }))} />
             : <Listings data={data} setData={setData} />}
       </div>

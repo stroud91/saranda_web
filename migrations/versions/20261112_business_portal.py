@@ -40,6 +40,7 @@ def upgrade():
         sa.Column("whatsapp", sa.String(40), nullable=True),
         sa.Column("website", sa.String(255), nullable=True),
         sa.Column("palette", sa.String(20)),
+        sa.Column("style", sa.JSON(), nullable=True),
         sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
         sa.Column("review_note", sa.Text(), nullable=True),
         sa.Column("pending_changes", sa.JSON(), nullable=True),

@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
 import { useConfig, useGuidesOn, usePartnersOn, whatsappUrl } from "../../lib/useConfig";
+import { LANGS, currentLang } from "../../i18n";
+import { useUi } from "../../store/ui";
 
 export default function Footer() {
   const cfg = useConfig();
   const guides = useGuidesOn();
   const partners = usePartnersOn();
+  const setLang = useUi((s) => s.setLang);
   const wa = whatsappUrl(cfg.whatsapp, "Hello Meg'Rooms! I'm planning a trip to Sarandë.");
   return (
     <footer className="footer">
@@ -50,6 +53,11 @@ export default function Footer() {
               <li><Link to="/privacy">Privacy policy</Link></li>
             </ul>
           </div>
+        </div>
+        <div className="footer-langs" role="group" aria-label="Language">
+          {LANGS.map((l) => (
+            <button key={l.code} type="button" lang={l.code} className={currentLang() === l.code ? "on" : ""} aria-pressed={currentLang() === l.code} onClick={() => setLang(l.code)}>{l.name}</button>
+          ))}
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Meg'Rooms · Sarandë, Albania</span>

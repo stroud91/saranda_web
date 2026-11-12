@@ -1,6 +1,6 @@
 import { hash } from "../../lib/format";
 
-const PALETTES = {
+export const PALETTES = {
   sea: ["#0b5c7e", "#19c3c0"],
   sunset: ["#d9653b", "#f4b63f"],
   olive: ["#6e7f3a", "#a9b872"],

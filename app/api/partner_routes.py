@@ -18,7 +18,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.extensions import limiter
 from app.models import Booking, Business, Enquiry, Hotel, db
-from app.models.business import PALETTES
+from app.models.business import PALETTES, STYLE_OPTIONS
 from app.services import accounts, mailer, partners
 from app.validation import Field, json_body
 
@@ -107,7 +107,7 @@ def dashboard():
         "email_verified": user.email_verified,
         "max_listings": current_app.config.get("PARTNER_MAX_LISTINGS", 40),
         "options": {"rental_types": partners.RENTAL_TYPES, "categories": partners.EXPERIENCE_CATEGORIES,
-                    "palettes": list(PALETTES)},
+                    "palettes": list(PALETTES), "style": {k: list(v) for k, v in STYLE_OPTIONS.items()}},
     })
 
 
@@ -119,6 +119,7 @@ def create_business():
     if _own_business(user):
         return jsonify({"error": "This account already has a business profile"}), 409
     data = json_body(partners.BUSINESS_SCHEMA)
+    data["style"] = partners.clean_style(data["style"])
     business = Business(**data, owner_id=user.id, slug=partners.slugify(data["name"]), status="pending")
     db.session.add(business)
     try:
@@ -138,6 +139,8 @@ def create_business():
 def update_business():
     business = g.business
     data = _sent_fields(partners.BUSINESS_SCHEMA)
+    if "style" in data:
+        data["style"] = partners.clean_style(data["style"])
     was_waiting = business.status == "pending" or bool(business.pending_changes)
     needs_review = partners.submit(business, data, partners.BUSINESS_LIVE, status_attr="status")
     db.session.commit()

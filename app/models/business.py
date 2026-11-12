@@ -12,6 +12,16 @@ from .db import add_prefix_for_prod, db, mask_email, new_reference, table_args, 
 BUSINESS_STATUSES = ("pending", "approved", "rejected", "suspended", "closed")
 PALETTES = ("sea", "sunset", "olive", "lagoon", "aegean", "spring", "terracotta")
 
+# How a business's public page looks. A style is a set of choices from these
+# lists — never free-form CSS, colours or URLs — so it is safe to apply at once.
+STYLE_OPTIONS = {
+    "background": ("plain", "gradient", "waves", "dots", "scene"),
+    "scene": ("harbor", "beach", "cove", "island", "castle", "ruins", "village", "city", "mountain", "lake", "vineyard", "spring"),
+    "variant": ("day", "golden", "sunset", "dusk"),
+    "cards": ("soft", "outline"),
+}
+STYLE_DEFAULT = {"background": "plain", "scene": "harbor", "variant": "golden", "cards": "soft"}
+
 
 class Business(db.Model):
     __tablename__ = "businesses"
@@ -32,6 +42,7 @@ class Business(db.Model):
     whatsapp = db.Column(db.String(40), nullable=True)
     website = db.Column(db.String(255), nullable=True)
     palette = db.Column(db.String(20), default="sea")
+    style = db.Column(db.JSON(none_as_null=True), nullable=True)  # see STYLE_OPTIONS
     status = db.Column(db.String(20), default="pending", nullable=False)
     review_note = db.Column(db.Text, nullable=True)
     pending_changes = db.Column(db.JSON(none_as_null=True), nullable=True)
@@ -50,9 +61,14 @@ class Business(db.Model):
     def brief(self):
         return {"slug": self.slug, "name": self.name}
 
+    def look(self):
+        """The page style with defaults filled in; anything unknown in the stored value is ignored."""
+        stored = self.style if isinstance(self.style, dict) else {}
+        return {key: stored[key] if stored.get(key) in STYLE_OPTIONS[key] else default for key, default in STYLE_DEFAULT.items()}
+
     def to_public_dict(self):
         out = {k: getattr(self, k) for k in self.PROFILE_FIELDS}
-        out.update({"slug": self.slug, "since": self.created_at.year if self.created_at else None})
+        out.update({"slug": self.slug, "style": self.look(), "since": self.created_at.year if self.created_at else None})
         return out
 
     def to_owner_dict(self):
