@@ -99,3 +99,29 @@ def test_seeding_never_silently_deletes_bookings(app, client):
     assert wiped.exit_code == 0, wiped.output
     with app.app_context():
         assert Booking.query.count() == 0
+
+
+def test_rate_limit_spares_page_files_but_still_guards_the_api():
+    """The site's own pages, scripts, images and videos must never count towards
+    the per-visitor limit: one visit loads 30+ files, so a guest clicking through
+    a few pages would be blocked. API endpoints keep their limits."""
+    import secrets
+
+    from app.extensions import db
+
+    class Limited(TestConfig):
+        RATELIMIT_ENABLED = True
+        RATELIMIT_DEFAULT = "60 per minute"
+        RATELIMIT_KEY_PREFIX = "rl-" + secrets.token_hex(4)  # fresh counters for this test
+
+    app = create_app(Limited)
+    with app.app_context():
+        db.create_all()
+        client = app.test_client()
+        paths = ["/", "/explore", "/stays/1", "/favicon.svg", "/assets/does-not-exist.js", "/media/video/reel.mp4"]
+        statuses = [client.get(paths[i % len(paths)]).status_code for i in range(90)]
+        assert 429 not in statuses
+        api = [client.get("/api/meta/health").status_code for _ in range(61)]
+        assert api[:60] == [200] * 60 and api[60] == 429
+        db.session.remove()
+        db.drop_all()

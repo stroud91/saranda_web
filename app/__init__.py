@@ -156,8 +156,12 @@ def create_app(config_object=Config):
         # Keep the route map out of production (less reconnaissance surface).
         app.view_functions["api_docs"] = lambda: (jsonify({"error": "Not found"}), 404)
 
+    # The site's own pages, scripts, images and videos are not rate-limited: one
+    # visit loads 30+ files, so counting them would block guests who click through
+    # a few pages. Every /api endpoint keeps its limits.
     @app.get("/", defaults={"path": ""})
     @app.get("/<path:path>")
+    @limiter.exempt
     def spa(path):
         if path.startswith("api/"):
             return jsonify({"error": "Not found"}), 404
