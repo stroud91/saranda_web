@@ -85,15 +85,18 @@ export const plural = (n, one, many) => tr(n === 1 ? one : many, { n });
 export function rich(text, parts = {}, vars) {
   const out = [];
   const re = /<(\w+)>(.*?)<\/\1>/gs;
-  const source = tr(text, vars);
+  // Tags are read from the sentence itself, and values are filled in afterwards,
+  // so a value that happens to contain "<a>…</a>" is only ever shown as text.
+  const source = tr(text);
   let last = 0;
   let m;
   while ((m = re.exec(source))) {
-    if (m.index > last) out.push(source.slice(last, m.index));
+    if (m.index > last) out.push(fill(source.slice(last, m.index), vars));
     const draw = parts[m[1]];
-    out.push(createElement(Fragment, { key: out.length }, draw ? draw(m[2]) : m[2]));
+    const inner = fill(m[2], vars);
+    out.push(createElement(Fragment, { key: out.length }, draw ? draw(inner) : inner));
     last = m.index + m[0].length;
   }
-  if (last < source.length) out.push(source.slice(last));
+  if (last < source.length) out.push(fill(source.slice(last), vars));
   return out;
 }

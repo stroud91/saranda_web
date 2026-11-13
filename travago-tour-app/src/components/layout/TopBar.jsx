@@ -6,6 +6,7 @@ import { useUi } from "../../store/ui";
 import { useAuth } from "../../store/auth";
 import { useGuidesOn } from "../../lib/useConfig";
 import Preferences from "./Preferences";
+import { tr } from "../../i18n";
 
 export const NAV = [
   { to: "/explore", label: "Explore", icon: Compass },
@@ -36,31 +37,31 @@ export default function TopBar() {
   return (
     <header className={`topbar ${HERO_PAGES.includes(pathname) ? "on-hero" : ""} ${scrolled ? "scrolled" : ""}`}>
       <div className="topbar-inner">
-        <Link to="/" className="brand" aria-label="Saranda Companion home">
+        <Link to="/" className="brand" aria-label={tr("Saranda Companion home")}>
           <Logo />
           <span>
             Saranda
             <small>Companion · Meg'Rooms</small>
           </span>
         </Link>
-        <nav className="nav" aria-label="Main">
+        <nav className="nav" aria-label={tr("Main")}>
           {NAV.filter((n) => guides || n.to !== "/guides").map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
               <Icon size={16} />
-              {label}
+              {tr(label)}
             </NavLink>
           ))}
         </nav>
         <div className="topbar-actions">
-          <button className="icon-btn search-btn" onClick={openPalette} aria-label="Search (Ctrl K)" title="Search · Ctrl K">
+          <button className="icon-btn search-btn" onClick={openPalette} aria-label={tr("Search (Ctrl K)")} title={tr("Search · Ctrl K")}>
             <Search size={19} />
           </button>
           {accounts && (user ? (
-            <Link to="/account" className="account-chip" aria-label={`My account (${user.name || user.email})`} title="My account">
+            <Link to="/account" className="account-chip" aria-label={`My account (${user.name || user.email})`} title={tr("My account")}>
               <span>{(user.name || user.email)[0].toUpperCase()}</span>
             </Link>
           ) : (
-            <Link to="/signin" className="icon-btn" aria-label="Sign in" title="Sign in"><UserRound size={19} /></Link>
+            <Link to="/signin" className="icon-btn" aria-label={tr("Sign in")} title={tr("Sign in")}><UserRound size={19} /></Link>
           ))}
           <Preferences />
         </div>

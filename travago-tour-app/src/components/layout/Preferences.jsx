@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Globe, MonitorSmartphone, Moon, Sun } from "lucide-react";
 import { LANGS, currentLang } from "../../i18n";
 import { useUi } from "../../store/ui";
+import { tr } from "../../i18n";
 
 const THEMES = [
   { value: "light", label: "Light", icon: Sun },
@@ -30,13 +31,13 @@ export default function Preferences() {
 
   return (
     <div className="prefs" ref={box}>
-      <button type="button" className="icon-btn prefs-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="dialog" aria-label="Language and appearance" title="Language and appearance">
+      <button type="button" className="icon-btn prefs-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="dialog" aria-label={tr("Language and appearance")} title={tr("Language and appearance")}>
         <Globe size={17} aria-hidden="true" />
         <span className="prefs-code">{lang.toUpperCase()}</span>
       </button>
       {open && (
-        <div className="prefs-pop" role="dialog" aria-label="Language and appearance">
-          <div className="prefs-title" id="prefs-lang">Language</div>
+        <div className="prefs-pop" role="dialog" aria-label={tr("Language and appearance")}>
+          <div className="prefs-title" id="prefs-lang">{tr("Language")}</div>
           <div className="prefs-langs" role="radiogroup" aria-labelledby="prefs-lang">
             {LANGS.map((l) => (
               <button key={l.code} type="button" role="radio" aria-checked={lang === l.code} lang={l.code} className={`prefs-lang ${lang === l.code ? "on" : ""}`} onClick={() => { setOpen(false); setLang(l.code); }}>
@@ -45,12 +46,12 @@ export default function Preferences() {
               </button>
             ))}
           </div>
-          <div className="prefs-title" id="prefs-theme">Appearance</div>
+          <div className="prefs-title" id="prefs-theme">{tr("Appearance")}</div>
           <div className="prefs-themes" role="radiogroup" aria-labelledby="prefs-theme">
             {THEMES.map(({ value, label, icon: Icon }) => (
               <button key={value} type="button" role="radio" aria-checked={theme === value} className={`prefs-theme ${theme === value ? "on" : ""}`} onClick={() => setTheme(value)}>
                 <Icon size={16} aria-hidden="true" />
-                <span>{label}</span>
+                <span>{tr(label)}</span>
               </button>
             ))}
           </div>

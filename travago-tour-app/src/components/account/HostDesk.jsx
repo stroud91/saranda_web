@@ -5,6 +5,7 @@ import { euro, fmtDate, money } from "../../lib/format";
 import { Alert, Segmented, Skeleton, toast } from "../ui";
 import { usePartnersOn } from "../../lib/useConfig";
 import PartnerReview from "./PartnerReview";
+import { tr } from "../../i18n";
 
 const patch = (path, body) => api(path, { method: "PATCH", body });
 const fresh = (path) => api(path, { cacheable: false });
@@ -50,9 +51,9 @@ function BookingRow({ b, onChange }) {
       {open && (
         <div className="host-actions">
           {b.payment_method === "bank" && b.status === "pending"
-            ? <button type="button" className="btn sm primary" disabled={busy} onClick={() => act({ paid: true }, "Marked as paid and confirmed")}><Banknote size={15} /> Money received</button>
-            : b.status === "requested" && <button type="button" className="btn sm primary" disabled={busy} onClick={() => act({ status: "confirmed" }, "Booking confirmed")}><Check size={15} /> Confirm</button>}
-          <button type="button" className="btn sm" disabled={busy} onClick={() => window.confirm(`Cancel booking ${b.reference}?`) && act({ status: "cancelled" }, "Booking cancelled")}><X size={15} /> Cancel</button>
+            ? <button type="button" className="btn sm primary" disabled={busy} onClick={() => act({ paid: true }, "Marked as paid and confirmed")}><Banknote size={15} /> {tr("Money received")}</button>
+            : b.status === "requested" && <button type="button" className="btn sm primary" disabled={busy} onClick={() => act({ status: "confirmed" }, "Booking confirmed")}><Check size={15} /> {tr("Confirm")}</button>}
+          <button type="button" className="btn sm" disabled={busy} onClick={() => window.confirm(`Cancel booking ${b.reference}?`) && act({ status: "cancelled" }, "Booking cancelled")}><X size={15} /> {tr("Cancel")}</button>
         </div>
       )}
     </li>
@@ -83,8 +84,8 @@ function GuideRow({ g, onChange }) {
       </div>
       {g.status === "requested" && (
         <div className="host-actions">
-          <button type="button" className="btn sm primary" disabled={busy} onClick={() => act("accepted")}><Check size={15} /> Accept</button>
-          <button type="button" className="btn sm" disabled={busy} onClick={() => act("declined")}><X size={15} /> Decline</button>
+          <button type="button" className="btn sm primary" disabled={busy} onClick={() => act("accepted")}><Check size={15} /> {tr("Accept")}</button>
+          <button type="button" className="btn sm" disabled={busy} onClick={() => act("declined")}><X size={15} /> {tr("Decline")}</button>
         </div>
       )}
     </li>
@@ -130,14 +131,14 @@ export default function HostDesk() {
             ...(data.partners ? [{ value: "partners", label: `Partners (${data.partners.queue.length})` }] : [])]}
           value={view} onChange={setView} layoutId="host-tabs"
         />
-        <button type="button" className="btn sm" onClick={load}><RefreshCw size={15} /> Refresh</button>
+        <button type="button" className="btn sm" onClick={load}><RefreshCw size={15} /> {tr("Refresh")}</button>
       </div>
       {view === "partners" && data.partners ? (
         <PartnerReview data={data.partners} onReload={load} />
       ) : view === "messages" ? (
         <section className="stack">
-          <h2 className="h3"><Inbox size={18} /> Messages from the contact form</h2>
-          {!data.messages.length && <p className="muted">No messages yet.</p>}
+          <h2 className="h3"><Inbox size={18} /> {tr("Messages from the contact form")}</h2>
+          {!data.messages.length && <p className="muted">{tr("No messages yet.")}</p>}
           <ul className="host-list">
             {data.messages.map((m) => (
               <li key={m.id} className="host-row">
@@ -152,20 +153,20 @@ export default function HostDesk() {
         </section>
       ) : (
         <>
-          {view === "todo" && count === 0 && <Alert kind="ok">You're all caught up. New requests and transfers will appear here.</Alert>}
+          {view === "todo" && count === 0 && <Alert kind="ok">{tr("You're all caught up. New requests and transfers will appear here.")}</Alert>}
           {bookings.length > 0 && (
             <section className="stack">
-              <h2 className="h3"><BedDouble size={18} /> Stays</h2>
+              <h2 className="h3"><BedDouble size={18} /> {tr("Stays")}</h2>
               <ul className="host-list">{bookings.map((b) => <BookingRow key={b.reference} b={b} onChange={replace("bookings")} />)}</ul>
             </section>
           )}
           {guides.length > 0 && (
             <section className="stack">
-              <h2 className="h3"><Users size={18} /> Guide requests</h2>
+              <h2 className="h3"><Users size={18} /> {tr("Guide requests")}</h2>
               <ul className="host-list">{guides.map((g) => <GuideRow key={g.reference} g={g} onChange={replace("guides")} />)}</ul>
             </section>
           )}
-          <p className="tiny muted"><Landmark size={13} /> Press “Money received” only after you see the transfer in your bank account with the booking reference.</p>
+          <p className="tiny muted"><Landmark size={13} /> {tr("Press “Money received” only after you see the transfer in your bank account with the booking reference.")}</p>
         </>
       )}
     </div>

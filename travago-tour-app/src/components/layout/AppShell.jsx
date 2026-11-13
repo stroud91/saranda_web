@@ -9,6 +9,7 @@ import { ToastHost } from "../ui";
 import { useUi } from "../../store/ui";
 import Interactions from "../fx/Interactions";
 import { useAuth } from "../../store/auth";
+import { tr } from "../../i18n";
 
 const CommandPalette = lazy(() => import("../fx/CommandPalette"));
 
@@ -75,7 +76,7 @@ export default function AppShell({ children }) {
   const full = FULLSCREEN.includes(location.pathname) || BARE.includes(location.pathname);
   return (
     <>
-      <a href="#main" className="skip-link">Skip to content</a>
+      <a href="#main" className="skip-link">{tr("Skip to content")}</a>
       <TopBar />
       <AnimatePresence mode="wait">
         <motion.main

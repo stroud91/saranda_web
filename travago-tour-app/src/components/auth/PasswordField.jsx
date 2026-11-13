@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { tr } from "../../i18n";
 
 /** Rough strength estimate: length matters most, then variety. Not a security control —
  *  the server enforces the real rules (length, common and breached passwords). */
@@ -28,7 +29,7 @@ export default function PasswordField({ label = "Password", value, onChange, err
           autoComplete={autoComplete} maxLength={128} required onKeyUp={onKey} onKeyDown={onKey} onBlur={() => setCaps(false)}
           aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} spellCheck={false} autoCapitalize="none"
         />
-        <button type="button" className="icon-btn sm pw-toggle" onClick={() => setShow((v) => !v)} aria-pressed={show} aria-label={show ? "Hide password" : "Show password"}>
+        <button type="button" className="icon-btn sm pw-toggle" onClick={() => setShow((v) => !v)} aria-pressed={show} aria-label={show ? tr("Hide password") : tr("Show password")}>
           {show ? <EyeOff size={17} /> : <Eye size={17} />}
         </button>
       </div>
@@ -36,7 +37,7 @@ export default function PasswordField({ label = "Password", value, onChange, err
         <div className={`pw-meter s${s.score}`} aria-hidden="true"><i /><i /><i /><i /><span>{s.label}</span></div>
       )}
       <div id={`${id}-help`}>
-        {caps && <span className="tiny pw-caps">Caps Lock is on</span>}
+        {caps && <span className="tiny pw-caps">{tr("Caps Lock is on")}</span>}
         {error ? <span className="field-error">{error}</span> : hint && <span className="tiny muted">{hint}</span>}
       </div>
     </div>

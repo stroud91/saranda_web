@@ -5,6 +5,7 @@ import SceneArt from "./art/SceneArt";
 import { CATEGORY_META, CategoryIcon } from "./ui";
 import { hmRange } from "../lib/format";
 import { useTrip } from "../store/trip";
+import { tr } from "../i18n";
 
 export default function DestinationCard({ d, extra, index = 0 }) {
   const fav = useTrip((s) => s.favorites.includes(d.slug));
@@ -24,7 +25,7 @@ export default function DestinationCard({ d, extra, index = 0 }) {
           <span className="dest-cat" style={{ "--c": meta.color }}>
             <CategoryIcon category={d.category} size={13} /> {meta.label}
           </span>
-          {d.unesco && <span className="badge glass dest-unesco">UNESCO</span>}
+          {d.unesco && <span className="badge glass dest-unesco">{tr("UNESCO")}</span>}
         </div>
         <div className="dest-body">
           <h3>{d.name}</h3>

@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, Compass, CalendarRange, Map, Users, BedDouble } from "lucide-react";
 import { useGuidesOn } from "../../lib/useConfig";
+import { tr } from "../../i18n";
 
 const TABS = [
   { to: "/", label: "Today", icon: Home, end: true },
@@ -17,14 +18,14 @@ export default function TabBar() {
   const guides = useGuidesOn();
   const tabs = guides ? TABS : [...TABS.slice(0, -1), STAYS_TAB];
   return (
-    <nav className="tabbar" aria-label="App">
+    <nav className="tabbar" aria-label={tr("App")}>
       {tabs.map(({ to, label, icon: Icon, end }) => (
         <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>
           {({ isActive }) => (
             <>
               {isActive && <motion.span layoutId="tab-pill" className="tab-pill" transition={{ type: "spring", damping: 30, stiffness: 400 }} />}
               <Icon size={22} strokeWidth={isActive ? 2.4 : 2} />
-              <span>{label}</span>
+              <span>{tr(label)}</span>
             </>
           )}
         </NavLink>

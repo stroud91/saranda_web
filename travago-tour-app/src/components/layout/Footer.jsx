@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useConfig, useGuidesOn, usePartnersOn, whatsappUrl } from "../../lib/useConfig";
 import { LANGS, currentLang } from "../../i18n";
 import { useUi } from "../../store/ui";
+import { tr } from "../../i18n";
 
 export default function Footer() {
   const cfg = useConfig();
@@ -17,51 +18,51 @@ export default function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div>
-            <img src="/media/megrooms-logo.png" alt="Meg'Rooms — feels like home" className="footer-logo" width="120" height="120" loading="lazy" />
+            <img src="/media/megrooms-logo.png" alt={tr("Meg'Rooms — feels like home")} className="footer-logo" width="120" height="120" loading="lazy" />
             <p className="small" style={{ maxWidth: 360, marginTop: 12 }}>
-              Your companion for Albania, from our apartments on the Sarandë seafront to the stone cities, mountains and the whole Ionian coast.
+              {tr("Your companion for Albania, from our apartments on the Sarandë seafront to the stone cities, mountains and the whole Ionian coast.")}
             </p>
-            {wa && <a className="btn whatsapp sm" href={wa} target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>}
+            {wa && <a className="btn whatsapp sm" href={wa} target="_blank" rel="noopener noreferrer">{tr("Chat on WhatsApp")}</a>}
           </div>
           <div>
-            <h4>Plan</h4>
+            <h4>{tr("Plan")}</h4>
             <ul>
-              <li><Link to="/plan">Trip planner</Link></li>
-              <li><Link to="/itineraries">Ready-made itineraries</Link></li>
-              <li><Link to="/routes">Route connector</Link></li>
-              <li><Link to="/map">Interactive map</Link></li>
+              <li><Link to="/plan">{tr("Trip planner")}</Link></li>
+              <li><Link to="/itineraries">{tr("Ready-made itineraries")}</Link></li>
+              <li><Link to="/routes">{tr("Route connector")}</Link></li>
+              <li><Link to="/map">{tr("Interactive map")}</Link></li>
             </ul>
           </div>
           <div>
-            <h4>Discover</h4>
+            <h4>{tr("Discover")}</h4>
             <ul>
-              <li><Link to="/explore">Destinations</Link></li>
-              {guides && <li><Link to="/guides">Local guides</Link></li>}
-              <li><Link to="/experiences">Experiences & rentals</Link></li>
-              {partners && <li><Link to="/partners">Local businesses</Link></li>}
-              <li><Link to="/essentials">Know before you go</Link></li>
+              <li><Link to="/explore">{tr("Destinations")}</Link></li>
+              {guides && <li><Link to="/guides">{tr("Local guides")}</Link></li>}
+              <li><Link to="/experiences">{tr("Experiences & rentals")}</Link></li>
+              {partners && <li><Link to="/partners">{tr("Local businesses")}</Link></li>}
+              <li><Link to="/essentials">{tr("Know before you go")}</Link></li>
             </ul>
           </div>
           <div>
-            <h4>Meg'Rooms</h4>
+            <h4>{tr("Meg'Rooms")}</h4>
             <ul>
-              <li><Link to="/stays">Our apartments</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              {partners && <li><Link to="/business">List your business</Link></li>}
-              <li><Link to="/essentials#emergency">Emergency numbers</Link></li>
-              <li><Link to="/terms">Booking terms</Link></li>
-              <li><Link to="/privacy">Privacy policy</Link></li>
+              <li><Link to="/stays">{tr("Our apartments")}</Link></li>
+              <li><Link to="/contact">{tr("Contact")}</Link></li>
+              {partners && <li><Link to="/business">{tr("List your business")}</Link></li>}
+              <li><Link to="/essentials#emergency">{tr("Emergency numbers")}</Link></li>
+              <li><Link to="/terms">{tr("Booking terms")}</Link></li>
+              <li><Link to="/privacy">{tr("Privacy policy")}</Link></li>
             </ul>
           </div>
         </div>
-        <div className="footer-langs" role="group" aria-label="Language">
+        <div className="footer-langs" role="group" aria-label={tr("Language")}>
           {LANGS.map((l) => (
             <button key={l.code} type="button" lang={l.code} className={currentLang() === l.code ? "on" : ""} aria-pressed={currentLang() === l.code} onClick={() => setLang(l.code)}>{l.name}</button>
           ))}
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Meg'Rooms · Sarandë, Albania</span>
-          <span>Independent travel guide · Prices and times are planning estimates — verify before booking.</span>
+          <span>{tr("Independent travel guide · Prices and times are planning estimates — verify before booking.")}</span>
           <span>
             Data: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a> ·{" "}
             <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a> ·{" "}

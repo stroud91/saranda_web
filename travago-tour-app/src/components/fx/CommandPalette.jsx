@@ -9,6 +9,7 @@ import { useDestinations } from "../../lib/useDestinations";
 import { CategoryIcon } from "../ui";
 import { useUi } from "../../store/ui";
 import { useGuidesOn, usePartnersOn } from "../../lib/useConfig";
+import { tr } from "../../i18n";
 
 const fold = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/\p{Mn}/gu, "");
 
@@ -62,7 +63,7 @@ export default function CommandPalette({ open, onClose }) {
     if (!terms.length) return [...pages.slice(0, 7), ...actions.filter((a) => !a.always)];
     const scored = all
       .map((it) => {
-        const label = fold(it.label), hay = `${label} ${fold(it.hint)} ${fold(it.words)}`;
+        const label = fold(tr(it.label)), hay = `${label} ${fold(it.label)} ${fold(tr(it.hint))} ${fold(it.words)}`;
         if (!it.always && !terms.every((t) => hay.includes(t))) return null;
         const score = (label.startsWith(terms[0]) ? 3 : 0) + (label.includes(terms[0]) ? 2 : 0) + (it.id.startsWith("d-") ? 1 : 0) - (it.always ? 5 : 0);
         return { it, score };
@@ -93,7 +94,7 @@ export default function CommandPalette({ open, onClose }) {
 
   return createPortal(
     <div className="cmdk-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <motion.div className="cmdk" role="dialog" aria-modal="true" aria-label="Search" initial={{ opacity: 0, scale: 0.97, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.18 }}>
+      <motion.div className="cmdk" role="dialog" aria-modal="true" aria-label={tr("Search")} initial={{ opacity: 0, scale: 0.97, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.18 }}>
         <div className="cmdk-input">
           <Search size={18} aria-hidden="true" />
           <input
@@ -101,7 +102,7 @@ export default function CommandPalette({ open, onClose }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKey}
-            placeholder="Search places, pages, or ask anything…"
+            placeholder={tr("Search places, pages, or ask anything…")}
             role="combobox"
             aria-expanded="true"
             aria-controls="cmdk-list"
@@ -123,13 +124,13 @@ export default function CommandPalette({ open, onClose }) {
               onClick={() => choose(it)}
             >
               <span className="cmdk-icon">{it.icon ? <it.icon size={17} /> : <CategoryIcon category={it.category} size={17} />}</span>
-              <span className="cmdk-text"><b>{it.label}</b>{it.hint && <span className="tiny muted">{it.hint}</span>}</span>
+              <span className="cmdk-text"><b>{tr(it.label)}</b>{it.hint && <span className="tiny muted">{tr(it.hint)}</span>}</span>
               {i === active && <CornerDownLeft size={15} className="cmdk-enter" aria-hidden="true" />}
             </li>
           ))}
-          {!items.length && <li className="cmdk-empty muted small">No matches — try a town, beach or castle.</li>}
+          {!items.length && <li className="cmdk-empty muted small">{tr("No matches — try a town, beach or castle.")}</li>}
         </ul>
-        <div className="cmdk-foot tiny muted"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> anywhere</span></div>
+        <div className="cmdk-foot tiny muted"><span><kbd>↑</kbd><kbd>↓</kbd> {tr("move")}</span><span><kbd>↵</kbd> {tr("open")}</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> anywhere</span></div>
       </motion.div>
     </div>,
     document.body

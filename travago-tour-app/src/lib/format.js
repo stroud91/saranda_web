@@ -1,3 +1,5 @@
+import { locale } from "../i18n";
+
 export const hm = (minutes) => {
   const m = Math.round(minutes || 0);
   const h = Math.floor(m / 60);
@@ -19,7 +21,7 @@ export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "
 export const fmtDate = (iso, opts = { weekday: "short", day: "numeric", month: "short" }) => {
   if (!iso) return "";
   const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso);
-  return d.toLocaleDateString("en-GB", opts);
+  return d.toLocaleDateString(locale(), opts);
 };
 
 export const addDays = (iso, n) => {

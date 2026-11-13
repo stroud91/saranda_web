@@ -6,6 +6,7 @@ import { useApi } from "../lib/useApi";
 import { euro } from "../lib/format";
 import SceneArt from "../components/art/SceneArt";
 import { PageHeader, Skeleton } from "../components/ui";
+import { rich, tr } from "../i18n";
 
 const VARIANTS = ["day", "golden", "sunset", "dusk", "day"];
 
@@ -22,14 +23,14 @@ function StayCard({ h, i }) {
           <h3>{h.apartment_name || h.hotel_name}</h3>
           <p className="small muted clamp-2">{h.description}</p>
           <div className="stay-facts small">
-            <span><BedDouble size={14} /> {h.bedrooms} bd</span>
-            <span><Bath size={14} /> {h.bathrooms} ba</span>
-            <span><Users size={14} /> {h.max_guests} guests</span>
+            <span><BedDouble size={14} /> {tr("{n} bd", { n: h.bedrooms })}</span>
+            <span><Bath size={14} /> {tr("{n} ba", { n: h.bathrooms })}</span>
+            <span><Users size={14} /> {tr("{n} guests", { n: h.max_guests })}</span>
             {h.business && <span><MapPin size={14} /> {h.city}</span>}
           </div>
           <div className="row between">
-            <span><b className="stay-price">{euro(h.price_per_night)}</b> <span className="small muted">/ night</span></span>
-            <span className="btn sm">View <ArrowRight size={14} /></span>
+            <span><b className="stay-price">{euro(h.price_per_night)}</b> <span className="small muted">{tr("/ night")}</span></span>
+            <span className="btn sm">{tr("View")} <ArrowRight size={14} /></span>
           </div>
         </div>
       </Link>
@@ -45,24 +46,24 @@ export default function Stays() {
   return (
     <div className="page container">
       <div className="stays-head">
-        <PageHeader eyebrow="Meg'Rooms · Sarandë" icon={BedDouble} title="Feels like home, on the Ionian" lead="Bright apartments steps from the Sarandë promenade — Butrint, Ksamil and the Blue Eye are all easy day trips. Book direct with the host." />
-        <img src="/media/megrooms-logo.png" alt="Meg'Rooms — feels like home" className="stays-logo big" width="160" height="160" />
+        <PageHeader eyebrow={tr("Meg'Rooms · Sarandë")} icon={BedDouble} title={tr("Feels like home, on the Ionian")} lead={tr("Bright apartments steps from the Sarandë promenade — Butrint, Ksamil and the Blue Eye are all easy day trips. Book direct with the host.")} />
+        <img src="/media/megrooms-logo.png" alt={tr("Meg'Rooms — feels like home")} className="stays-logo big" width="160" height="160" />
       </div>
       <div className="grid" style={{ "--min": "310px" }}>
         {!data && [0, 1, 2].map((i) => <Skeleton key={i} h={380} r={26} />)}
         {own?.map((h, i) => <StayCard key={h.id} h={h} i={i} />)}
       </div>
       <div className="card pad stays-why">
-        <div><MapPin size={20} /><b>Central Sarandë</b><span className="small muted">Walk to the promenade, restaurants and the Corfu ferry.</span></div>
-        <div><Waves size={20} /><b>Sea views</b><span className="small muted">Balconies and terraces facing the bay and Corfu.</span></div>
-        <div><Star size={20} /><b>Loved by guests</b><span className="small muted">Highly rated on Airbnb and Booking.com.</span></div>
+        <div><MapPin size={20} /><b>{tr("Central Sarandë")}</b><span className="small muted">{tr("Walk to the promenade, restaurants and the Corfu ferry.")}</span></div>
+        <div><Waves size={20} /><b>{tr("Sea views")}</b><span className="small muted">{tr("Balconies and terraces facing the bay and Corfu.")}</span></div>
+        <div><Star size={20} /><b>{tr("Loved by guests")}</b><span className="small muted">{tr("Highly rated on Airbnb and Booking.com.")}</span></div>
       </div>
       {partners.length > 0 && (
         <section className="stack partner-stays">
           <div>
-            <div className="eyebrow"><Store size={14} /> From local hosts</div>
-            <h2>More places to stay</h2>
-            <p className="muted">Offered by independent businesses we've checked. You request the dates and pay the host directly. <Link to="/partners">See all local businesses</Link></p>
+            <div className="eyebrow"><Store size={14} /> {tr("From local hosts")}</div>
+            <h2>{tr("More places to stay")}</h2>
+            <p className="muted">{tr("Offered by independent businesses we've checked. You request the dates and pay the host directly.")} <Link to="/partners">{tr("See all local businesses")}</Link></p>
           </div>
           <div className="grid" style={{ "--min": "310px" }}>
             {partners.map((h, i) => <StayCard key={h.id} h={h} i={i} />)}

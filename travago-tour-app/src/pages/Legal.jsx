@@ -7,6 +7,13 @@ import { FileText, ShieldCheck } from "lucide-react";
 import business from "../data/business.json";
 import { useConfig } from "../lib/useConfig";
 import { PageHeader } from "../components/ui";
+import { currentLang, tr } from "../i18n";
+
+/** These pages are legal text, so they aren't machine-swapped sentence by sentence. */
+function EnglishOnly() {
+  if (currentLang() === "en") return null;
+  return <p className="legal-note">{tr("This page is in English for now. Write to us if anything is unclear and we'll explain it in your language.")}</p>;
+}
 
 const ext = { target: "_blank", rel: "noopener noreferrer" };
 
@@ -74,6 +81,7 @@ export function Privacy() {
       <PageHeader eyebrow="Privacy" icon={ShieldCheck} title="Privacy policy" lead={`How ${business.trading_name} uses the details you share with us — in plain words. No advertising, no tracking cookies, and we never sell your data.`}>
         <p className="tiny muted">Last updated {updated}</p>
       </PageHeader>
+      <EnglishOnly />
       <Contents items={[["who", "Who we are"], ["collect", "What we collect and why"], ["shared", "Who else sees it"], ["storage", "Cookies and browser storage"], ["keep", "How long we keep it"], ["rights", "Your rights"], ["security", "How we protect it"], ["changes", "Children and changes"]]} />
 
       <Section id="who" title="Who we are">
@@ -142,7 +150,7 @@ export function Privacy() {
         <p>We use no advertising or analytics cookies, so there's no cookie banner. What your browser stores only makes the site work:</p>
         <ul>
           {accounts && <li><code>__Host-sc_session</code> — a cookie that keeps you signed in. Set only when you sign in; removed when you sign out. It holds a random code, not your details.</li>}
-          <li><code>saranda-ui</code> — your light/dark theme choice.</li>
+          <li><code>saranda-ui</code> — your light/dark theme and language choice.</li>
           <li><code>saranda-trip-v2</code> — the trip you're planning, so it's still there next time.</li>
           <li><code>saranda-concierge</code> — your concierge chat, deleted when you close the tab.</li>
           <li><code>celebrated:…</code> — remembers that we already showed the booking celebration, deleted when you close the tab.</li>
@@ -190,6 +198,7 @@ export function Terms() {
       <PageHeader eyebrow="Booking terms" icon={FileText} title="Booking terms" lead="The agreement between you and us when you book one of our apartments — what you pay, when, and what happens if plans change.">
         <p className="tiny muted">Last updated {updated}</p>
       </PageHeader>
+      <EnglishOnly />
       <Contents items={[["us", "Who you book with"], ["booking", "How booking works"], ["cancel", "Cancelling and changes"], ["stay", "During your stay"], ["guides", "Guides and tours"], ...(partners ? [["partners", "Local businesses"]] : []), ["info", "Travel information"], ["other", "Everything else"]]} />
 
       <Section id="us" title="Who you book with">

@@ -14,6 +14,7 @@ import { useTrip } from "../store/trip";
 import { useUi } from "../store/ui";
 import AlbaniaMap from "../components/map/AlbaniaMap";
 import { useDestinations } from "../lib/useDestinations";
+import { tr } from "../i18n";
 
 const MODE_ICON = { drive: Car, ferry: Ship, boat: Sailboat };
 const LINK_ICON = { stay: BedDouble, tour: Ticket, map: MapPin, directions: Navigation, ferry: Ship, car: Car };
@@ -23,7 +24,7 @@ function AddToTrip({ slug, name }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="btn primary" onClick={() => setOpen(true)}><Plus size={18} /> Add to my trip</button>
+      <button className="btn primary" onClick={() => setOpen(true)}><Plus size={18} /> {tr("Add to my trip")}</button>
       <Sheet open={open} onClose={() => setOpen(false)} title={`Add ${name} to…`} variant="center">
         <div className="stack" style={{ "--gap": "10px" }}>
           {days.map((d, i) => (
@@ -31,7 +32,7 @@ function AddToTrip({ slug, name }) {
               <b>Day {i + 1}</b> <span className="small muted">{d.title || d.stops.join(" → ")}</span>
             </button>
           ))}
-          <Link to="/plan" className="btn" onClick={() => setOpen(false)}>Open the planner</Link>
+          <Link to="/plan" className="btn" onClick={() => setOpen(false)}>{tr("Open the planner")}</Link>
         </div>
       </Sheet>
     </>
@@ -45,8 +46,8 @@ function GooglePlace({ slug }) {
     <div className="gplace">
       <span className="gplace-rating"><Star size={16} fill="currentColor" /> {data.rating?.toFixed(1)}</span>
       <span className="small muted">{data.rating_count?.toLocaleString("en")} Google reviews</span>
-      {data.open_now != null && <span className={`badge ${data.open_now ? "olive" : "terracotta"}`}>{data.open_now ? "Open now" : "Closed now"}</span>}
-      {data.maps_url && <a className="small" href={data.maps_url} target="_blank" rel="noopener noreferrer">Google Maps <ExternalLink size={12} /></a>}
+      {data.open_now != null && <span className={`badge ${data.open_now ? "olive" : "terracotta"}`}>{data.open_now ? tr("Open now") : tr("Closed now")}</span>}
+      {data.maps_url && <a className="small" href={data.maps_url} target="_blank" rel="noopener noreferrer">{tr("Google Maps")} <ExternalLink size={12} /></a>}
     </div>
   );
 }
@@ -80,8 +81,8 @@ export default function DestinationDetail() {
             <div className="row" style={{ gap: 8 }}>
               <span className="badge glass"><CategoryIcon category={d.category} size={13} /> {meta.label}</span>
               <span className="badge glass">{d.region_name}</span>
-              {d.unesco && <span className="badge glass">UNESCO World Heritage</span>}
-              {d.access !== "road" && <span className="badge glass">{d.access === "boat" ? "Boat access" : "Ferry"}</span>}
+              {d.unesco && <span className="badge glass">{tr("UNESCO World Heritage")}</span>}
+              {d.access !== "road" && <span className="badge glass">{d.access === "boat" ? tr("Boat access") : tr("Ferry")}</span>}
             </div>
             <h1>{d.name}</h1>
             <p className="dest-hero-lead">{d.summary}</p>
@@ -91,27 +92,27 @@ export default function DestinationDetail() {
               Video: <a href={clip.source} target="_blank" rel="noopener noreferrer">{clip.author}</a> · <a href={clip.license.url} target="_blank" rel="noopener noreferrer license">{clip.license.name}</a> · edited
             </span>
           )}
-          <button className={`fav-btn big ${fav ? "on" : ""}`} onClick={() => toggle(slug)} aria-pressed={fav} aria-label="Save"><Heart size={22} fill={fav ? "currentColor" : "none"} /></button>
+          <button className={`fav-btn big ${fav ? "on" : ""}`} onClick={() => toggle(slug)} aria-pressed={fav} aria-label={tr("Save")}><Heart size={22} fill={fav ? "currentColor" : "none"} /></button>
         </motion.div>
 
         <div className="split wide-left" style={{ marginTop: 28 }}>
           <div className="stack" style={{ "--gap": "22px" }}>
             <div className="stats">
-              <div className="stat"><div className="stat-label"><Clock size={14} /> Suggested time</div><div className="stat-value">{hmRange(d.visit_min, d.visit_max)}</div></div>
-              <div className="stat"><div className="stat-label"><Sparkles size={14} /> Best for</div><div className="stat-sub" style={{ fontWeight: 700, color: "var(--text)", marginTop: 6 }}>{d.best_for || meta.label}</div></div>
+              <div className="stat"><div className="stat-label"><Clock size={14} /> {tr("Suggested time")}</div><div className="stat-value">{hmRange(d.visit_min, d.visit_max)}</div></div>
+              <div className="stat"><div className="stat-label"><Sparkles size={14} /> {tr("Best for")}</div><div className="stat-sub" style={{ fontWeight: 700, color: "var(--text)", marginTop: 6 }}>{d.best_for || meta.label}</div></div>
             </div>
             <GooglePlace slug={slug} />
             {d.planning_note && (
-              <div className="tip-card"><Lightbulb size={20} /><div><b>Planner tip</b><p className="mb-0">{d.planning_note}</p></div></div>
+              <div className="tip-card"><Lightbulb size={20} /><div><b>{tr("Planner tip")}</b><p className="mb-0">{d.planning_note}</p></div></div>
             )}
             {d.highlights?.length > 0 && (
               <div className="card pad">
-                <h3>Highlights</h3>
+                <h3>{tr("Highlights")}</h3>
                 <ul className="check-list">{d.highlights.map((h) => <li key={h}>{h}</li>)}</ul>
               </div>
             )}
             <div className="card pad">
-              <div className="panel-title"><h3>Getting there & around</h3><Link to={`/routes?to=${slug}`} className="small">Route from anywhere →</Link></div>
+              <div className="panel-title"><h3>{tr("Getting there & around")}</h3><Link to={`/routes?to=${slug}`} className="small">{tr("Route from anywhere →")}</Link></div>
               <div className="conn-list">
                 {d.connections.map((c) => {
                   const Icon = MODE_ICON[c.mode];
@@ -121,7 +122,7 @@ export default function DestinationDetail() {
                       <span className="conn-name">{c.name}</span>
                       <span className="conn-time">{hmRange(c.min_minutes, c.max_minutes)}</span>
                       <span className="conn-km small muted">{kmRange(c.km_min, c.km_max)}</span>
-                      {c.source === "planner" && <span className="badge sea">Planner</span>}
+                      {c.source === "planner" && <span className="badge sea">{tr("Planner")}</span>}
                     </Link>
                   );
                 })}
@@ -134,11 +135,11 @@ export default function DestinationDetail() {
               <AddToTrip slug={slug} name={d.name} />
               <button className="btn" onClick={() => ask(`Tell me about ${d.name}: what to do and how to plan it`)}><Sparkles size={18} /> Ask about {d.name.split(" (")[0]}</button>
             </div>
-            <div className="card pad"><h3>Weather</h3><WeatherCard place={slug} compact /></div>
+            <div className="card pad"><h3>{tr("Weather")}</h3><WeatherCard place={slug} compact /></div>
             {links && (
               <div className="card pad">
-                <h3>Book & navigate</h3>
-                <p className="tiny muted">Pre-filled searches on each platform — compare and book where you prefer.</p>
+                <h3>{tr("Book & navigate")}</h3>
+                <p className="tiny muted">{tr("Pre-filled searches on each platform — compare and book where you prefer.")}</p>
                 {Object.entries(links).map(([group, items]) => (
                   <div key={group} className="link-group">
                     {items.map((l) => {
@@ -155,7 +156,7 @@ export default function DestinationDetail() {
             )}
             {guides?.guides?.length > 0 && (
               <div className="card pad">
-                <h3><Users size={18} /> Guides for this area</h3>
+                <h3><Users size={18} /> {tr("Guides for this area")}</h3>
                 <div className="stack" style={{ "--gap": "10px" }}>
                   {guides.guides.slice(0, 3).map((g) => (
                     <Link key={g.slug} to={`/guides/${g.slug}`} className="guide-row">

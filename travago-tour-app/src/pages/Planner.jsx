@@ -18,6 +18,7 @@ import AlbaniaMap from "../components/map/AlbaniaMap";
 import RouteSketch from "../components/art/RouteSketch";
 import CalendarButton from "../components/planner/CalendarButton";
 import { Alert, Segmented, Sheet, Skeleton, Stat, toast } from "../components/ui";
+import { tr } from "../i18n";
 
 const DAY_COLORS = ["#d9653b", "#0b5c7e", "#19c3c0", "#6e7f3a", "#d63c7a", "#f4b63f", "#0e8fb0", "#8e3b5f"];
 
@@ -39,8 +40,8 @@ function TemplatePicker({ open, onClose }) {
     }
   };
   return (
-    <Sheet open={open} onClose={onClose} title="Start from an itinerary">
-      <p className="small muted">Replaces your current days. You can edit everything afterwards.</p>
+    <Sheet open={open} onClose={onClose} title={tr("Start from an itinerary")}>
+      <p className="small muted">{tr("Replaces your current days. You can edit everything afterwards.")}</p>
       <div className="stack" style={{ "--gap": "12px" }}>
         {(data?.itineraries || []).map((it) => (
           <button key={it.slug} className="template card hover" onClick={() => pick(it.slug)} disabled={!!loadingSlug}>
@@ -75,7 +76,7 @@ function ShareSheet({ open, onClose }) {
         ? await put(`/trips/${t.shareId}`, body, { headers: { "X-Edit-Key": t.editKey } })
         : await post("/trips", body);
       t.set({ shareId: res.share_id, editKey: res.edit_key || t.editKey, savedAt: new Date().toISOString() });
-      toast("Trip saved");
+      toast(tr("Trip saved"));
     } catch (e) {
       if (e.status === 403 || e.status === 404) t.set({ shareId: null, editKey: null });
       setError(e.message);
@@ -95,25 +96,25 @@ function ShareSheet({ open, onClose }) {
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Save & share your trip" variant="center">
+    <Sheet open={open} onClose={onClose} title={tr("Save & share your trip")} variant="center">
       <div className="stack">
         <p className="small muted">{mode === "static"
-          ? "The link carries the whole trip inside it — nothing is stored on a server. Save again after changes to get an updated link."
-          : "Saving creates a private link anyone can view. Only this device can edit it (it keeps a secret edit key)."}</p>
-        <button className="btn primary" onClick={save} disabled={busy}>{busy ? <span className="spinner" /> : <Share2 size={18} />} {t.shareId ? "Save changes" : "Save & create link"}</button>
+          ? tr("The link carries the whole trip inside it — nothing is stored on a server. Save again after changes to get an updated link.")
+          : tr("Saving creates a private link anyone can view. Only this device can edit it (it keeps a secret edit key).")}</p>
+        <button className="btn primary" onClick={save} disabled={busy}>{busy ? <span className="spinner" /> : <Share2 size={18} />} {t.shareId ? tr("Save changes") : tr("Save & create link")}</button>
         {error && <Alert kind="error">{error}</Alert>}
         {url && (
           <>
             <div className="share-link">
               <Link2 size={16} />
-              <input className="input" readOnly value={url} onFocus={(e) => e.target.select()} aria-label="Share link" />
-              <button className="btn sm" onClick={copy}>{copied ? <Check size={16} /> : "Copy"}</button>
+              <input className="input" readOnly value={url} onFocus={(e) => e.target.select()} aria-label={tr("Share link")} />
+              <button className="btn sm" onClick={copy}>{copied ? <Check size={16} /> : tr("Copy")}</button>
             </div>
-            {navigator.share && <button className="btn" onClick={() => navigator.share({ title: t.title, url })}><Share2 size={16} /> Share…</button>}
+            {navigator.share && <button className="btn" onClick={() => navigator.share({ title: t.title, url })}><Share2 size={16} /> {tr("Share…")}</button>}
             {t.startDate ? (
-              <CalendarButton trip={{ title: t.title || "My Albania trip", data: tripPayload(t) }} shareId={t.shareId}>Add to calendar (.ics)</CalendarButton>
+              <CalendarButton trip={{ title: t.title || "My Albania trip", data: tripPayload(t) }} shareId={t.shareId}>{tr("Add to calendar (.ics)")}</CalendarButton>
             ) : (
-              <p className="tiny muted">Set a start date to export the trip to your calendar.</p>
+              <p className="tiny muted">{tr("Set a start date to export the trip to your calendar.")}</p>
             )}
             {t.savedAt && <p className="tiny faint">Last saved {new Date(t.savedAt).toLocaleString()}</p>}
           </>
@@ -200,29 +201,29 @@ export default function Planner() {
   return (
     <div className="page container planner">
       <header className="planner-head">
-        <div className="eyebrow"><CalendarRange size={14} /> Trip planner</div>
-        <input className="trip-title" value={t.title} onChange={(e) => t.set({ title: e.target.value.slice(0, 120) })} aria-label="Trip title" />
+        <div className="eyebrow"><CalendarRange size={14} /> {tr("Trip planner")}</div>
+        <input className="trip-title" value={t.title} onChange={(e) => t.set({ title: e.target.value.slice(0, 120) })} aria-label={tr("Trip title")} />
         <div className="planner-controls">
           <label className="field compact">
-            <span className="label"><CalendarDays size={13} /> Start date</span>
+            <span className="label"><CalendarDays size={13} /> {tr("Start date")}</span>
             <input type="date" className="input" value={t.startDate} min={todayIso()} onChange={(e) => t.set({ startDate: e.target.value })} />
           </label>
           <div className="field compact">
-            <span className="label">Pace</span>
+            <span className="label">{tr("Pace")}</span>
             <Segmented layoutId="pace" value={t.pace} onChange={(v) => t.set({ pace: v })} options={[{ value: "relaxed", label: "Relaxed" }, { value: "balanced", label: "Balanced" }, { value: "packed", label: "Packed" }]} />
           </div>
           <div className="row planner-buttons">
-            <button className="btn sm" onClick={() => setTemplates(true)}><LayoutTemplate size={16} /> Templates</button>
-            <button className="btn sm primary" onClick={() => setSharing(true)}><Share2 size={16} /> Save & share</button>
-            <button className="btn sm ghost" onClick={() => { if (confirm("Start a new empty trip?")) t.reset(); }}><RotateCcw size={16} /> New</button>
+            <button className="btn sm" onClick={() => setTemplates(true)}><LayoutTemplate size={16} /> {tr("Templates")}</button>
+            <button className="btn sm primary" onClick={() => setSharing(true)}><Share2 size={16} /> {tr("Save & share")}</button>
+            <button className="btn sm ghost" onClick={() => { if (confirm("Start a new empty trip?")) t.reset(); }}><RotateCcw size={16} /> {tr("New")}</button>
           </div>
         </div>
         {tl && (
           <div className="stats planner-stats">
-            <Stat icon={CalendarRange} label="Days" value={t.days.length} sub={t.startDate ? `from ${new Date(t.startDate + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : "set a start date"} />
-            <Stat icon={MapPin} label="Places" value={allStops.length} sub={plural(new Set(t.days.map((d) => d.stops[d.stops.length - 1]).filter((s) => bySlug[s]?.category !== "hub")).size, "base")} />
-            <Stat icon={Car} label="On the road" value={hmRange(tl.totals.moving_minutes_min, tl.totals.moving_minutes_max)} sub={kmRange(tl.totals.km_min, tl.totals.km_max)} />
-            <Stat icon={Clock} label="Exploring" value={`${Math.round(tl.totals.visit_minutes / 60)}h`} sub="suggested visit time" />
+            <Stat icon={CalendarRange} label={tr("Days")} value={t.days.length} sub={t.startDate ? `from ${new Date(t.startDate + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : "set a start date"} />
+            <Stat icon={MapPin} label={tr("Places")} value={allStops.length} sub={plural(new Set(t.days.map((d) => d.stops[d.stops.length - 1]).filter((s) => bySlug[s]?.category !== "hub")).size, "base")} />
+            <Stat icon={Car} label={tr("On the road")} value={hmRange(tl.totals.moving_minutes_min, tl.totals.moving_minutes_max)} sub={kmRange(tl.totals.km_min, tl.totals.km_max)} />
+            <Stat icon={Clock} label={tr("Exploring")} value={`${Math.round(tl.totals.visit_minutes / 60)}h`} sub="suggested visit time" />
           </div>
         )}
       </header>
@@ -232,7 +233,7 @@ export default function Planner() {
       </div>
 
       <div className="planner-grid">
-        <section className={`planner-days ${mobileView !== "days" ? "hide-mobile" : ""}`} aria-label="Days">
+        <section className={`planner-days ${mobileView !== "days" ? "hide-mobile" : ""}`} aria-label={tr("Days")}>
           {t.days.map((d, i) => (
             <DayCard key={d.id} day={d} index={i} active={i === active} summary={tl?.days?.[i]?.summary} onSelect={() => t.set({ activeDay: i })} />
           ))}

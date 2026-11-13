@@ -4,6 +4,7 @@ import { X, AlertTriangle, Info, CheckCircle2 } from "lucide-react";
 import {
   Landmark, Waves, Trees, Building2, Home, Mountain, Sailboat, Wine, Plane, Car, Ship, MapPin,
 } from "lucide-react";
+import { tr } from "../../i18n";
 
 export const CATEGORY_META = {
   beach: { icon: Waves, color: "#19c3c0", label: "Beach" },
@@ -61,7 +62,7 @@ export function Sheet({ open, onClose, title, children, variant = "side", footer
             <div className="sheet-grip" />
             <div className="sheet-head">
               <h3>{title}</h3>
-              <button className="icon-btn" onClick={onClose} aria-label="Close"><X size={20} /></button>
+              <button className="icon-btn" onClick={onClose} aria-label={tr("Close")}><X size={20} /></button>
             </div>
             <div className="sheet-body">{children}</div>
             {footer && <div className="sheet-foot">{footer}</div>}
@@ -81,7 +82,7 @@ export function Segmented({ options, value, onChange, layoutId }) {
         return (
           <button key={v} role="tab" aria-selected={value === v} className={value === v ? "on" : ""} onClick={() => onChange(v)}>
             {value === v && <motion.span layoutId={layoutId || "seg"} className="seg-pill" transition={{ type: "spring", damping: 30, stiffness: 380 }} />}
-            <span>{label}</span>
+            <span>{tr(label)}</span>
           </button>
         );
       })}
@@ -127,7 +128,7 @@ export function Field({ label, error, children, hint }) {
 export function Stat({ label, value, sub, icon: Icon }) {
   return (
     <div className="stat">
-      <div className="stat-label">{Icon && <Icon size={14} />}{label}</div>
+      <div className="stat-label">{Icon && <Icon size={14} />}{tr(label)}</div>
       <div className="stat-value">{value}</div>
       {sub && <div className="stat-sub">{sub}</div>}
     </div>
@@ -175,8 +176,8 @@ export function ErrorState({ error, onRetry }) {
   return (
     <div className="empty">
       <AlertTriangle size={28} style={{ margin: "0 auto 10px" }} />
-      <p>{error?.message || "Something went wrong."}</p>
-      {onRetry && <button className="btn sm" onClick={onRetry}>Try again</button>}
+      <p>{error?.message || tr("Something went wrong.")}</p>
+      {onRetry && <button className="btn sm" onClick={onRetry}>{tr("Try again")}</button>}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { BedDouble, Moon, Users } from "lucide-react";
 import { hash, money } from "../../lib/format";
+import { tr } from "../../i18n";
 
 const STATUS = {
   confirmed: ["Confirmed", "ok"],
@@ -40,7 +41,7 @@ export default function TicketCard({ booking: b, to, children }) {
   const body = (
     <>
       <div className="ticket-main">
-        <div className="ticket-eyebrow"><BedDouble size={13} /> Meg'Rooms · Sarandë, Albania</div>
+        <div className="ticket-eyebrow"><BedDouble size={13} /> {tr("Meg'Rooms · Sarandë, Albania")}</div>
         <div className="ticket-title">{b.hotel_name}</div>
         <div className="ticket-dates">
           <div><span className="tiny">Check-in · {dow(b.start_date)}</span><b>{day(b.start_date)}</b><span>{mon(b.start_date)}</span></div>
@@ -55,7 +56,7 @@ export default function TicketCard({ booking: b, to, children }) {
       </div>
       <div className="ticket-stub">
         <span className={`badge ${tone === "ok" ? "olive" : tone === "danger" ? "terracotta" : tone}`}>{label}</span>
-        <div className="ticket-ref"><span className="tiny">Reference</span><b>{b.reference}</b></div>
+        <div className="ticket-ref"><span className="tiny">{tr("Reference")}</span><b>{b.reference}</b></div>
         <Barcode seed={b.reference} />
       </div>
     </>

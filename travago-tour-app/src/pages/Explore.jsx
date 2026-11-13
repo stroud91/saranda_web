@@ -6,6 +6,7 @@ import DestinationCard from "../components/DestinationCard";
 import { CATEGORY_META, CategoryIcon, PageHeader, Skeleton } from "../components/ui";
 import { useTrip } from "../store/trip";
 import { normalize } from "../lib/text";
+import { tr } from "../i18n";
 
 export default function Explore() {
   const { list, regions, loading } = useDestinations();
@@ -35,14 +36,14 @@ export default function Explore() {
 
   return (
     <div className="page container">
-      <PageHeader eyebrow="Explore Albania" icon={Compass} title="Where the day could take you" lead="Beaches, UNESCO stone cities, boat-only bays and mountain villages — each with suggested visit times and honest planning notes." />
+      <PageHeader eyebrow={tr("Explore Albania")} icon={Compass} title={tr("Where the day could take you")} lead={tr("Beaches, UNESCO stone cities, boat-only bays and mountain villages — each with suggested visit times and honest planning notes.")} />
       <div className="explore-tools">
         <label className="search">
           <Search size={18} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search beaches, castles, villages…" aria-label="Search destinations" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search beaches, castles, villages…")} aria-label={tr("Search destinations")} />
         </label>
-        <div className="chips scroll" role="toolbar" aria-label="Category">
-          <button className={`chip ${!cat && !saved ? "on" : ""}`} onClick={() => { setParam("category", ""); setParam("saved", ""); }}>All</button>
+        <div className="chips scroll" role="toolbar" aria-label={tr("Category")}>
+          <button className={`chip ${!cat && !saved ? "on" : ""}`} onClick={() => { setParam("category", ""); setParam("saved", ""); }}>{tr("All")}</button>
           <button className={`chip ${saved ? "on" : ""}`} onClick={() => setParam("saved", saved ? "" : "1")}><Heart size={14} /> Saved {favorites.length > 0 && `(${favorites.length})`}</button>
           {Object.entries(CATEGORY_META).filter(([k]) => k !== "hub").map(([k, m]) => (
             <button key={k} className={`chip ${cat === k ? "on" : ""}`} onClick={() => setParam("category", cat === k ? "" : k)}>
@@ -50,7 +51,7 @@ export default function Explore() {
             </button>
           ))}
         </div>
-        <div className="chips scroll" role="toolbar" aria-label="Region">
+        <div className="chips scroll" role="toolbar" aria-label={tr("Region")}>
           {Object.entries(regions).map(([k, r]) => (
             <button key={k} className={`chip sm ${region === k ? "on" : ""}`} onClick={() => setParam("region", region === k ? "" : k)}>{r.name}</button>
           ))}
@@ -61,7 +62,7 @@ export default function Explore() {
         {loading && Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} h={330} r={26} />)}
         {items.filter((d) => d.category !== "hub").map((d, i) => <DestinationCard key={d.slug} d={d} index={i} />)}
       </div>
-      {!loading && !items.length && <div className="empty">No places match — try another filter.</div>}
+      {!loading && !items.length && <div className="empty">{tr("No places match — try another filter.")}</div>}
     </div>
   );
 }

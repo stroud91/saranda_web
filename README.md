@@ -165,9 +165,22 @@ Local businesses can add themselves at **/business**: one profile, then their ap
 - **Guests deal with the business directly.** A partner's stay is always request-to-book: the site never takes money for another business, even if PayPal or bank transfer is set up for your own apartments. Rentals and activities get an enquiry form. Requests go to the owner's confirmed account email and to their dashboard, where they confirm or decline.
 - **Public pages.** `/partners` lists approved businesses and `/partners/<slug>` shows one with its listings. Partner stays appear on `/stays` under "More places to stay"; activities and rentals appear on `/experiences` with the business's name.
 - **Taking things down.** *Take offline* in the Host desk hides a business and everything it lists, and *Put back online* restores it. An owner can pause or remove a listing, and deleting their account closes the business and erases its contact details.
+- **Page style.** Under *Page style* a business picks its page's background (clean, soft colour, waves, dots or an illustrated header), colours and card style, with a live preview that changes on every click and can be flipped between light and dark. Guests see the new look only after **Save**. A style is a set of choices from fixed lists (`STYLE_OPTIONS` in `app/models/business.py`), never free CSS, colours or URLs, so it applies without review.
 - **Limits and switch.** `PARTNER_MAX_LISTINGS` (default 40 per business); `PARTNERS_ENABLED=false` hides the portal and every partner listing.
 
 Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`). Photo uploads aren't supported yet; partner listings use the site's illustrations.
+
+## Languages and appearance
+
+The globe button in the top bar (and the row of languages in the footer) switches between **Shqip, English, Français, Italiano and Deutsch**, and between **Light, Dark and Auto**. Both choices are remembered in the browser and applied before the page is drawn (`public/boot.js`, a separate file because the Content-Security-Policy allows no inline scripts). A first-time visitor gets their browser's language if it is one of the five, otherwise English. `?lang=de` in any link opens the site in that language.
+
+How translation works:
+
+- English text is the key: `tr("Request to book")`. Values go in braces, `tr("up to {n} guests", { n })`, and sentences with links or bold use `rich("See our <a>privacy policy</a>.", { a: (c) => <Link to="/privacy">{c}</Link> })`.
+- `travago-tour-app/src/i18n/table.js` holds one row per phrase: `[English, Shqip, Français, Italiano, Deutsch]`. It loads only for visitors who aren't using English. **To translate more of the site, add rows there**; nothing else changes. A phrase without a row shows in English.
+- `src/i18n/i18n.test.js` fails the build if a row is incomplete, a phrase is listed twice, or a translation loses a `{value}` or `<tag>`.
+
+What is translated today: menus, footer, home page, stays and booking, experiences and rentals, business pages and the business dashboard, the style editor, sign-in and sign-up, contact. Still English: the destination guides, itineraries and essentials (they come from `app/data/`), the planner, map and atlas panels, the account and Host desk screens, the legal pages (which say so in the visitor's language), the concierge's answers and e-mails.
 
 ## Free mode (current default)
 

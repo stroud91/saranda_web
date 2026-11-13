@@ -6,6 +6,7 @@ import { CLIPS, REEL, YOUTUBE, clipByKey } from "../../lib/media";
 import { useDestinations } from "../../lib/useDestinations";
 import VideoLoop from "./VideoLoop";
 import YouTubeFacade from "./YouTubeFacade";
+import { tr } from "../../i18n";
 
 const Stories = lazy(() => import("./Stories"));
 
@@ -37,28 +38,28 @@ export default function ReelSection() {
     <section className="section container reel-section" aria-labelledby="reel-title">
       <div className="section-head">
         <div>
-          <div className="eyebrow"><Film size={14} /> Albania in motion</div>
-          <h2 id="reel-title">See it before you go</h2>
-          <p className="muted">Short films from the riviera, the mountains and the old stone towns — tap one to watch it full screen.</p>
+          <div className="eyebrow"><Film size={14} /> {tr("Albania in motion")}</div>
+          <h2 id="reel-title">{tr("See it before you go")}</h2>
+          <p className="muted">{tr("Short films from the riviera, the mountains and the old stone towns — tap one to watch it full screen.")}</p>
         </div>
       </div>
 
       <div className="reel-grid">
         {REEL && (
           <motion.div className="reel-stage" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6 }}>
-            <VideoLoop ref={reel} src={REEL.src.mp4} poster={REEL.src.poster} className="reel-video" onTime={onTime} label="Montage of places in Albania" />
+            <VideoLoop ref={reel} src={REEL.src.mp4} poster={REEL.src.poster} className="reel-video" onTime={onTime} label={tr("Montage of places in Albania")} />
             <div className="reel-glow" aria-hidden="true" />
             <div className="reel-hud">
               <span className="reel-rec" aria-hidden="true" />
               <div className="reel-now">
-                <span className="tiny">Now showing</span>
+                <span className="tiny">{tr("Now showing")}</span>
                 <b>{current?.title}</b>
               </div>
-              <button type="button" className="icon-btn sm" onClick={() => setStory(Math.max(0, CLIPS.findIndex((c) => c.key === current?.key)))} aria-label="Watch full screen">
+              <button type="button" className="icon-btn sm" onClick={() => setStory(Math.max(0, CLIPS.findIndex((c) => c.key === current?.key)))} aria-label={tr("Watch full screen")}>
                 <Maximize2 size={16} />
               </button>
             </div>
-            <div className="reel-chapters" role="tablist" aria-label="Places in this film">
+            <div className="reel-chapters" role="tablist" aria-label={tr("Places in this film")}>
               {chapters.map((c, k) => (
                 <button key={c.key} type="button" role="tab" aria-selected={k === chapter} className={`chip ${k === chapter ? "on" : ""}`} onClick={() => jump(k)}>
                   {clipByKey[c.key]?.short || clipByKey[c.key]?.title}
@@ -68,7 +69,7 @@ export default function ReelSection() {
           </motion.div>
         )}
 
-        <div className="story-rail" role="list" aria-label="Video stories">
+        <div className="story-rail" role="list" aria-label={tr("Video stories")}>
           {CLIPS.map((c, k) => (
             <motion.button
               type="button"
@@ -93,15 +94,15 @@ export default function ReelSection() {
 
       <div className="section-head yt-head">
         <div>
-          <div className="eyebrow"><Clapperboard size={14} /> Sarandë on film</div>
-          <h3>Favourite films by travellers and drone pilots</h3>
+          <div className="eyebrow"><Clapperboard size={14} /> {tr("Sarandë on film")}</div>
+          <h3>{tr("Favourite films by travellers and drone pilots")}</h3>
         </div>
       </div>
       <div className="yt-grid">
         {YOUTUBE.slice(0, 4).map((v) => <YouTubeFacade key={v.id} video={v} scene={bySlug[v.place]?.scene} />)}
       </div>
       <details className="yt-more">
-        <summary className="btn ghost sm">More films</summary>
+        <summary className="btn ghost sm">{tr("More films")}</summary>
         <div className="yt-grid">
           {YOUTUBE.slice(4).map((v) => <YouTubeFacade key={v.id} video={v} scene={bySlug[v.place]?.scene} />)}
         </div>

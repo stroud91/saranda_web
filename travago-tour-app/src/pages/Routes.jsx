@@ -9,6 +9,7 @@ import AlbaniaMap from "../components/map/AlbaniaMap";
 import Timeline from "../components/planner/Timeline";
 import { MODE_META, PageHeader, Segmented, Skeleton, toast } from "../components/ui";
 import { useTrip } from "../store/trip";
+import { tr } from "../i18n";
 
 const MODE_ICON = { drive: Car, ferry: Ship, boat: Sailboat };
 
@@ -37,7 +38,7 @@ function Journey({ result, name }) {
             <div className={`j-node ${i === 0 ? "start" : i === result.hops.length - 1 ? "end" : isStop ? "via" : "pass"}`}>
               <span className="j-dot" />
               <Link to={`/explore/${slug}`} className="j-name">{name(slug)}</Link>
-              {!isStop && <span className="tiny muted">via</span>}
+              {!isStop && <span className="tiny muted">{tr("via")}</span>}
             </div>
             {leg && (
               <div className={`j-leg m-${leg.mode}`}>
@@ -48,7 +49,7 @@ function Journey({ result, name }) {
                     <b>{hmRange(leg.min_minutes, leg.max_minutes)}</b>
                     <span className="small muted">{kmRange(leg.km_min, leg.km_max)}</span>
                     <span className={`badge ${leg.source === "planner" ? "sea" : leg.source === "estimate" ? "" : "terracotta"}`}>
-                      {leg.source === "planner" ? "Planner data" : leg.source === "estimate" ? "Estimate" : "Straight-line"}
+                      {leg.source === "planner" ? tr("Planner data") : leg.source === "estimate" ? tr("Estimate") : tr("Straight-line")}
                     </span>
                   </div>
                   <div className="range-bar" aria-hidden="true">
@@ -73,8 +74,8 @@ function PlannerTable({ name }) {
   const max = Math.max(...rows.map((r) => r.max_minutes));
   return (
     <div className="card pad">
-      <div className="panel-title"><h3><Gauge size={18} /> Driving distances & road planning</h3><span className="badge sea">From the planner</span></div>
-      <p className="small muted">Approximate planning ranges, not guaranteed times — summer traffic, road works, weather and stops change journeys significantly.</p>
+      <div className="panel-title"><h3><Gauge size={18} /> {tr("Driving distances & road planning")}</h3><span className="badge sea">{tr("From the planner")}</span></div>
+      <p className="small muted">{tr("Approximate planning ranges, not guaranteed times — summer traffic, road works, weather and stops change journeys significantly.")}</p>
       <div className="dist-table">
         {rows.map((r) => (
           <Link key={r.from + r.to} to={`/routes?from=${r.from}&to=${r.to}`} className="dist-row">
@@ -90,7 +91,7 @@ function PlannerTable({ name }) {
         ))}
       </div>
       <p className="tiny muted" style={{ marginTop: 12 }}>
-        Road-trip tip: don't schedule a major sight at the exact end of a long driving day. Leave a buffer for fuel, photos, coffee, parking and traffic.
+        {tr("Road-trip tip: don't schedule a major sight at the exact end of a long driving day. Leave a buffer for fuel, photos, coffee, parking and traffic.")}
       </p>
     </div>
   );
@@ -135,13 +136,13 @@ export default function Routes() {
 
   return (
     <div className="page container">
-      <PageHeader eyebrow="Route connector" icon={RouteIcon} title="Connect any two places" lead="Fastest chain of roads, ferries and boats between destinations — with time ranges from the planner, a clock-time estimate and a live map." />
+      <PageHeader eyebrow={tr("Route connector")} icon={RouteIcon} title={tr("Connect any two places")} lead={tr("Fastest chain of roads, ferries and boats between destinations — with time ranges from the planner, a clock-time estimate and a live map.")} />
 
       <div className="rc card pad">
         <div className="rc-grid">
-          <PlaceSelect id="rc-from" label="From" value={from} onChange={(v) => update({ from: v })} list={list} dot="a" />
-          <button className="icon-btn rc-swap" onClick={() => update({ from: to, to: from, via: [...via].reverse().join(",") })} aria-label="Swap start and destination"><ArrowUpDown size={18} /></button>
-          <PlaceSelect id="rc-to" label="To" value={to} onChange={(v) => update({ to: v })} list={list} dot="b" />
+          <PlaceSelect id="rc-from" label={tr("From")} value={from} onChange={(v) => update({ from: v })} list={list} dot="a" />
+          <button className="icon-btn rc-swap" onClick={() => update({ from: to, to: from, via: [...via].reverse().join(",") })} aria-label={tr("Swap start and destination")}><ArrowUpDown size={18} /></button>
+          <PlaceSelect id="rc-to" label={tr("To")} value={to} onChange={(v) => update({ to: v })} list={list} dot="b" />
         </div>
         <div className="row" style={{ marginTop: 12, gap: 8 }}>
           {via.map((v, i) => (
@@ -150,7 +151,7 @@ export default function Routes() {
           {via.length < 4 && (
             <label className="chip sm add-via">
               <Plus size={14} /> Add a stop
-              <select value="" onChange={(e) => e.target.value && update({ via: [...via, e.target.value].join(",") })} aria-label="Add a stop along the way">
+              <select value="" onChange={(e) => e.target.value && update({ via: [...via, e.target.value].join(",") })} aria-label={tr("Add a stop along the way")}>
                 <option value="">Add a stop</option>
                 {list.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
               </select>
@@ -168,16 +169,16 @@ export default function Routes() {
             <div className="stack" style={{ "--gap": "18px" }}>
               <div className="route-summary">
                 <div>
-                  <span className="eyebrow light">Door to door</span>
+                  <span className="eyebrow light">{tr("Door to door")}</span>
                   <div className="rs-time">{hmRange(t.min_minutes, t.max_minutes)}</div>
                   <div className="rs-sub">{kmRange(t.km_min, t.km_max)} · {t.hop_count} leg{t.hop_count === 1 ? "" : "s"} · {t.modes.map((m) => MODE_META[m].label).join(" + ")}</div>
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   {result.directions_url && roadOnly && (
-                    <a href={result.directions_url} target="_blank" rel="noopener noreferrer" className="btn glass sm"><Navigation size={16} /> Google Maps</a>
+                    <a href={result.directions_url} target="_blank" rel="noopener noreferrer" className="btn glass sm"><Navigation size={16} /> {tr("Google Maps")}</a>
                   )}
-                  <button className="btn glass sm" onClick={addAsDay}><CalendarPlus size={16} /> Add as a trip day</button>
-                  <Link className="btn glass sm" to={`/atlas?from=${result.hops[0]}&to=${result.hops[result.hops.length - 1]}&fly=1`}><Plane size={16} /> Fly it in 3D</Link>
+                  <button className="btn glass sm" onClick={addAsDay}><CalendarPlus size={16} /> {tr("Add as a trip day")}</button>
+                  <Link className="btn glass sm" to={`/atlas?from=${result.hops[0]}&to=${result.hops[result.hops.length - 1]}&fly=1`}><Plane size={16} /> {tr("Fly it in 3D")}</Link>
                 </div>
               </div>
               <div className="card pad"><Journey result={result} name={name} /></div>
@@ -195,9 +196,9 @@ export default function Routes() {
               </div>
               <div className="card pad">
                 <div className="panel-title">
-                  <h3><Clock size={18} /> Timeline estimate</h3>
+                  <h3><Clock size={18} /> {tr("Timeline estimate")}</h3>
                   <div className="row" style={{ gap: 8 }}>
-                    <select className="select sm-select" value={startTime} onChange={(e) => setStartTime(e.target.value)} aria-label="Start time">
+                    <select className="select sm-select" value={startTime} onChange={(e) => setStartTime(e.target.value)} aria-label={tr("Start time")}>
                       {["06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "11:00", "12:00", "14:00"].map((x) => <option key={x}>{x}</option>)}
                     </select>
                     <Segmented layoutId="rc-pace" value={pace} onChange={setPace} options={[{ value: "relaxed", label: "Relaxed" }, { value: "balanced", label: "Balanced" }, { value: "packed", label: "Packed" }]} />

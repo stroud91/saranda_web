@@ -10,6 +10,7 @@ import FxWidget from "../components/live/FxWidget";
 import { PageHeader, Skeleton, Alert } from "../components/ui";
 import { useTrip } from "../store/trip";
 import { useUi } from "../store/ui";
+import { tr } from "../i18n";
 
 const SECTIONS = [
   ["seasons", "When to go", Sun],
@@ -72,17 +73,17 @@ export default function Essentials() {
   if (!e) return <div className="page container"><Skeleton h={500} r={26} /></div>;
   return (
     <div className="page container essentials">
-      <PageHeader eyebrow={`Know before you go · ${e.edition}`} icon={BookOpen} title="Everything practical, in one place" lead="Seasons, money, budgets, food, beaches, packing, safety and the Corfu connection — from The Ultimate Albania Travel Planner 2027." />
+      <PageHeader eyebrow={`Know before you go · ${e.edition}`} icon={BookOpen} title={tr("Everything practical, in one place")} lead={tr("Seasons, money, budgets, food, beaches, packing, safety and the Corfu connection — from The Ultimate Albania Travel Planner 2027.")} />
       <div className="quick-start card pad">
-        <b>Quick start</b>
+        <b>{tr("Quick start")}</b>
         <ol>{e.quick_start.map((q) => <li key={q}>{q}</li>)}</ol>
       </div>
-      <nav className="ess-nav chips scroll" aria-label="Sections">
+      <nav className="ess-nav chips scroll" aria-label={tr("Sections")}>
         {SECTIONS.map(([id, label, Icon]) => <a key={id} href={`#${id}`} className="chip sm"><Icon size={13} /> {label}</a>)}
       </nav>
 
-      <Section id="seasons" icon={Sun} title="When to go">
-        <div className="card pad"><ClimateChart climate={e.climate} /><div className="row tiny muted" style={{ gap: 14 }}><span className="legend air">Air high</span><span className="legend sea">Sea temperature</span><span>Typical Sarandë averages</span></div></div>
+      <Section id="seasons" icon={Sun} title={tr("When to go")}>
+        <div className="card pad"><ClimateChart climate={e.climate} /><div className="row tiny muted" style={{ gap: 14 }}><span className="legend air">{tr("Air high")}</span><span className="legend sea">{tr("Sea temperature")}</span><span>{tr("Typical Sarandë averages")}</span></div></div>
         <div className="grid" style={{ "--min": "220px", marginTop: 16 }}>
           {e.seasons.map((s) => (
             <div key={s.key} className={`season-tile s-${s.key}`}><b>{s.months}</b><span className="badge glass">{s.verdict}</span><p className="small">{s.text}</p></div>
@@ -90,35 +91,35 @@ export default function Essentials() {
         </div>
       </Section>
 
-      <Section id="money" icon={Wallet} title="Money & the lek">
+      <Section id="money" icon={Wallet} title={tr("Money & the lek")}>
         <div className="split">
           <ul className="check-list">{e.money.map((m) => <li key={m}>{m}</li>)}</ul>
-          <div className="card pad"><h3>Converter</h3><FxWidget /></div>
+          <div className="card pad"><h3>{tr("Converter")}</h3><FxWidget /></div>
         </div>
       </Section>
 
-      <Section id="budget" icon={Wallet} title="Daily budget guide">
+      <Section id="budget" icon={Wallet} title={tr("Daily budget guide")}>
         <div className="grid" style={{ "--min": "240px" }}>
           {e.budget_tiers.map((t, i) => (
             <div key={t.key} className={`tier-card tier-${i}`}>
               <span className="eyebrow light">{t.label}</span>
               <div className="tier-price">€{t.min}–€{t.max}{t.key === "premium" ? "+" : ""}</div>
-              <span className="tiny">per person per day</span>
+              <span className="tiny">{tr("per person per day")}</span>
               <p className="small">{t.choices}</p>
             </div>
           ))}
         </div>
         <div className="card pad" style={{ marginTop: 16 }}>
           <table className="table">
-            <thead><tr><th>Category</th><th>Planning range</th></tr></thead>
+            <thead><tr><th>{tr("Category")}</th><th>{tr("Planning range")}</th></tr></thead>
             <tbody>{e.budget_categories.map((c) => <tr key={c.item}><td>{c.item}</td><td>{c.range}</td></tr>)}</tbody>
           </table>
         </div>
-        <div className="tip-card" style={{ marginTop: 16 }}><Lightbulb size={20} /><div><b>Save money</b><p className="mb-0">{e.save_money.join(" ")}</p></div></div>
+        <div className="tip-card" style={{ marginTop: 16 }}><Lightbulb size={20} /><div><b>{tr("Save money")}</b><p className="mb-0">{e.save_money.join(" ")}</p></div></div>
         <p className="tiny muted">{e.price_note} <Link to="/plan?tab=budget">Estimate your own trip →</Link></p>
       </Section>
 
-      <Section id="food" icon={Utensils} title="Food & what to order">
+      <Section id="food" icon={Utensils} title={tr("Food & what to order")}>
         <div className="grid" style={{ "--min": "220px" }}>
           {e.food.map((f, i) => (
             <motion.div key={f.name} className="food-card card pad" initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}>
@@ -128,11 +129,11 @@ export default function Essentials() {
             </motion.div>
           ))}
         </div>
-        <div className="tip-card" style={{ marginTop: 16 }}><Utensils size={20} /><div><b>Restaurant tip</b><p className="mb-0">{e.restaurant_tip}</p></div></div>
+        <div className="tip-card" style={{ marginTop: 16 }}><Utensils size={20} /><div><b>{tr("Restaurant tip")}</b><p className="mb-0">{e.restaurant_tip}</p></div></div>
       </Section>
 
-      <Section id="beaches" icon={Waves} title="Best beaches">
-        <p className="muted">Choose your beach by the experience you want — not simply social-media popularity.</p>
+      <Section id="beaches" icon={Waves} title={tr("Best beaches")}>
+        <p className="muted">{tr("Choose your beach by the experience you want — not simply social-media popularity.")}</p>
         <div className="beach-list">
           {e.beaches.map((b) => (
             <Link key={b.slug} to={`/explore/${b.slug}`} className="beach-row">
@@ -141,11 +142,11 @@ export default function Essentials() {
           ))}
         </div>
         <Alert kind="info"><b>Beach-day rule:</b> {e.beach_rule}</Alert>
-        <div className="tip-card" style={{ marginTop: 12 }}><Ship size={20} /><div><b>Boat day idea</b><p className="mb-0">{e.boat_day}</p></div></div>
+        <div className="tip-card" style={{ marginTop: 12 }}><Ship size={20} /><div><b>{tr("Boat day idea")}</b><p className="mb-0">{e.boat_day}</p></div></div>
       </Section>
 
-      <Section id="packing" icon={Backpack} title="Packing checklist">
-        <p className="small muted">Tick items off — your list is saved on this device and shared with the planner.</p>
+      <Section id="packing" icon={Backpack} title={tr("Packing checklist")}>
+        <p className="small muted">{tr("Tick items off — your list is saved on this device and shared with the planner.")}</p>
         <div className="grid" style={{ "--min": "240px" }}>
           {Object.entries(e.packing).map(([group, items]) => (
             <div key={group} className="card pad check-group">
@@ -161,20 +162,20 @@ export default function Essentials() {
         </div>
       </Section>
 
-      <Section id="safety" icon={ShieldCheck} title="Safety, etiquette & a daily rhythm">
+      <Section id="safety" icon={ShieldCheck} title={tr("Safety, etiquette & a daily rhythm")}>
         <div className="split">
           <div className="stack" style={{ "--gap": "10px" }}>
             {e.safety.map((s) => <div key={s.topic} className="safety-row"><b>{s.topic}</b><span className="small">{s.tip}</span></div>)}
           </div>
           <div className="card pad">
-            <h3><Clock size={18} /> A simple daily rhythm</h3>
+            <h3><Clock size={18} /> {tr("A simple daily rhythm")}</h3>
             <ol className="rhythm">{e.daily_rhythm.map((r) => <li key={r.time}><span>{r.time}</span><b>{r.label}</b></li>)}</ol>
             <p className="tiny muted">{e.road_trip_tip}</p>
           </div>
         </div>
       </Section>
 
-      <Section id="emergency" icon={Phone} title="Emergency numbers">
+      <Section id="emergency" icon={Phone} title={tr("Emergency numbers")}>
         <div className="grid" style={{ "--min": "180px" }}>
           {e.emergency.map((n) => (
             <a key={n.number} href={`tel:${n.number}`} className={`sos-card ${n.number === "112" ? "main" : ""}`}>
@@ -184,7 +185,7 @@ export default function Essentials() {
         </div>
       </Section>
 
-      <Section id="corfu" icon={Ship} title="The Corfu–Albania connection">
+      <Section id="corfu" icon={Ship} title={tr("The Corfu–Albania connection")}>
         <p>{e.corfu.summary}</p>
         <div className="split">
           <ul className="check-list">{e.corfu.checklist.map((c) => <li key={c}>{c}</li>)}</ul>
@@ -195,16 +196,16 @@ export default function Essentials() {
         </div>
       </Section>
 
-      <Section id="booking" icon={ListChecks} title="Booking strategy">
+      <Section id="booking" icon={ListChecks} title={tr("Booking strategy")}>
         <ul className="check-list">{e.booking_strategy.map((b) => <li key={b}>{b}</li>)}</ul>
         <Alert kind="info"><b>Final check:</b> {e.final_check}</Alert>
       </Section>
 
-      <Section id="sources" icon={Library} title="Sources & disclaimer">
+      <Section id="sources" icon={Library} title={tr("Sources & disclaimer")}>
         <ul className="sources">{e.sources.map((s) => <li key={s.name}><span className={`badge ${s.kind === "live" ? "sea" : s.kind === "official" ? "olive" : "sun"}`}>{s.kind}</span> {s.name}</li>)}</ul>
         <p className="small muted">{e.disclaimer}</p>
         <p className="tiny faint">Last reviewed {e.last_reviewed}.</p>
-        <button className="btn" onClick={() => ask()}><Sparkles size={16} /> Still have a question? Ask the concierge</button>
+        <button className="btn" onClick={() => ask()}><Sparkles size={16} /> {tr("Still have a question? Ask the concierge")}</button>
       </Section>
     </div>
   );

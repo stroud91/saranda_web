@@ -3,6 +3,7 @@ import { Moon, Sun, Sunrise, Sunset, Volume2, VolumeX, Radio } from "lucide-reac
 import SceneArt from "../art/SceneArt";
 import { createOcean, webgl2Supported } from "./ocean";
 import { plip, setSound, soundAvailable } from "../../lib/seaSound";
+import { tr } from "../../i18n";
 
 /** Current hour in Sarandë (Europe/Tirane), e.g. 18.5 for 18:30. */
 export function sarandaHour(date = new Date()) {
@@ -125,7 +126,7 @@ export default function OceanHero({ scrollProgress, surfaceRef }) {
           <div className="time-dial glass-card">
             <MoodIcon size={16} aria-hidden="true" />
             <label htmlFor="ocean-hour" className="time-dial-label">
-              <span className="tiny">{live ? "Now in Sarandë" : mood}</span>
+              <span className="tiny">{live ? tr("Now in Sarandë") : mood}</span>
               <b>{fmtHour(hour)}</b>
             </label>
             <input

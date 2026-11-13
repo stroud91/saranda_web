@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Car, Ship, Sailboat, Utensils, MapPin, Flag, Home, AlertTriangle, Info, Navigation } from "lucide-react";
 import { Link } from "react-router-dom";
 import { hm, hmRange, kmRange } from "../../lib/format";
+import { tr } from "../../i18n";
 
 const ICON = { depart: Flag, drive: Car, ferry: Ship, boat: Sailboat, lunch: Utensils, visit: MapPin, arrive: Home };
 
@@ -15,7 +16,7 @@ export default function Timeline({ day, compact = false }) {
         {s.moving_minutes_max > 0 && <span className="muted">· on the move {hmRange(s.moving_minutes_min, s.moving_minutes_max)}</span>}
         {s.km_max > 0 && <span className="muted">· {kmRange(s.km_min, s.km_max)}</span>}
         {day.directions_url && s.moving_minutes_max > 0 && (
-          <a className="tiny" href={day.directions_url} target="_blank" rel="noopener noreferrer"><Navigation size={12} /> Directions</a>
+          <a className="tiny" href={day.directions_url} target="_blank" rel="noopener noreferrer"><Navigation size={12} /> {tr("Directions")}</a>
         )}
       </div>
       {day.warnings?.length > 0 && (

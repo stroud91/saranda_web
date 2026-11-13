@@ -4,6 +4,7 @@ import { Ban, Check, ExternalLink, MessageSquareWarning, RotateCcw, Store } from
 import { KINDS, PROFILE_FIELDS, fieldLabel, partnerPatch, showValue } from "../../lib/partners";
 import { fmtDate } from "../../lib/format";
 import { Alert, toast } from "../ui";
+import { tr } from "../../i18n";
 
 const TYPE_LABEL = { business: "Business profile", stays: "Apartment", rentals: "Rental", experiences: "Activity" };
 const STATUS_TONE = { approved: "olive", pending: "sun", rejected: "terracotta", suspended: "terracotta" };
@@ -38,7 +39,7 @@ function QueueRow({ q, onDone }) {
     setBusy(true);
     try {
       await partnerPatch(reviewPath(q), { action, note: action === "reject" ? note : undefined });
-      toast(action === "approve" ? "Approved — the business has been emailed" : "Sent back with your note");
+      toast(action === "approve" ? tr("Approved — the business has been emailed") : tr("Sent back with your note"));
       onDone();
     } catch (e) {
       toast(e.message);
@@ -57,7 +58,7 @@ function QueueRow({ q, onDone }) {
         <Submission q={q} />
         {asking && (
           <label className="field">
-            <span className="label">What should they change? (emailed to the business)</span>
+            <span className="label">{tr("What should they change? (emailed to the business)")}</span>
             <textarea className="textarea" value={note} onChange={(e) => setNote(e.target.value)} maxLength={600} autoFocus />
           </label>
         )}
@@ -65,13 +66,13 @@ function QueueRow({ q, onDone }) {
       <div className="host-actions">
         {!asking ? (
           <>
-            <button type="button" className="btn sm primary" disabled={busy} onClick={() => decide("approve")}><Check size={15} /> Approve</button>
-            <button type="button" className="btn sm" disabled={busy} onClick={() => setAsking(true)}><MessageSquareWarning size={15} /> {q.first_review ? "Ask for changes" : "Don't accept"}</button>
+            <button type="button" className="btn sm primary" disabled={busy} onClick={() => decide("approve")}><Check size={15} /> {tr("Approve")}</button>
+            <button type="button" className="btn sm" disabled={busy} onClick={() => setAsking(true)}><MessageSquareWarning size={15} /> {q.first_review ? tr("Ask for changes") : tr("Don't accept")}</button>
           </>
         ) : (
           <>
-            <button type="button" className="btn sm primary" disabled={busy || note.trim().length < 3} onClick={() => decide("reject")}>Send note</button>
-            <button type="button" className="btn sm" disabled={busy} onClick={() => setAsking(false)}>Back</button>
+            <button type="button" className="btn sm primary" disabled={busy || note.trim().length < 3} onClick={() => decide("reject")}>{tr("Send note")}</button>
+            <button type="button" className="btn sm" disabled={busy} onClick={() => setAsking(false)}>{tr("Back")}</button>
           </>
         )}
       </div>
@@ -90,7 +91,7 @@ function BusinessRow({ b, onDone }) {
     setBusy(true);
     try {
       await partnerPatch(`/admin/partners/businesses/${b.id}`, { action, note: note || undefined });
-      toast(action === "suspend" ? "Taken offline" : "Back online");
+      toast(action === "suspend" ? tr("Taken offline") : tr("Back online"));
       onDone();
     } catch (e) {
       toast(e.message);
@@ -105,9 +106,9 @@ function BusinessRow({ b, onDone }) {
         <span className="small muted">{b.city || "—"} · {b.listings} listing{b.listings === 1 ? "" : "s"} · {b.owner_email ? <a href={`mailto:${b.owner_email}`}>{b.owner_email}</a> : "no owner"} · joined {fmtDate(b.created_at, { day: "numeric", month: "short", year: "numeric" })}</span>
       </div>
       <div className="host-actions">
-        {b.status === "approved" && <Link className="btn sm" to={`/partners/${b.slug}`}><ExternalLink size={14} /> Page</Link>}
-        {b.status === "approved" && <button type="button" className="btn sm" disabled={busy} onClick={() => act("suspend")}><Ban size={14} /> Take offline</button>}
-        {b.status === "suspended" && <button type="button" className="btn sm primary" disabled={busy} onClick={() => act("reinstate")}><RotateCcw size={14} /> Put back online</button>}
+        {b.status === "approved" && <Link className="btn sm" to={`/partners/${b.slug}`}><ExternalLink size={14} /> {tr("Page")}</Link>}
+        {b.status === "approved" && <button type="button" className="btn sm" disabled={busy} onClick={() => act("suspend")}><Ban size={14} /> {tr("Take offline")}</button>}
+        {b.status === "suspended" && <button type="button" className="btn sm primary" disabled={busy} onClick={() => act("reinstate")}><RotateCcw size={14} /> {tr("Put back online")}</button>}
       </div>
     </li>
   );
@@ -118,12 +119,12 @@ export default function PartnerReview({ data, onReload }) {
   return (
     <div className="stack" style={{ "--gap": "22px" }}>
       <section className="stack">
-        <h2 className="h3"><Check size={18} /> Waiting for your review</h2>
-        {!data.queue.length && <Alert kind="ok">Nothing to review. New businesses and listings will appear here, and you'll get an email.</Alert>}
+        <h2 className="h3"><Check size={18} /> {tr("Waiting for your review")}</h2>
+        {!data.queue.length && <Alert kind="ok">{tr("Nothing to review. New businesses and listings will appear here, and you'll get an email.")}</Alert>}
         <ul className="host-list">{data.queue.map((q) => <QueueRow key={`${q.type}-${q.id}`} q={q} onDone={onReload} />)}</ul>
       </section>
       <section className="stack">
-        <h2 className="h3"><Store size={18} /> Businesses</h2>
+        <h2 className="h3"><Store size={18} /> {tr("Businesses")}</h2>
         {!data.businesses.length && <p className="muted">No businesses have signed up yet. They start at <Link to="/business">/business</Link>.</p>}
         <ul className="host-list">{data.businesses.map((b) => <BusinessRow key={b.id} b={b} onDone={onReload} />)}</ul>
       </section>

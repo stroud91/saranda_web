@@ -6,6 +6,7 @@
 import { MapPin, Store } from "lucide-react";
 import GuideAvatar, { PALETTES } from "../art/GuideAvatar";
 import SceneArt from "../art/SceneArt";
+import { tr } from "../../i18n";
 
 export const DEFAULT_LOOK = { background: "plain", scene: "harbor", variant: "golden", cards: "soft" };
 
@@ -33,7 +34,7 @@ export const LOOK_CHOICES = {
   ],
 };
 
-export const PALETTE_NAMES = { sea: "Sea", sunset: "Sunset", olive: "Olive", lagoon: "Lagoon", aegean: "Deep blue", spring: "Spring", terracotta: "Terracotta" };
+export const PALETTE_NAMES = { sea: "Sea", sunset: "Sunset", olive: "Olive", lagoon: "Lagoon", aegean: "Deep blue", spring: "Spring green", terracotta: "Terracotta" };
 
 /** Only known choices are ever used, whatever the data says. */
 export function cleanLook(look) {
@@ -63,8 +64,8 @@ export function BusinessHero({ business: b, children }) {
     <header className="card pad biz-hero">
       <GuideAvatar name={b.name || "?"} palette={b.palette} size={88} />
       <div className="stack" style={{ "--gap": "8px", minWidth: 0 }}>
-        <div className="eyebrow"><Store size={14} /> Local business{b.since ? ` · on Saranda Companion since ${b.since}` : ""}</div>
-        <h1>{b.name || "Your business"}</h1>
+        <div className="eyebrow"><Store size={14} /> {tr("Local business")}{b.since ? ` · ${tr("on Saranda Companion since {year}", { year: b.since })}` : ""}</div>
+        <h1>{b.name || tr("Your business")}</h1>
         {b.tagline && <p className="lead" style={{ margin: 0 }}>{b.tagline}</p>}
         {(b.address || b.city) && <span className="small muted"><MapPin size={14} /> {[b.address, b.city].filter(Boolean).join(", ")}</span>}
         <div className="row">{children}</div>

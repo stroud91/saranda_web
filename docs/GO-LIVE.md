@@ -167,6 +167,8 @@ Other businesses can list their own apartments, rentals and activities at `https
 2. Open **My account → Host desk → Partners**. Read what was submitted, then **Approve** or **Ask for changes** (your note is emailed to them).
 3. To remove a business later, press **Take offline** next to it.
 
+Each business can also style its own page (background, colours, header picture) under **Page style** in its dashboard. The choices come from fixed lists, so they need no review.
+
 Guests book and pay those businesses directly; no money for them passes through your PayPal or bank account. Read the "Listings from local businesses" section on **/terms** and adjust it with your lawyer if you want different rules. To switch the whole feature off, put `PARTNERS_ENABLED=false` in `.env`.
 
 ## 11. Daily clean-up and backups
