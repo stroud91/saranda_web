@@ -161,14 +161,47 @@ Both need the Python app (they use the database and secret keys); the static upl
 Local businesses can add themselves at **/business**: one profile, then their apartments, rentals and activities, all managed from one dashboard. It needs the Python app with accounts and outgoing email (owners must confirm their address).
 
 - **Nothing is public until you approve it.** New businesses and listings appear in *My account → Host desk → Partners*, with every submitted field. Approve, or send it back with a note that is emailed to the owner.
-- **Edits are reviewed too.** On an approved profile or listing, prices, capacity and the on/off switch change at once. Names, descriptions and contact details wait for approval while the approved version stays live. The Host desk shows the old and new text side by side.
+- **Edits are reviewed too.** On an approved profile or listing, prices, capacity and the on/off switch change at once. Names, descriptions, contact details and new photos wait for approval while the approved version stays live. The Host desk shows the old and new text side by side, and the photos as thumbnails.
 - **Guests deal with the business directly.** A partner's stay is always request-to-book: the site never takes money for another business, even if PayPal or bank transfer is set up for your own apartments. Rentals and activities get an enquiry form. Requests go to the owner's confirmed account email and to their dashboard, where they confirm or decline.
 - **Public pages.** `/partners` lists approved businesses and `/partners/<slug>` shows one with its listings. Partner stays appear on `/stays` under "More places to stay"; activities and rentals appear on `/experiences` with the business's name.
 - **Taking things down.** *Take offline* in the Host desk hides a business and everything it lists, and *Put back online* restores it. An owner can pause or remove a listing, and deleting their account closes the business and erases its contact details.
 - **Page style.** Under *Page style* a business picks its page's background (clean, soft colour, waves, dots or an illustrated header), colours and card style, with a live preview that changes on every click and can be flipped between light and dark. Guests see the new look only after **Save**. A style is a set of choices from fixed lists (`STYLE_OPTIONS` in `app/models/business.py`), never free CSS, colours or URLs, so it applies without review.
 - **Limits and switch.** `PARTNER_MAX_LISTINGS` (default 40 per business); `PARTNERS_ENABLED=false` hides the portal and every partner listing.
 
-Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`). Photo uploads aren't supported yet; partner listings use the site's illustrations.
+Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`).
+
+## Photos, calendars and your own listings
+
+These three need the Python app; the static upload shows whatever was in the database when it was exported.
+
+### Photos
+
+Every apartment, rental and activity can have up to 12 photos. In the form, press **Add photos**, pick several at once, and use the arrows to put the best one first (it is the cover on cards). A listing without photos keeps the site's illustration.
+
+- The browser shrinks each photo before sending it, so a 6 MB phone photo uploads as a few hundred KB.
+- The server accepts JPEG, PNG and WebP up to `UPLOAD_MAX_MB` (default 10) and 50 megapixels. It re-draws every photo and saves it again as a JPEG in two sizes (1600 px and 640 px). That removes the location and camera details stored in phone photos.
+- Files live in `instance/uploads/` (or `UPLOAD_DIR`) under random names. Deploys never touch that folder, so **include it in your backups**.
+- A business's new photos wait for your review like its text does. Removing or reordering photos you already approved applies at once.
+- Photos that were uploaded but never saved on a listing are deleted after two days by `flask users cleanup`. A business that closes takes its photos with it.
+
+### Calendars: blocking nights and syncing with Airbnb or Booking.com
+
+Each stay has a **Calendar** button, in the Host desk for your apartments and in the business dashboard for a partner's. It shows three kinds of taken nights: booked on this site, imported from another site, and blocked by hand.
+
+- **Block nights** for repairs, your own use, or a booking you took by phone. A block can't be laid over an existing booking.
+- **Import from another site.** Paste that site's calendar (iCal) link under *Connect a calendar*. Its reserved nights become unavailable here. Links are accepted only from Airbnb, Booking.com, Vrbo, HomeAway, Tripadvisor and Google Calendar; add other hosts with `CALENDAR_FEED_HOSTS`.
+- **Export to another site.** Copy the link shown under the connected site (or *Our link for other sites*) into that site's "import calendar" box. It lists taken nights only, with no names or prices. The link made for a connected site leaves out that site's own nights, so reservations never bounce back and forth.
+- **How fresh it is.** `flask calendars sync` refreshes every connected calendar; run it from cron every 30 minutes (see `docs/GO-LIVE.md`). A stay's calendars are also re-read just before a booking is accepted if the last check is older than `CALENDAR_SYNC_MINUTES` (default 30). Other sites read our link on their own schedule, usually every few hours, so a night can still be sold twice within that window: block by hand after a last-minute booking elsewhere.
+- If another site's link stops working, the nights from the last good check stay blocked and the calendar shows the problem.
+
+### Your own listings
+
+*My account → Host desk → Your listings* lists your apartments, rentals, activities and guides with **Edit**, **Calendar**, **Pause** and **Remove**, and an **Add** button for each. Changes are live as soon as you save, with no review step.
+
+- The forms are the same as a business's, plus a few host-only fields: the badge and Airbnb rating on an apartment, the company name on a rental, the start time of an activity.
+- An apartment with bookings ahead can't be removed (pause it instead). A removed listing is kept in the database so past bookings still make sense.
+- **Guides** are added and edited here too. A guide with requests on record can be switched off but not deleted. Untick *Sample profile* on a seeded guide once you have replaced its details with a real person's.
+- Listings that belong to a partner business are not editable here; they go through the review queue under *Partners*.
 
 ## Languages and appearance
 
@@ -218,6 +251,8 @@ Everything is set through environment variables; see `.env.example`. None of the
 | Affiliate links | `BOOKING_AFFILIATE_ID`, `GYG_PARTNER_ID`, `VIATOR_PARTNER_ID` | Plain search links |
 | Admin API with Clerk tokens | `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTIES`, `ADMIN_USER_IDS` | Use a host account instead |
 | Business portal | `PARTNERS_ENABLED` (default on), `PARTNER_MAX_LISTINGS` | On when accounts are on; businesses need a confirmed email, so set up `SMTP_*` |
+| Photos | `UPLOAD_MAX_MB` (default 10), `UPLOAD_DIR`, `PARTNER_MAX_PHOTOS` (default 300 per business) | Stored in `instance/uploads/` |
+| Calendar sync | `CALENDAR_SYNC_MINUTES` (default 30), `CALENDAR_FEED_HOSTS` (extra hosts to import from) | Works with the built-in list of booking sites; add the cron job to keep it fresh |
 | Sample guide profiles | `SHOW_SAMPLE_GUIDES=true` (demos only) | Hidden; guide pages appear once a real guide is added |
 | Message retention | `MESSAGE_RETENTION_MONTHS` (default 24) | Old contact messages and unconfirmed guide requests are deleted by `flask users cleanup` |
 
@@ -238,7 +273,18 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
   - State-changing requests from other sites are rejected (`Origin` / `Sec-Fetch-Site` checks on top of SameSite and JSON-only writes).
   - Hosts are verified, allow-listed addresses or accounts created from the server's terminal, and host sessions last 12 hours.
 - **No enumerable IDs.** Bookings and guide requests use unguessable 60-bit references, and public reads mask contact details. Shared trips have a public share id plus a secret edit key, which is stored hashed and compared in constant time.
-- **Request hardening.** CORS is allow-listed, writes must be JSON (which blocks cross-site form CSRF), bodies are capped at 256 KB, every write is validated against a declared schema, and bot-facing forms have honeypots. Rate limits apply per IP, with stricter ones on booking, contact, trip-saving and concierge endpoints.
+- **Request hardening.** CORS is allow-listed, writes must be JSON (which blocks cross-site form CSRF), bodies are capped at 256 KB, every write is validated against a declared schema, and bot-facing forms have honeypots. Rate limits apply per IP, with stricter ones on booking, contact, trip-saving and concierge endpoints. The one exception to "JSON only, 256 KB" is the photo upload route.
+- **Photo uploads** (`app/services/uploads.py`, `tests/test_uploads.py`).
+  - Only a signed-in host, or a business owner with a confirmed email, can upload. The request must carry a header that a cross-site form can't set.
+  - The file type is decided by decoding the file, never by its name or declared type. Size and pixel limits are checked before decoding, which stops decompression bombs.
+  - Nothing is stored as it arrived: each photo is re-encoded to JPEG. That drops metadata, embedded scripts and anything appended to the file.
+  - Files get random 128-bit names in a folder outside the code and are served only as `image/jpeg` with `nosniff`. A request for any other name under `/media/u/` is a 404.
+  - A listing accepts only addresses of photos its own business uploaded, so one business can't attach another's photo or an outside URL. Per-business quotas apply.
+- **Calendar import** (`app/services/calendars.py`, `tests/test_calendar.py`).
+  - Fetching a link that a user typed is a classic route into a server's private network (SSRF). Links are fetched only over HTTPS from an allowlist of booking-site hosts. Ports, logins in the URL and IP addresses are refused, redirects are not followed, and there is a time limit and a 1.5 MB size limit.
+  - Only dates are read from the file. The number and length of events are capped.
+  - The export link carries a random secret per stay and reveals only which nights are taken.
+  - A calendar can be opened or changed only by the host (own apartments) or by the owner of that stay's business.
 - **Headers.** Strict CSP (Stripe, map tiles and the YouTube player only; the static build also allows the browser's calls to the free weather, rates and routing APIs), HSTS, `X-Frame-Options: DENY`, `nosniff`, a restrictive `Permissions-Policy` and COOP. The same set is applied in `.htaccess` for the static host.
 - **Outbound calls.** HTTPS only, to an explicit host allowlist (an SSRF guard), with timeouts, size caps and negative caching.
 - **Admin authentication.** Clerk RS256 JWTs are verified against JWKS with issuer, expiry and authorized-party checks, and admins come from an allow-list.
@@ -247,7 +293,7 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
 
 ## Content notes
 
-- The guide profiles in `app/seeds/guides.py` are **samples** with no ratings or reviews. Guests don't see them: until a real guide is added (through `POST /api/admin/guides`), the guide links are hidden and `/guides` says guides are on their way. `SHOW_SAMPLE_GUIDES=true` shows the samples, labelled "Sample profile", for demos.
+- The guide profiles in `app/seeds/guides.py` are **samples** with no ratings or reviews. Guests don't see them: until a real guide is added (in *Host desk → Your listings*), the guide links are hidden and `/guides` says guides are on their way. `SHOW_SAMPLE_GUIDES=true` shows the samples, labelled "Sample profile", for demos.
 - The privacy policy (`/privacy`) and booking terms (`/terms`) read your business details and cancellation rules from `travago-tour-app/src/data/business.json`, and the live configuration decides which payment methods and features they describe.
 - Rental cars and experiences are sample seed data too.
 - Distances, times and prices are planning estimates. Legs from the planner are labelled "Planner data" and everything else "Estimate". Ferry schedules are never shown as fixed; the site always tells travellers to check the operator.

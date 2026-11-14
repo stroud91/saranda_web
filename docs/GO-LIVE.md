@@ -155,9 +155,23 @@ The guest sees your details, the exact amount, the booking reference and a QR co
 
 ## 10. Content to replace before launch
 
-- **Guides.** The eight seeded guide profiles are samples, and guests don't see them. Once you have real guides, they need adding to the database (ask your developer, or use the admin API `POST /api/admin/guides`). The guide pages and links reappear by themselves. `SHOW_SAMPLE_GUIDES=true` shows the samples again, for demos only.
-- **Tours and rental cars** on /experiences are sample data too. Replace them, or ask for that page to be hidden.
-- **Apartments:** check every name, photo and nightly price on /stays, and get anything wrong corrected before you take bookings.
+You do all of this yourself in **My account → Host desk → Your listings**. Changes show on the site as soon as you press Save.
+
+- **Apartments.** Press **Edit** on each one. Check the name, description, price and guest numbers, then press **Add photos** and pick 5–12 photos from your phone or computer. Put the best one first with the arrows; it is the cover on the /stays cards.
+- **Tours and rental cars** on /experiences are sample data. Edit them into your real offers, **Pause** the ones you don't offer, or **Remove** them.
+- **Guides.** The eight seeded guide profiles are samples, and guests don't see them. Press **Add a guide** for each real guide, or edit a sample into a real person and untick *Sample profile*. The guide pages and links appear by themselves once one real guide exists. `SHOW_SAMPLE_GUIDES=true` shows the samples again, for demos only.
+
+### Stop double bookings (Airbnb, Booking.com)
+
+If an apartment is also listed on another site, connect the two calendars so a night sold on one is blocked on the other. Do this for each apartment, in **Your listings → Calendar**:
+
+1. **Bring the other site's bookings here.** On Airbnb: *Calendar → Availability → Connect calendars → Export calendar*, and copy the link. On Booking.com: *Calendar → Sync calendars → Export calendar*. Paste the link under **Connect a calendar**, choose the site and press **Connect**. Its reserved nights turn orange in the calendar.
+2. **Send this site's bookings there.** Under the site you just connected, press **Copy the link to paste into Airbnb** (or Booking.com). On that site, choose *Import calendar* and paste it.
+3. Add the cron job in step 11 so the calendars are checked every 30 minutes.
+
+For anything else (repairs, family visiting, a booking taken by phone), use **Block nights** in the same screen.
+
+Other sites read our link every few hours, not instantly. After a last-minute booking here, block the same nights on the other site by hand, and the other way round.
 
 ### Local businesses (the business portal)
 
@@ -169,6 +183,8 @@ Other businesses can list their own apartments, rentals and activities at `https
 
 Each business can also style its own page (background, colours, header picture) under **Page style** in its dashboard. The choices come from fixed lists, so they need no review.
 
+Businesses can add photos and manage a calendar for each of their stays, the same way you do. New photos show in the review queue as small pictures; click one to see it full size before you approve.
+
 Guests book and pay those businesses directly; no money for them passes through your PayPal or bank account. Read the "Listings from local businesses" section on **/terms** and adjust it with your lawyer if you want different rules. To switch the whole feature off, put `PARTNERS_ENABLED=false` in `.env`.
 
 ## 11. Daily clean-up and backups
@@ -177,9 +193,21 @@ Guests book and pay those businesses directly; no money for them passes through 
 ```bash
 cd /home/<user>/megrooms_flask && /home/<user>/virtualenv/megrooms_flask/3.11/bin/flask --app app users cleanup >/dev/null 2>&1
 ```
-It removes expired sign-ins and email links. It also removes contact messages, questions sent to partner businesses and unconfirmed guide requests older than 24 months, as the privacy policy promises (`MESSAGE_RETENTION_MONTHS`).
+It removes expired sign-ins and email links, and photos that were uploaded but never used. It also removes contact messages, questions sent to partner businesses and unconfirmed guide requests older than 24 months, as the privacy policy promises (`MESSAGE_RETENTION_MONTHS`).
 
-**Backups.** At least weekly, download `megrooms_flask/instance/saranda.db` (your bookings and accounts) and `megrooms_flask/.env`, and keep them somewhere private. Or use cPanel → **Backup** / **JetBackup** if your plan has it.
+**Calendar cron job.** Add a second one with *Twice Per Hour* (`0,30 * * * *`). It re-reads the calendars you connected from Airbnb, Booking.com and others:
+```bash
+cd /home/<user>/megrooms_flask && /home/<user>/virtualenv/megrooms_flask/3.11/bin/flask --app app calendars sync >/dev/null 2>&1
+```
+Skip it if no apartment is connected to another site.
+
+**Backups.** At least weekly, download these and keep them somewhere private:
+
+- `megrooms_flask/instance/saranda.db`: your bookings, accounts and listings.
+- `megrooms_flask/instance/uploads/`: every photo. In File Manager, right-click the folder → **Compress**, then download the zip.
+- `megrooms_flask/.env`: your settings and keys.
+
+Or use cPanel → **Backup** / **JetBackup** if your plan has it.
 
 ## 12. Optional extras (paid, off until you add keys)
 
