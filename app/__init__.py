@@ -91,7 +91,7 @@ def _register_errors(app):
             desc = exc.description if exc.code == 404 and exc.description and "requested URL" not in exc.description else None
             return jsonify({"error": desc or messages.get(exc.code, exc.name)}), exc.code
         if exc.code == 404:
-            return _spa_index()
+            return _page(request.path.strip("/"))
         return exc
 
     @app.errorhandler(Exception)
@@ -101,13 +101,29 @@ def _register_errors(app):
         return jsonify({"error": "Something went wrong on our side. Please try again."}), 500
 
 
-def _spa_index():
+def _page(path):
+    """The app's page for an address, with that address's own title, description and
+    preview tags (see services/seo.py). Addresses that lead nowhere answer 404."""
+    from .services import seo
+
     index = os.path.join(STATIC_DIR, "index.html")
-    if os.path.exists(index):
-        resp = send_from_directory(STATIC_DIR, "index.html")
-        resp.headers["Cache-Control"] = "no-cache"
-        return resp
-    return jsonify({"error": "Frontend not built. Run `npm run build` in travago-tour-app."}), 404
+    if not os.path.exists(index):
+        return jsonify({"error": "Frontend not built. Run `npm run build` in travago-tour-app."}), 404
+    if seo.is_asset(path):  # a script or image that isn't there must not come back as a web page
+        return jsonify({"error": "Not found"}), 404
+    lang = request.args.get("lang", "en")
+    lang = lang if lang in seo.LANGS else "en"
+    meta = seo.resolve(path, lang)
+    html = seo.render(seo.shell(index), meta or seo.NOT_FOUND, seo.base_url(request), lang)
+    resp = app_response(html, 200 if meta else 404)
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+def app_response(html, status):
+    from flask import Response
+
+    return Response(html, status=status, mimetype="text/html")
 
 
 def create_app(config_object=Config):
@@ -193,7 +209,28 @@ def create_app(config_object=Config):
             if path.startswith("assets/"):
                 resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
             return resp
-        return _spa_index()
+        return _page(path)
+
+    @app.get("/sitemap.xml")
+    @limiter.exempt
+    def sitemap():
+        from flask import Response
+
+        from .services import seo
+
+        base = seo.base_url(request)
+        if not base:
+            return jsonify({"error": "Not found"}), 404
+        return Response(seo.sitemap(base), mimetype="application/xml", headers={"Cache-Control": "public, max-age=3600"})
+
+    @app.get("/robots.txt")
+    @limiter.exempt
+    def robots():
+        from flask import Response
+
+        from .services import seo
+
+        return Response(seo.robots(seo.base_url(request)), mimetype="text/plain", headers={"Cache-Control": "public, max-age=3600"})
 
     return app
 

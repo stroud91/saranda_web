@@ -1,3 +1,8 @@
-# https://www.robotstxt.org/robotstxt.html
+# Rewritten at build time by scripts/prerender_static.py (static upload) and
+# answered by the Python app itself when that is running.
 User-agent: *
-Disallow:
+Disallow: /api/
+Disallow: /account
+Disallow: /booking/
+Disallow: /guide-request/
+Disallow: /trip/

@@ -2,7 +2,7 @@
    - Hashed build assets: cache-first (immutable).
    - Navigations: network-first, falling back to the cached shell.
    - API calls are never cached here (they carry live data and references). */
-const VERSION = "sc-v5";
+const VERSION = "sc-v6";
 const SHELL = ["/", "/boot.js", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -26,8 +26,11 @@ self.addEventListener("fetch", (event) => {
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(VERSION).then((c) => c.put("/", copy));
+        // Only a real page is kept for offline use: an address that doesn't exist answers 404.
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(VERSION).then((c) => c.put("/", copy));
+        }
         return res;
       }).catch(() => caches.match("/"))
     );
