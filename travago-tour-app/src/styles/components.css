@@ -324,3 +324,27 @@
 .cmdk-foot { display: flex; gap: 14px; justify-content: flex-end; padding: 8px 14px; border-top: 1px solid var(--line); }
 @media (max-width: 640px) { .cmdk-foot { display: none; } .cmdk-backdrop { padding-top: 70px; } }
 .confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1250; pointer-events: none; }
+
+/* ---------- Language and appearance menu ---------- */
+.prefs { position: relative; }
+.prefs-btn { width: auto; min-width: 42px; padding: 0 10px; gap: 5px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; }
+.prefs-code { font-size: 0.74rem; font-weight: 800; letter-spacing: 0.06em; }
+.prefs-pop { position: absolute; right: 0; top: calc(100% + 10px); z-index: 60; width: 232px; padding: 14px; border-radius: 18px; background: var(--bg-elev); color: var(--text); border: 1px solid var(--line-strong); box-shadow: var(--sh-3); display: grid; gap: 8px; }
+.prefs-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.prefs-title + .prefs-themes, .prefs-langs + .prefs-title { margin-top: 2px; }
+.prefs-langs { display: grid; gap: 2px; margin-bottom: 6px; }
+.prefs-lang { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 0; border-radius: 10px; background: transparent; color: var(--text); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.prefs-lang:hover { background: var(--line); }
+.prefs-lang.on { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.prefs-themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.prefs-theme { display: grid; justify-items: center; gap: 4px; padding: 9px 4px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: transparent; color: var(--text); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+.prefs-theme.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+@media (max-width: 520px) {
+  .topbar-actions .prefs-btn { min-width: 38px; height: 38px; padding: 0 6px; }
+  .prefs-btn svg { display: none; }
+  .prefs-pop { position: fixed; right: 10px; top: calc(var(--topbar-h) + 6px); }
+}
+.footer-langs { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 4px; }
+.footer-langs button { border: 1px solid rgba(255, 255, 255, 0.22); background: transparent; color: inherit; font: inherit; font-size: 0.85rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; opacity: 0.85; }
+.footer-langs button:hover { opacity: 1; border-color: rgba(255, 255, 255, 0.5); }
+.footer-langs button.on { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.5); opacity: 1; }

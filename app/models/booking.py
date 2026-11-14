@@ -76,6 +76,8 @@ class Booking(db.Model):
             "payment_status": self.payment_status,
             "hotel_id": self.hotel_id,
             "hotel_name": self.hotel.hotel_name if self.hotel else None,
+            # Set when the stay belongs to a partner business: the guest deals with them directly.
+            "hosted_by": self.hotel.business_brief() if self.hotel else None,
             "start_date": self.start_date.date().isoformat() if self.start_date else None,
             "end_date": self.end_date.date().isoformat() if self.end_date else None,
             "nights": self.nights,
@@ -93,6 +95,13 @@ class Booking(db.Model):
             "hold_expires_at": self.hold_expires_at.isoformat() + "Z" if self.hold_expires_at else None,
             "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
         }
+
+    def to_host_dict(self):
+        """For whoever hosts the stay: the booking plus how to reach the guest."""
+        out = self.to_public_dict()
+        out.update({"guest_name": self.guest_name, "guest_email": self.guest_email,
+                    "guest_phone": self.guest_phone, "notes": self.notes})
+        return out
 
     def to_admin_dict(self):
         out = self.to_public_dict()

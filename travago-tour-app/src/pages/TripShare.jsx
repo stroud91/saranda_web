@@ -9,6 +9,7 @@ import AlbaniaMap from "../components/map/AlbaniaMap";
 import CalendarButton from "../components/planner/CalendarButton";
 import { ErrorState, Skeleton, toast } from "../components/ui";
 import { useTrip } from "../store/trip";
+import { tr } from "../i18n";
 
 export default function TripShare() {
   const { shareId } = useParams();
@@ -26,14 +27,14 @@ export default function TripShare() {
     <div className="page container">
       <div className="share-hero">
         <div>
-          <div className="eyebrow">Shared trip</div>
+          <div className="eyebrow">{tr("Shared trip")}</div>
           <h1>{trip.title}</h1>
           <p className="muted">{trip.data.days.length} days{trip.data.start_date ? ` · from ${fmtDate(trip.data.start_date, { day: "numeric", month: "long", year: "numeric" })}` : ""} · {trip.data.travelers} traveller{trip.data.travelers === 1 ? "" : "s"}
             {tl && <> · {hmRange(tl.totals.moving_minutes_min, tl.totals.moving_minutes_max)} on the road</>}</p>
         </div>
         <div className="row">
-          <button className="btn primary" onClick={() => { loadShared(trip); toast("Copied into your planner"); navigate("/plan"); }}><Copy size={16} /> Copy to my planner</button>
-          {trip.data.start_date && <CalendarButton trip={trip} shareId={shareId}>Calendar</CalendarButton>}
+          <button className="btn primary" onClick={() => { loadShared(trip); toast(tr("Copied into your planner")); navigate("/plan"); }}><Copy size={16} /> {tr("Copy to my planner")}</button>
+          {trip.data.start_date && <CalendarButton trip={trip} shareId={shareId}>{tr("Calendar")}</CalendarButton>}
         </div>
       </div>
       <div className="map-card" style={{ height: 360, margin: "18px 0" }}>

@@ -9,6 +9,7 @@ import TicketCard from "../components/account/TicketCard";
 import BankTransferPanel from "../components/account/BankTransferPanel";
 import { useAuth } from "../store/auth";
 import Confetti from "../components/fx/Confetti";
+import { rich, tr } from "../i18n";
 
 const LABEL = {
   confirmed: { icon: Check, title: "You're booked!", tone: "ok", text: "Your stay is confirmed. We look forward to welcoming you in Sarandë." },
@@ -31,8 +32,8 @@ export function StatusCard({ status, label, children, reference }) {
   return (
     <motion.div className={`status-card tone-${s.tone}`} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
       <div className="success-icon"><s.icon size={30} /></div>
-      <h1>{s.title}</h1>
-      <p className="muted">{s.text}</p>
+      <h1>{tr(s.title)}</h1>
+      <p className="muted">{tr(s.text)}</p>
       {reference && <div className="ref-code">{reference}</div>}
       {children}
     </motion.div>
@@ -124,7 +125,11 @@ export default function BookingStatus() {
 
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
   if (!b) return <div className="page container"><Skeleton h={360} r={26} /></div>;
-  const label = labelFor(b);
+  const host = b.hosted_by;
+  const base = labelFor(b);
+  // A partner business hosts this stay: say who confirms and who is paid.
+  const label = host && b.status === "requested" ? { ...base, text: tr("{name} will confirm your dates by email. You pay them directly; nothing has been charged.", { name: host.name }) }
+    : host && b.status === "confirmed" ? { ...base, text: tr("Your stay is confirmed by {name}. You pay them directly.", { name: host.name }) } : base;
   const canPayPal = b.status === "pending" && b.payment_method === "paypal" && b.payment_status !== "processing";
   const chargedOther = b.charge_currency && b.charge_currency !== "EUR" && b.charge_amount;
   return (
@@ -136,29 +141,30 @@ export default function BookingStatus() {
       <TicketCard booking={b}>
         <div className="row between wrap gap-sm small">
           <span>
-            {b.payment_status === "paid" ? <><Check size={14} /> Paid {money(b.amount_due)}</> : b.status === "pending" ? <>To pay now: <b>{money(b.amount_due)}</b></> : b.status === "requested" ? "Pay on arrival" : null}
+            {b.payment_status === "paid" ? <><Check size={14} /> {tr("Paid {amount}", { amount: money(b.amount_due) })}</> : b.status === "pending" ? rich("To pay now: <b>{amount}</b>", { b: (c) => <b>{c}</b> }, { amount: money(b.amount_due) }) : b.status === "requested" ? tr("Pay on arrival") : null}
             {chargedOther && b.status !== "cancelled" && <span className="muted"> · charged as {money(b.charge_amount, b.charge_currency)}</span>}
           </span>
-          {b.guest_email_masked && <span className="tiny muted">Confirmation to {b.guest_email_masked}</span>}
+          {b.guest_email_masked && <span className="tiny muted">{tr("Confirmation to {email}", { email: b.guest_email_masked })}</span>}
         </div>
+        {host && <p className="tiny muted" style={{ margin: "8px 0 0" }}>{rich("Hosted by <a>{name}</a>, an independent local business.", { a: (c) => <Link to={`/partners/${host.slug}`}>{c}</Link> }, { name: host.name })}</p>}
       </TicketCard>
 
       {canPayPal && (
         <div className="card pad stack">
-          <h3 className="mb-0"><CreditCard size={18} /> Finish paying</h3>
-          <p className="small muted">You'll pay on PayPal's own page — with your PayPal balance, or by card without an account — and come straight back here.</p>
-          <button type="button" className="btn primary lg" onClick={payWithPayPal} disabled={busy}>{busy ? <span className="spinner" /> : null} Continue to PayPal · {money(b.charge_amount || b.amount_due, b.charge_currency || "EUR")}</button>
+          <h3 className="mb-0"><CreditCard size={18} /> {tr("Finish paying")}</h3>
+          <p className="small muted">{tr("You'll pay on PayPal's own page — with your PayPal balance, or by card without an account — and come straight back here.")}</p>
+          <button type="button" className="btn primary lg" onClick={payWithPayPal} disabled={busy}>{busy ? <span className="spinner" /> : null} {tr("Continue to PayPal")} · {money(b.charge_amount || b.amount_due, b.charge_currency || "EUR")}</button>
         </div>
       )}
       {payment?.open && payment.bank && <BankTransferPanel reference={reference} payment={payment} onUpdate={setB} />}
 
-      <p className="tiny muted center">Save your reference <b>{b.reference}</b> — you'll need it if you contact us.</p>
+      <p className="tiny muted center">{rich("Save your reference <b>{ref}</b> — you'll need it if you contact us.", { b: (c) => <b>{c}</b> }, { ref: b.reference })}</p>
       <div className="row" style={{ justifyContent: "center" }}>
-        <Link to="/plan" className="btn primary"><Compass size={16} /> Plan your days</Link>
+        <Link to="/plan" className="btn primary"><Compass size={16} /> {tr("Plan your days")}</Link>
         {authAvailable && (user
-          ? <Link to="/account" className="btn"><UserRound size={16} /> My bookings</Link>
-          : <Link to={`/signup?next=${encodeURIComponent(`/booking/${reference}`)}`} className="btn"><UserRound size={16} /> Create an account to keep it</Link>)}
-        <Link to="/stays" className="btn">Back to stays</Link>
+          ? <Link to="/account" className="btn"><UserRound size={16} /> {tr("My bookings")}</Link>
+          : <Link to={`/signup?next=${encodeURIComponent(`/booking/${reference}`)}`} className="btn"><UserRound size={16} /> {tr("Create an account to keep it")}</Link>)}
+        <Link to="/stays" className="btn">{tr("Back to stays")}</Link>
       </div>
     </div>
   );

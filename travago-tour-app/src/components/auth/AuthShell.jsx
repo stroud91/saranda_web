@@ -4,6 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import SceneArt from "../art/SceneArt";
 import Logo from "../art/Logo";
 import { createOcean, webgl2Supported } from "../hero/ocean";
+import { tr } from "../../i18n";
 
 /**
  * Split layout for sign-in pages: the live Ionian Sea on one side (each page
@@ -42,7 +43,7 @@ export default function AuthShell({ hour = 19.2, eyebrow, title, lead, children,
         <div className="auth-art-shade" />
         <div className="auth-art-copy">
           <Logo />
-          <p>Your trips, bookings and guides — kept together, wherever you sign in.</p>
+          <p>{tr("Your trips, bookings and guides — kept together, wherever you sign in.")}</p>
         </div>
       </div>
       <div className="auth-panel">

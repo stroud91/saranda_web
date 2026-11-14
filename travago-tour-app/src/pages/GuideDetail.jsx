@@ -13,6 +13,7 @@ import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, CategoryIcon, ErrorState, Field, Segmented, Skeleton, Stepper } from "../components/ui";
 import { useTrip } from "../store/trip";
 import { useAuth } from "../store/auth";
+import { tr } from "../i18n";
 
 function RequestForm({ guide }) {
   const trip = useTrip();
@@ -38,7 +39,7 @@ function RequestForm({ guide }) {
   const tripDayIdx = Math.min(trip.activeDay, trip.days.length - 1);
   const tripStops = trip.days[tripDayIdx]?.stops || [];
   const price = duration === "half" ? guide.price_half_day : duration === "full" ? guide.price_full_day : guide.price_full_day * days;
-  const up = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const up = (k) => (e) => { const v = e.target.value; setForm((f) => ({ ...f, [k]: v })); };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -67,7 +68,7 @@ function RequestForm({ guide }) {
       <motion.div className="success-card" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
         <p className="muted">{fmtDate(r.tour_date, { weekday: "long", day: "numeric", month: "long" })} · {r.duration_label} · {r.group_size} people · estimate <b>{euro(r.quoted_price)}</b></p>
         <Handoff handoff={r.handoff} title={`Send your request to ${guide.name}`} />
-        <button type="button" className="btn ghost sm" onClick={() => setStatus({ busy: false, error: "", done: null })}>Change details</button>
+        <button type="button" className="btn ghost sm" onClick={() => setStatus({ busy: false, error: "", done: null })}>{tr("Change details")}</button>
       </motion.div>
     );
   }
@@ -89,18 +90,18 @@ function RequestForm({ guide }) {
   return (
     <form className="stack request-form" onSubmit={submit} noValidate>
       <div>
-        <span className="label">1 · Choose a date</span>
+        <span className="label">{tr("1 · Choose a date")}</span>
         <MonthCalendar month={month} onMonth={setMonth} busy={busy} selected={date} onPick={setDate} minDate={tomorrow} />
         {errors.tour_date && <span className="field-error">{errors.tour_date}</span>}
       </div>
       <div className="field">
-        <span className="label">2 · How long?</span>
+        <span className="label">{tr("2 · How long?")}</span>
         <Segmented layoutId={`dur-${guide.slug}`} value={duration} onChange={setDuration} options={[{ value: "half", label: `Half day · ${euro(guide.price_half_day)}` }, { value: "full", label: `Full day · ${euro(guide.price_full_day)}` }, { value: "multi", label: "Multi-day" }]} />
-        {duration === "multi" && <div className="row" style={{ marginTop: 8 }}><span className="small">Days</span><Stepper label="days" value={days} min={2} max={14} onChange={setDays} /></div>}
+        {duration === "multi" && <div className="row" style={{ marginTop: 8 }}><span className="small">{tr("Days")}</span><Stepper label={tr("days")} value={days} min={2} max={14} onChange={setDays} /></div>}
       </div>
       <div className="form-grid two">
-        <div className="field"><span className="label">Group size (max {guide.max_group})</span><Stepper label="group size" value={group} min={1} max={guide.max_group} onChange={setGroup} /></div>
-        <Field label="Language"><select className="select" value={language} onChange={(e) => setLanguage(e.target.value)}>{guide.languages.map((l) => <option key={l}>{l}</option>)}</select></Field>
+        <div className="field"><span className="label">Group size (max {guide.max_group})</span><Stepper label={tr("group size")} value={group} min={1} max={guide.max_group} onChange={setGroup} /></div>
+        <Field label={tr("Language")}><select className="select" value={language} onChange={(e) => setLanguage(e.target.value)}>{guide.languages.map((l) => <option key={l}>{l}</option>)}</select></Field>
       </div>
       {tripStops.length > 1 && (
         <label className="check-row">
@@ -108,21 +109,21 @@ function RequestForm({ guide }) {
           <span>Use Day {tripDayIdx + 1} of my trip: <b>{tripStops.map(name).join(" → ")}</b></span>
         </label>
       )}
-      <span className="label">3 · Your details</span>
+      <span className="label">{tr("3 · Your details")}</span>
       <div className="form-grid two">
-        <Field label="Name" error={errors.name}><input className="input" value={form.name} onChange={up("name")} autoComplete="name" maxLength={120} required /></Field>
-        <Field label="Email" error={errors.email}><input className="input" type="email" value={form.email} onChange={up("email")} autoComplete="email" maxLength={255} required /></Field>
-        <Field label="Phone / WhatsApp (optional)" error={errors.phone}><input className="input" type="tel" value={form.phone} onChange={up("phone")} autoComplete="tel" maxLength={40} /></Field>
-        <Field label="Pickup point (optional)" error={errors.pickup}><input className="input" value={form.pickup} onChange={up("pickup")} placeholder="e.g. Meg'Rooms, Sarandë" maxLength={200} /></Field>
+        <Field label={tr("Name")} error={errors.name}><input className="input" value={form.name} onChange={up("name")} autoComplete="name" maxLength={120} required /></Field>
+        <Field label={tr("Email")} error={errors.email}><input className="input" type="email" value={form.email} onChange={up("email")} autoComplete="email" maxLength={255} required /></Field>
+        <Field label={tr("Phone / WhatsApp (optional)")} error={errors.phone}><input className="input" type="tel" value={form.phone} onChange={up("phone")} autoComplete="tel" maxLength={40} /></Field>
+        <Field label={tr("Pickup point (optional)")} error={errors.pickup}><input className="input" value={form.pickup} onChange={up("pickup")} placeholder={tr("e.g. Meg'Rooms, Sarandë")} maxLength={200} /></Field>
       </div>
-      <Field label="Anything the guide should know?" error={errors.message}><textarea className="textarea" value={form.message} onChange={up("message")} maxLength={2000} placeholder="Kids, mobility, interests…" /></Field>
+      <Field label={tr("Anything the guide should know?")} error={errors.message}><textarea className="textarea" value={form.message} onChange={up("message")} maxLength={2000} placeholder={tr("Kids, mobility, interests…")} /></Field>
       <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
       {status.error && <Alert kind="error">{status.error}</Alert>}
       <div className="quote-bar">
-        <div><span className="tiny muted">Estimated for your group</span><div className="quote-amount">{euro(price)}</div></div>
+        <div><span className="tiny muted">{tr("Estimated for your group")}</span><div className="quote-amount">{euro(price)}</div></div>
         <button className="btn primary lg" disabled={status.busy}>{status.busy ? <span className="spinner" /> : <CalendarCheck size={18} />} Request {guide.name.split(" ")[0]}</button>
       </div>
-      <p className="tiny muted"><ShieldCheck size={12} /> No payment now. Your contact details are shared only with this guide.</p>
+      <p className="tiny muted"><ShieldCheck size={12} /> No payment now. Your details go only to Meg'Rooms and this guide — see our <Link to="/privacy">privacy policy</Link>.</p>
     </form>
   );
 }
@@ -141,9 +142,9 @@ export default function GuideDetail() {
           <GuideAvatar name={g.name} palette={g.palette} size={110} className="guide-hero-avatar" />
           <div>
             <div className="row" style={{ gap: 6 }}>
-              {g.licensed && <span className="badge sea"><BadgeCheck size={12} /> Licensed guide</span>}
-              {g.has_vehicle && <span className="badge olive"><Car size={12} /> Provides transport</span>}
-              {g.is_sample && <span className="badge">Sample profile</span>}
+              {g.licensed && <span className="badge sea"><BadgeCheck size={12} /> {tr("Licensed guide")}</span>}
+              {g.has_vehicle && <span className="badge olive"><Car size={12} /> {tr("Provides transport")}</span>}
+              {g.is_sample && <span className="badge">{tr("Sample profile")}</span>}
             </div>
             <h1>{g.name}</h1>
             <p className="lead">{g.headline}</p>
@@ -153,18 +154,18 @@ export default function GuideDetail() {
       <div className="split wide-left" style={{ marginTop: 24 }}>
         <div className="stack" style={{ "--gap": "18px" }}>
           <div className="stats">
-            <div className="stat"><div className="stat-label"><MapPin size={14} /> Based in</div><div className="stat-value">{g.base_city}</div></div>
-            <div className="stat"><div className="stat-label"><Clock size={14} /> Experience</div><div className="stat-value">{g.years_experience} yrs</div></div>
-            <div className="stat"><div className="stat-label"><UsersRound size={14} /> Group</div><div className="stat-value">up to {g.max_group}</div></div>
+            <div className="stat"><div className="stat-label"><MapPin size={14} /> {tr("Based in")}</div><div className="stat-value">{g.base_city}</div></div>
+            <div className="stat"><div className="stat-label"><Clock size={14} /> {tr("Experience")}</div><div className="stat-value">{g.years_experience} yrs</div></div>
+            <div className="stat"><div className="stat-label"><UsersRound size={14} /> {tr("Group")}</div><div className="stat-value">up to {g.max_group}</div></div>
           </div>
           <div className="card pad">
-            <h3>About</h3>
+            <h3>{tr("About")}</h3>
             <p>{g.bio}</p>
             <div className="row" style={{ gap: 8 }}><Languages size={16} /> {g.languages.map((l) => <span key={l} className="chip sm">{l}</span>)}</div>
             <div className="row" style={{ gap: 8, marginTop: 10 }}><Award size={16} /> {g.specialties.map((s) => <span key={s} className="chip sm">{s}</span>)}</div>
           </div>
           <div className="card pad">
-            <h3>Signature stops</h3>
+            <h3>{tr("Signature stops")}</h3>
             <div className="sig-stops">
               {g.signature_stop_details.map((s) => (
                 <Link key={s.slug} to={`/explore/${s.slug}`} className="sig-stop"><CategoryIcon category={s.category} size={16} /> {s.name}</Link>
@@ -172,9 +173,9 @@ export default function GuideDetail() {
             </div>
           </div>
           <div className="card pad pricing">
-            <div><span className="tiny muted">Half day (≈4h)</span><b>{euro(g.price_half_day)}</b></div>
-            <div><span className="tiny muted">Full day (≈8h)</span><b>{euro(g.price_full_day)}</b></div>
-            <p className="tiny muted" style={{ gridColumn: "1 / -1", margin: 0 }}>Prices are per group. Entry tickets, boat fuel and meals are usually extra — confirm with your guide.</p>
+            <div><span className="tiny muted">{tr("Half day (≈4h)")}</span><b>{euro(g.price_half_day)}</b></div>
+            <div><span className="tiny muted">{tr("Full day (≈8h)")}</span><b>{euro(g.price_full_day)}</b></div>
+            <p className="tiny muted" style={{ gridColumn: "1 / -1", margin: 0 }}>{tr("Prices are per group. Entry tickets, boat fuel and meals are usually extra — confirm with your guide.")}</p>
           </div>
         </div>
         <aside className="card pad sticky-col" id="request">

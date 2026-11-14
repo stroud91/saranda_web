@@ -92,6 +92,34 @@ def test_guides_directory_and_request_flow(client):
     assert client.post("/api/guides/arben-history/requests", json=big).status_code == 400
 
 
+def test_sample_guides_stay_hidden_until_switched_on(app, client):
+    from app.models import Guide, db
+    from app.seeds.guides import GUIDES
+
+    app.config["SHOW_SAMPLE_GUIDES"] = False
+    assert client.get("/api/meta/config").json["guides"] is False
+    listing = client.get("/api/guides/").json
+    assert listing == {"guides": [], "facets": {"languages": [], "specialties": []}}
+    # Profiles can't be opened or requested by guessing their address either.
+    assert client.get("/api/guides/arben-history").status_code == 404
+    assert client.get("/api/guides/arben-history/availability").status_code == 404
+    req = {"tour_date": future(20), "duration": "full", "group_size": 2, "name": "Ana", "email": "ana@example.com"}
+    assert client.post("/api/guides/arben-history/requests", json=req).status_code == 404
+    answer = client.post("/api/concierge/", json={"messages": [{"role": "user", "content": "Show me local guides"}]}).json
+    assert "coming soon" in answer["text"] and answer["cards"] == []
+
+    # A real guide added by the host shows straight away; the samples stay hidden.
+    real = {**GUIDES[0], "slug": "real-guide", "name": "Real Guide"}
+    db.session.add(Guide(**real, is_sample=False))
+    db.session.commit()
+    assert client.get("/api/meta/config").json["guides"] is True
+    assert [g["slug"] for g in client.get("/api/guides/").json["guides"]] == ["real-guide"]
+    assert client.post("/api/guides/real-guide/requests", json=req).status_code == 201
+
+    app.config["SHOW_SAMPLE_GUIDES"] = True
+    assert len(client.get("/api/guides/").json["guides"]) == len(GUIDES) + 1
+
+
 def test_booking_price_is_server_side_and_overlaps_rejected(client):
     hotel = client.get("/api/hotels/").json[0]
     body = {"hotel_id": hotel["id"], "start_date": future(10), "end_date": future(13), "guest_count": 2,
@@ -195,3 +223,26 @@ def test_free_mode_defaults(client):
     # Free OpenStreetMap tiles must be allowed by the CSP.
     csp = client.get("/api/meta/health").headers["Content-Security-Policy"]
     assert "https://tile.openstreetmap.org" in csp
+
+
+def test_cleanup_deletes_old_messages_but_keeps_accepted_guide_requests(app):
+    from datetime import datetime, timedelta
+
+    from app.models import ContactMessage, Guide, GuideBooking, db
+
+    old = datetime.utcnow() - timedelta(days=800)
+    guide = Guide.query.first()
+    db.session.add_all([
+        ContactMessage(name="Old", email="old@example.com", message="Hi", created_at=old),
+        ContactMessage(name="New", email="new@example.com", message="Hi"),
+        GuideBooking(guide_id=guide.id, tour_date=old.date(), duration="full", group_size=2, name="Old",
+                     email="old@example.com", quoted_price=100, status="declined", created_at=old),
+        GuideBooking(guide_id=guide.id, tour_date=old.date(), duration="full", group_size=2, name="Kept",
+                     email="kept@example.com", quoted_price=100, status="accepted", created_at=old),
+    ])
+    db.session.commit()
+    result = app.test_cli_runner().invoke(args=["users", "cleanup"])
+    assert result.exit_code == 0, result.output
+    assert [m.name for m in ContactMessage.query.all()] == ["New"]
+    assert [g.name for g in GuideBooking.query.all()] == ["Kept"]
+    assert app.test_client().get("/api/meta/config").json["retention_months"] == 24

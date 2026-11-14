@@ -37,6 +37,20 @@ class Guide(db.Model):
 
     requests = db.relationship("GuideBooking", backref="guide", lazy=True)
 
+    @classmethod
+    def listed(cls):
+        """Guides guests may see and request.
+
+        Sample profiles from the seed data stay hidden unless SHOW_SAMPLE_GUIDES
+        is switched on, so nobody can request a guide who doesn't exist.
+        """
+        from flask import current_app
+
+        query = cls.query.filter_by(is_active=True)
+        if not current_app.config.get("SHOW_SAMPLE_GUIDES"):
+            query = query.filter(cls.is_sample.isnot(True))
+        return query
+
     def quote(self, duration, days=1):
         if duration == "half":
             return float(self.price_half_day)

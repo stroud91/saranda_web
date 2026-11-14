@@ -4,14 +4,15 @@
     flask users promote you@example.com         # turn an existing account into a host
     flask users verify guest@example.com        # mark an address as verified by hand
     flask users list
-    flask users cleanup                         # drop expired sessions and tokens
+    flask users cleanup                         # drop expired sessions/tokens and old messages (run daily)
 """
 from datetime import timedelta
 
 import click
+from flask import current_app
 from flask.cli import AppGroup
 
-from app.models import AuthToken, LoginThrottle, User, UserSession, db
+from app.models import AuthToken, ContactMessage, Enquiry, GuideBooking, LoginThrottle, User, UserSession, db
 from app.models.db import utcnow
 from app.services import accounts
 
@@ -87,10 +88,20 @@ def list_users():
 
 @user_commands.command("cleanup")
 def cleanup():
-    """Delete expired sessions, used or expired tokens and stale sign-in counters."""
+    """Delete expired sessions, used or expired tokens and stale sign-in counters, plus
+    contact messages, enquiries to partner businesses and unconfirmed guide requests older
+    than MESSAGE_RETENTION_MONTHS."""
     now = utcnow()
     n = UserSession.query.filter(UserSession.expires_at < now).delete(synchronize_session=False)
     n += AuthToken.query.filter(AuthToken.expires_at < now).delete(synchronize_session=False)
     n += LoginThrottle.query.filter(LoginThrottle.window_start < now - timedelta(days=1)).delete(synchronize_session=False)
+    months = current_app.config.get("MESSAGE_RETENTION_MONTHS", 24)
+    if months > 0:
+        cutoff = now - timedelta(days=round(months * 30.44))
+        n += ContactMessage.query.filter(ContactMessage.created_at < cutoff).delete(synchronize_session=False)
+        n += Enquiry.query.filter(Enquiry.created_at < cutoff).delete(synchronize_session=False)
+        # Accepted guide requests are business records and are kept like stay bookings.
+        n += GuideBooking.query.filter(GuideBooking.status != "accepted",
+                                       GuideBooking.created_at < cutoff).delete(synchronize_session=False)
     db.session.commit()
     click.echo(f"Removed {n} rows.")

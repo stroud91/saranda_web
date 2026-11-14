@@ -21,7 +21,7 @@ from sqlalchemy import select
 from app.extensions import limiter
 from app.models import Booking, Hotel, db
 from app.models.db import utcnow
-from app.services import accounts, bank_transfer, checkout, mailer, payments, paypal
+from app.services import accounts, bank_transfer, checkout, mailer, partners, payments, paypal
 from app.validation import Field, ValidationError, json_body
 
 log = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def _validate_stay(data, lock=False):
     if lock:
         stmt = stmt.with_for_update()
     hotel = db.session.execute(stmt).scalar_one_or_none()
-    if not hotel or hotel.is_active is False:
+    if not hotel or hotel.is_active is False or not hotel.is_public or (hotel.business_id and not partners.enabled()):
         raise ValidationError({"hotel_id": "Stay not found"})
     today = date.today()
     if data["start_date"] < today:
@@ -100,7 +100,20 @@ def _guest(booking):
 
 
 def _notify_host(booking, event):
-    mailer.deliver(mailer.booking_for_host, booking.to_public_dict(), _guest(booking), event)
+    """Tell whoever hosts the stay: the site's host, or the partner business that owns it."""
+    business = booking.hotel.business if booking.hotel else None
+    to = None
+    if business:
+        if not (business.owner and business.owner.email_verified):
+            return
+        to = business.owner.email  # guest details only go to a confirmed address
+    mailer.deliver(mailer.booking_for_host, booking.to_public_dict(), _guest(booking), event, to, accounts.site_url())
+
+
+def methods_for(hotel):
+    """Ways to pay for this stay. A partner's stay is always request-to-book: the site
+    never takes money on another business's behalf."""
+    return ["request"] if hotel.business_id else checkout.method_ids()
 
 
 def _notify_confirmed(booking):
@@ -114,11 +127,12 @@ def create_booking():
     data = json_body(BOOKING_SCHEMA)
     if data["website"]:
         return jsonify({"error": "Request rejected"}), 400
-    available = checkout.method_ids()
+    hotel, nights = _validate_stay(data, lock=True)
+    available = methods_for(hotel)
     method = data["payment_method"] or available[0]
     if method not in available:
+        db.session.rollback()
         raise ValidationError({"payment_method": "That way to pay isn't available. Please choose another."})
-    hotel, nights = _validate_stay(data, lock=True)
     start, end = _dt(data["start_date"]), _dt(data["end_date"])
     if blocking_bookings(hotel.id, start, end, lock=True):
         db.session.rollback()

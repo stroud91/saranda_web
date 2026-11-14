@@ -6,6 +6,7 @@ import { safeNext, useAuth } from "../store/auth";
 import AuthShell from "../components/auth/AuthShell";
 import PasswordField from "../components/auth/PasswordField";
 import { Alert, Field, Skeleton } from "../components/ui";
+import { rich, tr } from "../i18n";
 
 // Only focus the first field on desktop: on phones it would open the keyboard and scroll the page.
 const FINE_POINTER = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -21,8 +22,8 @@ function useAuthPage(title) {
 
 function Unavailable() {
   return (
-    <AuthShell title="Accounts aren't available here" lead="This copy of the site runs without a server, so there is nothing to sign in to. You can still plan trips and send booking requests.">
-      <Link className="btn primary" to="/plan">Plan a trip <ArrowRight size={16} /></Link>
+    <AuthShell title={tr("Accounts aren't available here")} lead={tr("This copy of the site runs without a server, so there is nothing to sign in to. You can still plan trips and send booking requests.")}>
+      <Link className="btn primary" to="/plan">{tr("Plan a trip")} <ArrowRight size={16} /></Link>
     </AuthShell>
   );
 }
@@ -51,17 +52,17 @@ export function SignIn() {
     }
   };
   return (
-    <AuthShell hour={19.2} eyebrow="Welcome back" title="Sign in" lead="See your bookings, guide requests and saved trips."
-      footer={<>New here? <Link to={`/signup?next=${encodeURIComponent(next)}`}>Create an account</Link></>}>
+    <AuthShell hour={19.2} eyebrow={tr("Welcome back")} title={tr("Sign in")} lead={tr("See your bookings, guide requests and saved trips.")}
+      footer={rich("New here? <a>Create an account</a>", { a: (c) => <Link to={`/signup?next=${encodeURIComponent(next)}`}>{c}</Link> })}>
       <form className="stack" onSubmit={submit} noValidate>
-        <Field label="Email"><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" maxLength={255} required autoFocus={FINE_POINTER} /></Field>
+        <Field label={tr("Email")}><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" maxLength={255} required autoFocus={FINE_POINTER} /></Field>
         <PasswordField value={password} onChange={setPassword} />
         <div className="row between small">
-          <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Keep me signed in</label>
-          <Link to="/forgot-password">Forgot password?</Link>
+          <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> {tr("Keep me signed in")}</label>
+          <Link to="/forgot-password">{tr("Forgot password?")}</Link>
         </div>
         {state.error && <Alert kind="error">{state.error}</Alert>}
-        <button className="btn primary lg" disabled={state.busy || !email || !password}>{state.busy ? <span className="spinner" /> : <LogIn size={18} />} Sign in</button>
+        <button className="btn primary lg" disabled={state.busy || !email || !password}>{state.busy ? <span className="spinner" /> : <LogIn size={18} />} {tr("Sign in")}</button>
       </form>
     </AuthShell>
   );
@@ -72,7 +73,8 @@ export function SignUp() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "", website: "" });
   const [state, setState] = useState({ busy: false, error: "", fields: {} });
-  const up = (k) => (e) => setForm({ ...form, [k]: e?.target ? e.target.value : e });
+  // Functional update: autofill sets several fields in the same tick and all must be kept.
+  const up = (k) => (e) => { const v = e?.target ? e.target.value : e; setForm((f) => ({ ...f, [k]: v })); };
 
   if (!ready) return <div className="page container"><Skeleton h={420} r={26} /></div>;
   if (!available) return <Unavailable />;
@@ -90,17 +92,17 @@ export function SignUp() {
     }
   };
   return (
-    <AuthShell hour={6.9} eyebrow="A new day on the riviera" title="Create your account" lead="Free, and takes a minute. Your bookings and trips follow you to any device."
-      footer={<>Already have an account? <Link to={`/signin?next=${encodeURIComponent(next)}`}>Sign in</Link></>}>
+    <AuthShell hour={6.9} eyebrow={tr("A new day on the riviera")} title={tr("Create your account")} lead={tr("Free, and takes a minute. Your bookings and trips follow you to any device.")}
+      footer={rich("Already have an account? <a>Sign in</a>", { a: (c) => <Link to={`/signin?next=${encodeURIComponent(next)}`}>{c}</Link> })}>
       <form className="stack" onSubmit={submit} noValidate>
-        <Field label="Name" error={state.fields.name}><input className="input" value={form.name} onChange={up("name")} autoComplete="name" maxLength={120} required autoFocus={FINE_POINTER} /></Field>
-        <Field label="Email" error={state.fields.email}><input className="input" type="email" value={form.email} onChange={up("email")} autoComplete="username" maxLength={255} required /></Field>
+        <Field label={tr("Name")} error={state.fields.name}><input className="input" value={form.name} onChange={up("name")} autoComplete="name" maxLength={120} required autoFocus={FINE_POINTER} /></Field>
+        <Field label={tr("Email")} error={state.fields.email}><input className="input" type="email" value={form.email} onChange={up("email")} autoComplete="username" maxLength={255} required /></Field>
         <PasswordField value={form.password} onChange={up("password")} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
         <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
         {state.error && !Object.keys(state.fields).length && <Alert kind="error">{state.error}</Alert>}
         {state.fields.email === "Already registered" && <Alert kind="info">That email already has an account. <Link to="/signin">Sign in</Link> or <Link to="/forgot-password">reset the password</Link>.</Alert>}
-        <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : <UserPlus size={18} />} Create account</button>
-        <p className="tiny muted">We only use your details for your bookings and account. You can export or delete your data at any time.</p>
+        <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : <UserPlus size={18} />} {tr("Create account")}</button>
+        <p className="tiny muted">{rich("By creating an account you accept our <terms>booking terms</terms>. We only use your details for your bookings and account — see the <privacy>privacy policy</privacy>. You can export or delete your data at any time.", { terms: (c) => <Link to="/terms">{c}</Link>, privacy: (c) => <Link to="/privacy">{c}</Link> })}</p>
       </form>
     </AuthShell>
   );
@@ -123,18 +125,18 @@ export function ForgotPassword() {
     }
   };
   return (
-    <AuthShell hour={21.4} eyebrow="It happens" title="Forgot your password?" lead="Enter your email and we'll send a link to choose a new one."
-      footer={<Link to="/signin">Back to sign in</Link>}>
+    <AuthShell hour={21.4} eyebrow={tr("It happens")} title={tr("Forgot your password?")} lead={tr("Enter your email and we'll send a link to choose a new one.")}
+      footer={<Link to="/signin">{tr("Back to sign in")}</Link>}>
       {state.sent ? (
         state.delivery
-          ? <Alert kind="ok">If that address has an account, a reset link is on its way. It works for one hour. Check your spam folder too.</Alert>
+          ? <Alert kind="ok">{tr("If that address has an account, a reset link is on its way. It works for one hour. Check your spam folder too.")}</Alert>
           : <Alert kind="warn">Email isn't set up on this site yet, so we can't send reset links. Please <Link to="/contact">contact us</Link> and we'll help you back in.</Alert>
       ) : (
         <form className="stack" onSubmit={submit} noValidate>
           {!emailDelivery && <Alert kind="warn">Reset emails aren't switched on yet. <Link to="/contact">Contact us</Link> if you're locked out.</Alert>}
-          <Field label="Email"><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" maxLength={255} required autoFocus={FINE_POINTER} /></Field>
+          <Field label={tr("Email")}><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" maxLength={255} required autoFocus={FINE_POINTER} /></Field>
           {state.error && <Alert kind="error">{state.error}</Alert>}
-          <button className="btn primary lg" disabled={state.busy || !email}>{state.busy ? <span className="spinner" /> : <KeyRound size={18} />} Send reset link</button>
+          <button className="btn primary lg" disabled={state.busy || !email}>{state.busy ? <span className="spinner" /> : <KeyRound size={18} />} {tr("Send reset link")}</button>
         </form>
       )}
     </AuthShell>
@@ -163,13 +165,13 @@ export function ResetPassword() {
     }
   };
   return (
-    <AuthShell hour={5.6} eyebrow="Almost there" title="Choose a new password" lead="You'll be signed in, and every other device will be signed out."
-      footer={<Link to="/forgot-password">Ask for a new link</Link>}>
-      {!token ? <Alert kind="warn">This page needs the link from your reset email.</Alert> : (
+    <AuthShell hour={5.6} eyebrow={tr("Almost there")} title={tr("Choose a new password")} lead={tr("You'll be signed in, and every other device will be signed out.")}
+      footer={<Link to="/forgot-password">{tr("Ask for a new link")}</Link>}>
+      {!token ? <Alert kind="warn">{tr("This page needs the link from your reset email.")}</Alert> : (
         <form className="stack" onSubmit={submit} noValidate>
-          <PasswordField label="New password" value={password} onChange={setPassword} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
+          <PasswordField label={tr("New password")} value={password} onChange={setPassword} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
           {state.error && !state.fields.password && <Alert kind="error">{state.error}</Alert>}
-          <button className="btn primary lg" disabled={state.busy || !password}>{state.busy ? <span className="spinner" /> : <KeyRound size={18} />} Save password</button>
+          <button className="btn primary lg" disabled={state.busy || !password}>{state.busy ? <span className="spinner" /> : <KeyRound size={18} />} {tr("Save password")}</button>
         </form>
       )}
     </AuthShell>
@@ -195,11 +197,11 @@ export function VerifyEmail() {
   if (!ready) return <div className="page container"><Skeleton h={420} r={26} /></div>;
   if (!available) return <Unavailable />;
   return (
-    <AuthShell hour={8.2} eyebrow="Email" title={state.status === "ok" ? "Email confirmed" : "Confirming your email"}>
+    <AuthShell hour={8.2} eyebrow={tr("Email")} title={state.status === "ok" ? tr("Email confirmed") : tr("Confirming your email")}>
       {state.status === "working" && <Skeleton h={60} r={14} />}
-      {state.status === "ok" && <Alert kind="ok"><MailCheck size={16} /> Thank you — bookings made with this address now appear in your account.</Alert>}
+      {state.status === "ok" && <Alert kind="ok"><MailCheck size={16} /> {tr("Thank you — bookings made with this address now appear in your account.")}</Alert>}
       {state.status === "error" && <Alert kind="error">{state.message}</Alert>}
-      <Link className="btn primary" to={user ? "/account" : "/signin"}>{user ? "Go to my account" : "Sign in"} <ArrowRight size={16} /></Link>
+      <Link className="btn primary" to={user ? "/account" : "/signin"}>{user ? tr("Go to my account") : tr("Sign in")} <ArrowRight size={16} /></Link>
     </AuthShell>
   );
 }

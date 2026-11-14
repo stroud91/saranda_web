@@ -1,7 +1,8 @@
+from .business import Reviewable
 from .db import add_prefix_for_prod, db, table_args, utcnow
 
 
-class Tour(db.Model):
+class Tour(Reviewable, db.Model):
     __tablename__ = "tours"
     __table_args__ = table_args()
 
@@ -39,4 +40,5 @@ class Tour(db.Model):
             "destination_slug": self.destination_slug,
             "guide_id": self.guide_id,
             "start_time": self.start_date.strftime("%H:%M") if self.start_date else None,
+            "business": self.business_brief(),
         }

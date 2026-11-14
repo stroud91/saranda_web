@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
-  Box, CalendarRange, Route, Users, BedDouble, BookOpen, Sparkles, ArrowRight, MapPin, Clock, Car, Ship, Sun, Star, Waves,
+  Box, CalendarRange, Compass, Route, Users, BedDouble, BookOpen, Sparkles, ArrowRight, MapPin, Clock, Car, Ship, Sun, Star, Waves,
 } from "lucide-react";
 import { useApi } from "../lib/useApi";
+import { useGuidesOn } from "../lib/useConfig";
 import { useDestinations } from "../lib/useDestinations";
 import { hm, hmRange, euro } from "../lib/format";
 import { WeatherChip, WeatherCard } from "../components/live/Weather";
@@ -17,6 +18,7 @@ import GuideAvatar from "../components/art/GuideAvatar";
 import { Skeleton } from "../components/ui";
 import { useUi } from "../store/ui";
 import { useTrip } from "../store/trip";
+import { plural, rich, tr } from "../i18n";
 
 const QUICK = [
   { to: "/plan", icon: CalendarRange, title: "Plan a trip", text: "Day-by-day timelines", grad: "var(--grad-sea)" },
@@ -26,6 +28,8 @@ const QUICK = [
   { to: "/stays", icon: BedDouble, title: "Meg'Rooms", text: "Sea-view apartments", grad: "var(--grad-terracotta)" },
   { to: "/essentials", icon: BookOpen, title: "Essentials", text: "Money, food, safety", grad: "var(--grad-aegean)" },
 ];
+// Takes the guides tile's place until real guides are listed.
+const EXPLORE_TILE = { to: "/explore", icon: Compass, title: "Explore", text: "Beaches, castles, towns", grad: "var(--grad-olive)" };
 
 function HeroConnector() {
   const { list } = useDestinations();
@@ -37,19 +41,19 @@ function HeroConnector() {
     <form className="hero-connector glass-card" onSubmit={(e) => { e.preventDefault(); navigate(`/routes?from=${from}&to=${to}`); }}>
       <div className="hc-field">
         <span className="hc-dot a" />
-        <label className="sr-only" htmlFor="hc-from">From</label>
+        <label className="sr-only" htmlFor="hc-from">{tr("From")}</label>
         <select id="hc-from" value={from} onChange={(e) => setFrom(e.target.value)}>
           {options.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
         </select>
       </div>
       <div className="hc-field">
         <span className="hc-dot b" />
-        <label className="sr-only" htmlFor="hc-to">To</label>
+        <label className="sr-only" htmlFor="hc-to">{tr("To")}</label>
         <select id="hc-to" value={to} onChange={(e) => setTo(e.target.value)}>
           {list.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
         </select>
       </div>
-      <button className="btn sun"><Route size={18} /> How long?</button>
+      <button className="btn sun"><Route size={18} /> {tr("How long?")}</button>
     </form>
   );
 }
@@ -59,19 +63,22 @@ function Hero() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const openConcierge = useUi((s) => s.openConcierge);
+  const guides = useGuidesOn();
   return (
     <section className="hero" ref={ref}>
       <OceanHero scrollProgress={scrollYProgress} surfaceRef={ref} />
       <div className="hero-overlay" />
       <motion.div className="container hero-content" style={{ opacity: fade }}>
         <motion.div className="eyebrow light" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <MapPin size={14} /> Sarandë · Albanian Riviera · 2027 edition
+          <MapPin size={14} /> {tr("Sarandë · Albanian Riviera · 2027 edition")}
         </motion.div>
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>
-          Albania, planned from <em>the Ionian coast.</em>
+          {rich("Albania, planned from <em>the Ionian coast.</em>", { em: (c) => <em>{c}</em> })}
         </motion.h1>
         <motion.p className="hero-lead" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
-          Connect any two places with real drive times, build day-by-day timelines, estimate your budget, pick a local guide — and come home to a sea-view apartment.
+          {guides
+            ? tr("Connect any two places with real drive times, build day-by-day timelines, estimate your budget, pick a local guide — and come home to a sea-view apartment.")
+            : tr("Connect any two places with real drive times, build day-by-day timelines, estimate your budget — and come home to a sea-view apartment.")}
         </motion.p>
         <motion.div className="row hero-chips" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
           <WeatherChip />
@@ -81,8 +88,8 @@ function Hero() {
           <HeroConnector />
         </motion.div>
         <motion.div className="row" style={{ marginTop: 18 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}>
-          <Link to="/plan" className="btn primary lg"><CalendarRange size={20} /> Plan my trip</Link>
-          <button className="btn glass lg" onClick={() => openConcierge()}><Sparkles size={20} /> Ask the concierge</button>
+          <Link to="/plan" className="btn primary lg"><CalendarRange size={20} /> {tr("Plan my trip")}</Link>
+          <button className="btn glass lg" onClick={() => openConcierge()}><Sparkles size={20} /> {tr("Ask the concierge")}</button>
         </motion.div>
       </motion.div>
       <svg className="hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
@@ -94,15 +101,17 @@ function Hero() {
 }
 
 function QuickActions() {
+  const guides = useGuidesOn();
+  const tiles = guides ? QUICK : QUICK.map((q) => (q.to === "/guides" ? EXPLORE_TILE : q));
   return (
-    <section className="container quick-grid" aria-label="Quick actions">
-      {QUICK.map((q, i) => (
+    <section className="container quick-grid" aria-label={tr("Quick actions")}>
+      {tiles.map((q, i) => (
         <motion.div key={q.to} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
           <Link to={q.to} className="quick card hover">
             <span className="quick-icon" style={{ background: q.grad }}><q.icon size={22} /></span>
             <span>
-              <b>{q.title}</b>
-              <span className="small muted">{q.text}</span>
+              <b>{tr(q.title)}</b>
+              <span className="small muted">{tr(q.text)}</span>
             </span>
             <ArrowRight size={18} className="quick-arrow" />
           </Link>
@@ -122,18 +131,18 @@ function Itineraries() {
     <section className="section container">
       <div className="section-head">
         <div>
-          <div className="eyebrow">Choose your trip length</div>
-          <h2>7, 10 or 14 days — ready to go</h2>
+          <div className="eyebrow">{tr("Choose your trip length")}</div>
+          <h2>{tr("7, 10 or 14 days — ready to go")}</h2>
         </div>
-        <Link to="/itineraries" className="btn sm">All itineraries <ArrowRight size={16} /></Link>
+        <Link to="/itineraries" className="btn sm">{tr("All itineraries")} <ArrowRight size={16} /></Link>
       </div>
       <div className="grid" style={{ "--min": "300px" }}>
         {!data && [0, 1, 2].map((i) => <Skeleton key={i} h={380} r={26} />)}
         {main.map((it, i) => (
           <motion.article key={it.slug} className={`itin-card card ${it.recommended ? "recommended" : ""}`} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
             <div className={`itin-top tone-${it.color}`}>
-              <div className="itin-days"><b>{it.days_count}</b><span>days</span></div>
-              {it.recommended && <span className="badge glass"><Star size={12} /> The sweet spot</span>}
+              <div className="itin-days"><b>{it.days_count}</b><span>{tr("days")}</span></div>
+              {it.recommended && <span className="badge glass"><Star size={12} /> {tr("The sweet spot")}</span>}
               <RouteSketch path={it.path} labels={it.path.map(() => "")} width={300} height={150} className="itin-sketch" color="#fff" />
             </div>
             <div className="itin-body">
@@ -146,8 +155,8 @@ function Itineraries() {
               </div>
               <div className="itin-bases small">{it.bases.map(name).join(" · ")}</div>
               <div className="row" style={{ marginTop: 14 }}>
-                <Link to={`/itineraries/${it.slug}`} className="btn sm">Day by day</Link>
-                <button className="btn primary sm" onClick={() => { load(it); navigate("/plan"); }}>Use this plan</button>
+                <Link to={`/itineraries/${it.slug}`} className="btn sm">{tr("Day by day")}</Link>
+                <button className="btn primary sm" onClick={() => { load(it); navigate("/plan"); }}>{tr("Use this plan")}</button>
               </div>
             </div>
           </motion.article>
@@ -166,11 +175,11 @@ function SarandaBase() {
       <div className="container">
         <div className="section-head">
           <div>
-            <div className="eyebrow"><Waves size={14} /> Your Sarandë base</div>
-            <h2>Split the south into easy day trips</h2>
-            <p className="muted">Don't try to see everything in one afternoon — everything below is a short hop from our door.</p>
+            <div className="eyebrow"><Waves size={14} /> {tr("Your Sarandë base")}</div>
+            <h2>{tr("Split the south into easy day trips")}</h2>
+            <p className="muted">{tr("Don't try to see everything in one afternoon — everything below is a short hop from our door.")}</p>
           </div>
-          <Link to="/itineraries/sarande-3-day-base" className="btn sm">3-day base plan <ArrowRight size={16} /></Link>
+          <Link to="/itineraries/sarande-3-day-base" className="btn sm">{tr("3-day base plan")} <ArrowRight size={16} /></Link>
         </div>
         <div className="h-scroll">
           {trips.map((c, i) => {
@@ -203,8 +212,8 @@ function SeasonStrip() {
   const max = Math.max(...data.climate.map((c) => c.air_high));
   return (
     <div className="card pad season-card">
-      <div className="panel-title"><h3><Sun size={18} /> When to go</h3><Link to="/essentials#seasons" className="small">Season guide</Link></div>
-      <div className="season-bars" role="img" aria-label="Typical air and sea temperatures by month in Sarandë">
+      <div className="panel-title"><h3><Sun size={18} /> {tr("When to go")}</h3><Link to="/essentials#seasons" className="small">{tr("Season guide")}</Link></div>
+      <div className="season-bars" role="img" aria-label={tr("Typical air and sea temperatures by month in Sarandë")}>
         {data.climate.map((c) => (
           <div key={c.month} className={`sb ${c.month === month ? "now" : ""}`}>
             <span className="sb-air" style={{ height: `${(c.air_high / max) * 100}%` }}><i>{c.air_high}°</i></span>
@@ -214,7 +223,7 @@ function SeasonStrip() {
         ))}
       </div>
       <div className="row tiny muted" style={{ gap: 14, marginTop: 8 }}>
-        <span className="legend air">Air high</span><span className="legend sea">Sea</span>
+        <span className="legend air">{tr("Air high")}</span><span className="legend sea">{tr("Sea")}</span>
       </div>
       <div className="seasons">
         {data.seasons.map((s) => (
@@ -226,17 +235,19 @@ function SeasonStrip() {
 }
 
 function GuidesPreview() {
-  const { data } = useApi("/guides/");
+  const on = useGuidesOn();
+  const { data } = useApi(on ? "/guides/" : null);
   const guides = (data?.guides || []).slice(0, 4);
+  if (!on) return null;
   return (
     <section className="section container">
       <div className="section-head">
         <div>
-          <div className="eyebrow"><Users size={14} /> Local experts</div>
-          <h2>Pick your guide</h2>
-          <p className="muted">Archaeologists, skippers, chefs and drivers — request a date and they confirm.</p>
+          <div className="eyebrow"><Users size={14} /> {tr("Local experts")}</div>
+          <h2>{tr("Pick your guide")}</h2>
+          <p className="muted">{tr("Archaeologists, skippers, chefs and drivers — request a date and they confirm.")}</p>
         </div>
-        <Link to="/guides" className="btn sm">All guides <ArrowRight size={16} /></Link>
+        <Link to="/guides" className="btn sm">{tr("All guides")} <ArrowRight size={16} /></Link>
       </div>
       <div className="grid" style={{ "--min": "250px" }}>
         {!data && [0, 1, 2, 3].map((i) => <Skeleton key={i} h={200} r={26} />)}
@@ -263,10 +274,10 @@ function StaysBanner() {
       <div className="stays-banner">
         <div className="stays-banner-art"><SceneArt scene="harbor" seed="megrooms" variant="golden" /></div>
         <div className="stays-banner-body">
-          <img src="/media/megrooms-logo.png" alt="Meg'Rooms" className="stays-logo" width="96" height="96" />
-          <h2>Sleep by the sea in Sarandë</h2>
-          <p>{data ? `${data.length} apartments` : "Apartments"} with Ionian views, steps from the promenade{from ? ` — from ${euro(from)} a night` : ""}. Book direct, no platform fees.</p>
-          <Link to="/stays" className="btn dark">See apartments <ArrowRight size={16} /></Link>
+          <img src="/media/megrooms-logo.png" alt={tr("Meg'Rooms")} className="stays-logo" width="96" height="96" />
+          <h2>{tr("Sleep by the sea in Sarandë")}</h2>
+          <p>{tr("Apartments with Ionian views, steps from the promenade.")}{from ? ` ${tr("From {price} a night.", { price: euro(from) })}` : ""} {tr("Book direct, no platform fees.")}</p>
+          <Link to="/stays" className="btn dark">{tr("See apartments")} <ArrowRight size={16} /></Link>
         </div>
       </div>
     </section>
@@ -278,12 +289,12 @@ function CorfuBanner() {
     <section className="container">
       <div className="corfu-banner">
         <div>
-          <div className="eyebrow light"><Ship size={14} /> Greece + Albania</div>
-          <h2>Corfu is just across the channel</h2>
-          <p>2 nights Corfu + 3 nights Sarandë makes a perfect 5-day, two-country trip. Ferry schedules are seasonal — always check the current operator timetable.</p>
+          <div className="eyebrow light"><Ship size={14} /> {tr("Greece + Albania")}</div>
+          <h2>{tr("Corfu is just across the channel")}</h2>
+          <p>{tr("2 nights Corfu + 3 nights Sarandë makes a perfect 5-day, two-country trip. Ferry schedules are seasonal — always check the current operator timetable.")}</p>
           <div className="row">
-            <Link to="/itineraries/corfu-sarande-5" className="btn glass">5-day Corfu + Sarandë</Link>
-            <Link to="/essentials#corfu" className="btn ghost" style={{ color: "#fff" }}>Ferry checklist <ArrowRight size={16} /></Link>
+            <Link to="/itineraries/corfu-sarande-5" className="btn glass">{tr("5-day Corfu + Sarandë")}</Link>
+            <Link to="/essentials#corfu" className="btn ghost" style={{ color: "#fff" }}>{tr("Ferry checklist")} <ArrowRight size={16} /></Link>
           </div>
         </div>
         <svg viewBox="0 0 200 120" className="corfu-art" aria-hidden="true">
@@ -311,7 +322,7 @@ export default function Home() {
       <SarandaBase />
       <section className="container section">
         <div className="split">
-          <div className="card pad"><div className="panel-title"><h3><Clock size={18} /> Sarandë right now</h3></div><WeatherCard /></div>
+          <div className="card pad"><div className="panel-title"><h3><Clock size={18} /> {tr("Sarandë right now")}</h3></div><WeatherCard /></div>
           <SeasonStrip />
         </div>
       </section>

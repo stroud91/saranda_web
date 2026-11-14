@@ -345,6 +345,8 @@ export function createLocalApi(staticApi, { contactEmail, whatsapp, liveData = t
     ["GET", /^\/hotels\/(\d+)$/, (m) => responses[`/hotels/${m[1]}`] || Promise.reject(notFound("Stay not found"))],
     ["GET", /^\/tours\/?$/, () => responses["/tours/"]],
     ["GET", /^\/car_rentals\/?$/, (m, q) => responses["/car_rentals/"].filter((c) => !q.type || c.car_type === q.type)],
+    // Partner businesses sign up and are reviewed on the server; a static copy has none.
+    ["GET", /^\/businesses\/?$/, () => ({ businesses: [] })],
     ["GET", /^\/trips\/([^/]+)$/, (m) => getTrip(m[1])],
     ["GET", /^\/bookings\/([A-Za-z0-9-]+)$/, () => Promise.reject(notFound("Booking not found"))],
     ["POST", /^\/planner\/timeline$/, (m, q, b) => planTimeline(b)],

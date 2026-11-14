@@ -4,6 +4,7 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import { Lock } from "lucide-react";
 import { Alert } from "../ui";
 import { euro } from "../../lib/format";
+import { tr } from "../../i18n";
 
 function Form({ reference, amount }) {
   const stripe = useStripe();
@@ -28,7 +29,7 @@ function Form({ reference, amount }) {
       <PaymentElement options={{ layout: "tabs" }} />
       {error && <Alert kind="error">{error}</Alert>}
       <button className="btn primary lg block" disabled={!stripe || busy}>{busy ? <span className="spinner" /> : <Lock size={18} />} Pay {euro(amount)}</button>
-      <p className="tiny muted center">Payments are processed securely by Stripe. Card details never touch our servers.</p>
+      <p className="tiny muted center">{tr("Payments are processed securely by Stripe. Card details never touch our servers.")}</p>
     </form>
   );
 }

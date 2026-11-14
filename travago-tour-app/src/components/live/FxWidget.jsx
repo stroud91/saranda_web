@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { useApi } from "../../lib/useApi";
+import { tr } from "../../i18n";
 
 export function useLek() {
   const { data } = useApi("/live/fx");
@@ -9,7 +10,7 @@ export function useLek() {
 
 export function FxChip() {
   const { rate, live } = useLek();
-  return <span className="live-chip">€1 = <b>{rate.toFixed(1)} L</b>{!live && <span className="tiny"> · approx.</span>}</span>;
+  return <span className="live-chip">€1 = <b>{rate.toFixed(1)} L</b>{!live && <span className="tiny"> {tr("· approx.")}</span>}</span>;
 }
 
 export default function FxWidget() {
@@ -22,14 +23,14 @@ export default function FxWidget() {
     <div className="fx">
       <div className="fx-row">
         <label className="fx-box">
-          <span className="label">{dir === "eur" ? "Euro" : "Lek"}</span>
+          <span className="label">{dir === "eur" ? tr("Euro") : tr("Lek")}</span>
           <input className="input" type="number" min="0" inputMode="decimal" value={eur} onChange={(e) => setEur(Math.max(0, Number(e.target.value) || 0))} />
         </label>
-        <button className="icon-btn" onClick={() => { setDir(dir === "eur" ? "all" : "eur"); setEur(Math.round(dir === "eur" ? all : euros)); }} aria-label="Swap currencies">
+        <button className="icon-btn" onClick={() => { setDir(dir === "eur" ? "all" : "eur"); setEur(Math.round(dir === "eur" ? all : euros)); }} aria-label={tr("Swap currencies")}>
           <ArrowLeftRight size={18} />
         </button>
         <div className="fx-box out">
-          <span className="label">{dir === "eur" ? "Albanian lek" : "Euro"}</span>
+          <span className="label">{dir === "eur" ? tr("Albanian lek") : tr("Euro")}</span>
           <div className="fx-out">{dir === "eur" ? `${Math.round(all).toLocaleString("en")} L` : `€${euros.toFixed(2)}`}</div>
         </div>
       </div>

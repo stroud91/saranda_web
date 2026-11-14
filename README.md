@@ -97,6 +97,8 @@ After changing anything in `app/data/` or the engines, regenerate the static bun
 
 ## Deploying to cPanel
 
+For the full launch checklist (mailbox, `.env`, payments, cron job, backups), follow **[docs/GO-LIVE.md](docs/GO-LIVE.md)**. The short version:
+
 The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain root. Flask serves both the website and `/api`.
 
 **First time**
@@ -154,6 +156,32 @@ Both need the Python app (they use the database and secret keys); the static upl
 - For a bank transfer the guest sees your IBAN, the exact amount and the booking reference. Dates are held for 48 hours, or 5 days once the guest reports the transfer. You press **Money received** in the Host desk when it lands.
 - Stripe remains in the code for a business registered in the EU or USA.
 
+## Business portal (partners)
+
+Local businesses can add themselves at **/business**: one profile, then their apartments, rentals and activities, all managed from one dashboard. It needs the Python app with accounts and outgoing email (owners must confirm their address).
+
+- **Nothing is public until you approve it.** New businesses and listings appear in *My account → Host desk → Partners*, with every submitted field. Approve, or send it back with a note that is emailed to the owner.
+- **Edits are reviewed too.** On an approved profile or listing, prices, capacity and the on/off switch change at once. Names, descriptions and contact details wait for approval while the approved version stays live. The Host desk shows the old and new text side by side.
+- **Guests deal with the business directly.** A partner's stay is always request-to-book: the site never takes money for another business, even if PayPal or bank transfer is set up for your own apartments. Rentals and activities get an enquiry form. Requests go to the owner's confirmed account email and to their dashboard, where they confirm or decline.
+- **Public pages.** `/partners` lists approved businesses and `/partners/<slug>` shows one with its listings. Partner stays appear on `/stays` under "More places to stay"; activities and rentals appear on `/experiences` with the business's name.
+- **Taking things down.** *Take offline* in the Host desk hides a business and everything it lists, and *Put back online* restores it. An owner can pause or remove a listing, and deleting their account closes the business and erases its contact details.
+- **Page style.** Under *Page style* a business picks its page's background (clean, soft colour, waves, dots or an illustrated header), colours and card style, with a live preview that changes on every click and can be flipped between light and dark. Guests see the new look only after **Save**. A style is a set of choices from fixed lists (`STYLE_OPTIONS` in `app/models/business.py`), never free CSS, colours or URLs, so it applies without review.
+- **Limits and switch.** `PARTNER_MAX_LISTINGS` (default 40 per business); `PARTNERS_ENABLED=false` hides the portal and every partner listing.
+
+Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`). Photo uploads aren't supported yet; partner listings use the site's illustrations.
+
+## Languages and appearance
+
+The globe button in the top bar (and the row of languages in the footer) switches between **Shqip, English, Français, Italiano and Deutsch**, and between **Light, Dark and Auto**. Both choices are remembered in the browser and applied before the page is drawn (`public/boot.js`, a separate file because the Content-Security-Policy allows no inline scripts). A first-time visitor gets their browser's language if it is one of the five, otherwise English. `?lang=de` in any link opens the site in that language.
+
+How translation works:
+
+- English text is the key: `tr("Request to book")`. Values go in braces, `tr("up to {n} guests", { n })`, and sentences with links or bold use `rich("See our <a>privacy policy</a>.", { a: (c) => <Link to="/privacy">{c}</Link> })`.
+- `travago-tour-app/src/i18n/table.js` holds one row per phrase: `[English, Shqip, Français, Italiano, Deutsch]`. It loads only for visitors who aren't using English. **To translate more of the site, add rows there**; nothing else changes. A phrase without a row shows in English.
+- `src/i18n/i18n.test.js` fails the build if a row is incomplete, a phrase is listed twice, or a translation loses a `{value}` or `<tag>`.
+
+What is translated today: menus, footer, home page, stays and booking, experiences and rentals, business pages and the business dashboard, the style editor, sign-in and sign-up, contact. Still English: the destination guides, itineraries and essentials (they come from `app/data/`), the planner, map and atlas panels, the account and Host desk screens, the legal pages (which say so in the visitor's language), the concierge's answers and e-mails.
+
 ## Free mode (current default)
 
 Out of the box the site uses only free services and needs no API keys:
@@ -164,7 +192,6 @@ Out of the box the site uses only free services and needs no API keys:
 | ExchangeRate-API (open feed) | EUR → ALL rate | Free with the attribution link shown on the site |
 | OpenStreetMap tiles | Maps | Free with attribution; light use per the OSM tile policy |
 | OSRM public server | Road shapes | Free demo server for light use; self-host for production |
-| Google Fonts | Typography | Free |
 
 Stripe, the Anthropic concierge and Google Places stay switched off until their keys are added. The site falls back to request-to-book, the built-in answer engine, and no ratings. To add them later, fill in the "PAID services" block in `.env`.
 
@@ -190,6 +217,9 @@ Everything is set through environment variables; see `.env.example`. None of the
 | Road geometry | `OSRM_URL` (self-host for production traffic) | Straight segments |
 | Affiliate links | `BOOKING_AFFILIATE_ID`, `GYG_PARTNER_ID`, `VIATOR_PARTNER_ID` | Plain search links |
 | Admin API with Clerk tokens | `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTIES`, `ADMIN_USER_IDS` | Use a host account instead |
+| Business portal | `PARTNERS_ENABLED` (default on), `PARTNER_MAX_LISTINGS` | On when accounts are on; businesses need a confirmed email, so set up `SMTP_*` |
+| Sample guide profiles | `SHOW_SAMPLE_GUIDES=true` (demos only) | Hidden; guide pages appear once a real guide is added |
+| Message retention | `MESSAGE_RETENTION_MONTHS` (default 24) | Old contact messages and unconfirmed guide requests are deleted by `flask users cleanup` |
 
 Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `payment_intent.succeeded`, `payment_intent.processing` and `payment_intent.canceled`.
 
@@ -217,7 +247,8 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
 
 ## Content notes
 
-- The guide profiles in `app/seeds/guides.py` are **samples**, labelled "Sample profile" in the UI and seeded with no ratings or reviews. Replace them with real, vetted guides through `POST /api/admin/guides` before launch.
+- The guide profiles in `app/seeds/guides.py` are **samples** with no ratings or reviews. Guests don't see them: until a real guide is added (through `POST /api/admin/guides`), the guide links are hidden and `/guides` says guides are on their way. `SHOW_SAMPLE_GUIDES=true` shows the samples, labelled "Sample profile", for demos.
+- The privacy policy (`/privacy`) and booking terms (`/terms`) read your business details and cancellation rules from `travago-tour-app/src/data/business.json`, and the live configuration decides which payment methods and features they describe.
 - Rental cars and experiences are sample seed data too.
 - Distances, times and prices are planning estimates. Legs from the planner are labelled "Planner data" and everything else "Estimate". Ferry schedules are never shown as fixed; the site always tells travellers to check the operator.
 - Update `app/data/` each season: ferry notes, budget ranges and attraction details (see `LAST_REVIEWED` in `app/data/essentials.py`).

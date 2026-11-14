@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock } from "lucide-react";
+import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock, Store } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { post } from "../lib/api";
 import { euro, todayIso, addDays, fmtDate, goToPayPal, money } from "../lib/format";
@@ -11,6 +11,7 @@ import Handoff from "../components/ui/Handoff";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, ErrorState, Field, Sheet, Skeleton, Stepper } from "../components/ui";
 import { WeatherCard } from "../components/live/Weather";
+import { plural, rich, tr } from "../i18n";
 
 const PaymentStep = lazy(() => import("../components/stays/PaymentStep"));
 
@@ -32,8 +33,11 @@ export default function StayDetail() {
   const [state, setState] = useState({ busy: false, error: "", pay: null });
   const user = useAuth((s) => s.user);
   // Ways to pay come from the server; older configs only say whether cards are on.
-  const methods = useMemo(() => cfg.payments?.methods?.length ? cfg.payments.methods
-    : [cfg.payments?.enabled ? { id: "card", label: "Card" } : { id: "request", label: "Request to book" }], [cfg]);
+  // A partner business's stay is always request-to-book: the guest pays that business directly.
+  const partner = h?.business || null;
+  const methods = useMemo(() => partner ? [{ id: "request", label: "Request to book" }]
+    : cfg.payments?.methods?.length ? cfg.payments.methods
+      : [cfg.payments?.enabled ? { id: "card", label: "Card" } : { id: "request", label: "Request to book" }], [cfg, partner]);
   const [method, setMethod] = useState(null);
   const chosen = methods.find((m) => m.id === method) || methods[0];
   const payable = chosen.id !== "request";
@@ -65,7 +69,7 @@ export default function StayDetail() {
   const quoteBody = useMemo(() => (h && checkOut > checkIn ? { hotel_id: h.id, start_date: checkIn, end_date: checkOut, guest_count: guests } : null), [h, checkIn, checkOut, guests]);
   const { data: quote, error: quoteError } = useLivePost("/bookings/quote", quoteBody, 250);
 
-  useEffect(() => { if (h) document.title = `${h.apartment_name || h.hotel_name} · Meg'Rooms`; }, [h]);
+  useEffect(() => { if (h) document.title = `${h.apartment_name || h.hotel_name} · ${h.business?.name || "Meg'Rooms"}`; }, [h]);
 
   const pick = (iso) => {
     setTouched(true);
@@ -79,7 +83,7 @@ export default function StayDetail() {
     }
   };
 
-  const up = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const up = (k) => (e) => { const v = e.target.value; setForm((f) => ({ ...f, [k]: v })); };
   const book = async (e) => {
     e.preventDefault();
     setState({ busy: true, error: "", pay: null });
@@ -103,7 +107,7 @@ export default function StayDetail() {
 
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
   if (!h) return <div className="page container"><Skeleton h={420} r={26} /></div>;
-  const wa = whatsappUrl(cfg.whatsapp, `Hello! I'm interested in ${h.hotel_name} from ${checkIn} to ${checkOut} for ${guests} guests.`);
+  const wa = partner ? null : whatsappUrl(cfg.whatsapp, `Hello! I'm interested in ${h.hotel_name} from ${checkIn} to ${checkOut} for ${guests} guests.`);
   const nights = quote?.nights;
 
   return (
@@ -120,55 +124,69 @@ export default function StayDetail() {
       <div className="split wide-left" style={{ marginTop: 24 }}>
         <div className="stack" style={{ "--gap": "18px" }}>
           <div>
-            <div className="eyebrow">Meg'Rooms · {h.city}</div>
+            <div className="eyebrow">{partner ? <><Store size={14} /> {tr("Hosted by")} <Link to={`/partners/${partner.slug}`}>{partner.name}</Link></> : "Meg'Rooms"} · {h.city}</div>
             <h1 style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)" }}>{h.hotel_name}</h1>
             <div className="stay-facts">
-              <span><BedDouble size={16} /> {h.bedrooms} bedroom{h.bedrooms === 1 ? "" : "s"} · {h.beds} bed{h.beds === 1 ? "" : "s"}</span>
+              <span><BedDouble size={16} /> {plural(h.bedrooms, "{n} bedroom", "{n} bedrooms")} · {plural(h.beds, "{n} bed", "{n} beds")}</span>
               <span><Bath size={16} /> {h.bathrooms} bath</span>
-              <span><Users size={16} /> up to {h.max_guests}</span>
+              <span><Users size={16} /> {tr("up to {n} guests", { n: h.max_guests })}</span>
               {h.airbnb_rating && <span><Star size={16} fill="currentColor" /> {h.airbnb_rating} on {h.rating_source}</span>}
             </div>
           </div>
           <p className="lead">{h.description}</p>
           <div className="card pad">
-            <h3>Amenities</h3>
+            <h3>{tr("Amenities")}</h3>
             <ul className="amenities">{h.amenities.map((a) => <li key={a}><Check size={16} /> {a}</li>)}</ul>
           </div>
           <div className="card pad">
-            <h3>Where you'll be</h3>
+            <h3>{tr("Where you'll be")}</h3>
             <p className="small muted">{h.address}</p>
-            <p className="small">Butrint 30–45 min · Ksamil 25–40 min · Blue Eye 45–60 min · Himarë 1¼–1¾ h · Corfu by ferry.</p>
-            <Link to="/itineraries/sarande-3-day-base" className="btn sm"><Compass size={16} /> 3-day Sarandë base plan</Link>
+            {partner ? (
+              <Link to="/routes" className="btn sm"><Compass size={16} /> {tr("Check drive times from here")}</Link>
+            ) : (
+              <>
+                <p className="small">{tr("Butrint 30–45 min · Ksamil 25–40 min · Blue Eye 45–60 min · Himarë 1¼–1¾ h · Corfu by ferry.")}</p>
+                <Link to="/itineraries/sarande-3-day-base" className="btn sm"><Compass size={16} /> {tr("3-day Sarandë base plan")}</Link>
+              </>
+            )}
           </div>
-          <div className="card pad"><h3>Sarandë weather</h3><WeatherCard compact /></div>
+          {partner ? (
+            <div className="card pad">
+              <h3><Store size={18} /> {tr("Your host")}</h3>
+              <p className="small muted">{rich("This stay is offered by <b>{name}</b>, an independent local business we've checked. They confirm your dates and you pay them directly.", { b: (c) => <b>{c}</b> }, { name: partner.name })}</p>
+              <Link to={`/partners/${partner.slug}`} className="btn sm">{tr("About {name}", { name: partner.name })}</Link>
+            </div>
+          ) : (
+            <div className="card pad"><h3>{tr("Sarandë weather")}</h3><WeatherCard compact /></div>
+          )}
         </div>
         <aside className="card pad sticky-col booking-widget">
           <div className="row between">
-            <span><b className="stay-price">{euro(h.price_per_night)}</b> <span className="muted">/ night</span></span>
-            {h.min_nights > 1 && <span className="badge">min {h.min_nights} nights</span>}
+            <span><b className="stay-price">{euro(h.price_per_night)}</b> <span className="muted">{tr("/ night")}</span></span>
+            {h.min_nights > 1 && <span className="badge">{tr("min {n} nights", { n: h.min_nights })}</span>}
           </div>
           <div className="date-pair">
-            <button className={picking === "in" ? "on" : ""} onClick={() => setPicking("in")}><span className="tiny muted">Check-in</span><b>{fmtDate(checkIn)}</b></button>
-            <button className={picking === "out" ? "on" : ""} onClick={() => setPicking("out")}><span className="tiny muted">Check-out</span><b>{fmtDate(checkOut)}</b></button>
+            <button className={picking === "in" ? "on" : ""} onClick={() => setPicking("in")}><span className="tiny muted">{tr("Check-in")}</span><b>{fmtDate(checkIn)}</b></button>
+            <button className={picking === "out" ? "on" : ""} onClick={() => setPicking("out")}><span className="tiny muted">{tr("Check-out")}</span><b>{fmtDate(checkOut)}</b></button>
           </div>
           <MonthCalendar month={month} onMonth={setMonth} busy={booked} range={[checkIn, checkOut]} selected={picking === "in" ? checkIn : checkOut} onPick={pick} minDate={todayIso()} />
-          <div className="row between"><span className="small"><Users size={15} /> Guests</span><Stepper label="guests" value={guests} min={1} max={h.max_guests} onChange={setGuests} /></div>
+          <div className="row between"><span className="small"><Users size={15} /> {tr("Guests")}</span><Stepper label={tr("guests")} value={guests} min={1} max={h.max_guests} onChange={setGuests} /></div>
           {quoteError && <Alert kind="warn">{quoteError.message}</Alert>}
           {quote && (
             <div className="quote">
-              <div className="row between small"><span>{euro(quote.nightly)} × {nights} night{nights === 1 ? "" : "s"}</span><span>{euro(quote.nightly * nights)}</span></div>
-              {quote.cleaning_fee > 0 && <div className="row between small"><span>Cleaning</span><span>{euro(quote.cleaning_fee)}</span></div>}
-              <div className="row between quote-total"><span>Total</span><b>{euro(quote.total)}</b></div>
-              {!quote.available && <Alert kind="warn">Some of these nights are already booked — try other dates.</Alert>}
+              <div className="row between small"><span>{euro(quote.nightly)} × {plural(nights, "{n} night", "{n} nights")}</span><span>{euro(quote.nightly * nights)}</span></div>
+              {quote.cleaning_fee > 0 && <div className="row between small"><span>{tr("Cleaning")}</span><span>{euro(quote.cleaning_fee)}</span></div>}
+              <div className="row between quote-total"><span>{tr("Total")}</span><b>{euro(quote.total)}</b></div>
+              {!quote.available && <Alert kind="warn">{tr("Some of these nights are already booked — try other dates.")}</Alert>}
             </div>
           )}
-          <button className="btn primary lg block" disabled={!quote || !quote.available} onClick={() => setOpen(true)}><CalendarDays size={18} /> {methods.some((m) => m.id !== "request") ? "Reserve" : "Request to book"}</button>
-          {wa && <a className="btn whatsapp block" href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} /> Ask on WhatsApp</a>}
-          <p className="tiny muted center"><ShieldCheck size={12} /> Price calculated by our server — no hidden fees.</p>
+          <button className="btn primary lg block" disabled={!quote || !quote.available} onClick={() => setOpen(true)}><CalendarDays size={18} /> {methods.some((m) => m.id !== "request") ? tr("Reserve") : tr("Request to book")}</button>
+          {wa && <a className="btn whatsapp block" href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} /> {tr("Ask on WhatsApp")}</a>}
+          <p className="tiny muted center"><ShieldCheck size={12} /> {tr("Price calculated by our server — no hidden fees.")}</p>
         </aside>
       </div>
 
-      <Sheet open={open} onClose={() => { setOpen(false); if (state.handoff) setState({ busy: false, error: "", pay: null }); }} title={state.pay ? "Secure payment" : state.handoff ? "Send your request" : "Your details"} variant="center">
+      <Sheet open={open} onClose={() => { setOpen(false); if (state.handoff) setState({ busy: false, error: "", pay: null }); }} title={state.pay ? tr("Secure payment") : state.handoff ? tr("Send your request") : tr("Your details")} variant="center">
         {state.handoff ? (
           <Handoff handoff={state.handoff} title={`${h.hotel_name} · ${fmtDate(checkIn)} → ${fmtDate(checkOut)}`} />
         ) : state.pay ? (
@@ -177,32 +195,32 @@ export default function StayDetail() {
           </Suspense>
         ) : (
           <form className="stack" onSubmit={book} noValidate>
-            <div className="quote-mini small">{h.hotel_name} · {fmtDate(checkIn)} → {fmtDate(checkOut)} · {guests} guest{guests === 1 ? "" : "s"} · <b>{quote && euro(quote.total)}</b></div>
+            <div className="quote-mini small">{h.hotel_name} · {fmtDate(checkIn)} → {fmtDate(checkOut)} · {plural(guests, "{n} guest", "{n} guests")} · <b>{quote && euro(quote.total)}</b></div>
             <div className="form-grid two">
-              <Field label="Full name" error={errors.guest_name}><input className="input" value={form.guest_name} onChange={up("guest_name")} autoComplete="name" maxLength={120} required /></Field>
-              <Field label="Email" error={errors.guest_email}><input className="input" type="email" value={form.guest_email} onChange={up("guest_email")} autoComplete="email" maxLength={255} required /></Field>
+              <Field label={tr("Full name")} error={errors.guest_name}><input className="input" value={form.guest_name} onChange={up("guest_name")} autoComplete="name" maxLength={120} required /></Field>
+              <Field label={tr("Email")} error={errors.guest_email}><input className="input" type="email" value={form.guest_email} onChange={up("guest_email")} autoComplete="email" maxLength={255} required /></Field>
             </div>
-            <Field label="Phone / WhatsApp (optional)" error={errors.guest_phone}><input className="input" type="tel" value={form.guest_phone} onChange={up("guest_phone")} autoComplete="tel" maxLength={40} /></Field>
-            <Field label="Arrival time, requests… (optional)" error={errors.notes}><textarea className="textarea" value={form.notes} onChange={up("notes")} maxLength={1500} /></Field>
+            <Field label={tr("Phone / WhatsApp (optional)")} error={errors.guest_phone}><input className="input" type="tel" value={form.guest_phone} onChange={up("guest_phone")} autoComplete="tel" maxLength={40} /></Field>
+            <Field label={tr("Arrival time, requests… (optional)")} error={errors.notes}><textarea className="textarea" value={form.notes} onChange={up("notes")} maxLength={1500} /></Field>
             <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
             {payable && (
               <fieldset className="pay-methods">
-                <legend className="label">How would you like to pay?</legend>
+                <legend className="label">{tr("How would you like to pay?")}</legend>
                 {methods.map((m) => {
                   const Icon = { paypal: Wallet, card: CreditCard, bank: Landmark, request: Clock }[m.id] || CreditCard;
                   return (
                     <label key={m.id} className={`pay-method ${chosen.id === m.id ? "on" : ""}`}>
                       <input type="radio" name="payment_method" value={m.id} checked={chosen.id === m.id} onChange={() => setMethod(m.id)} />
                       <Icon size={20} aria-hidden="true" />
-                      <span><b>{m.label}</b><span className="tiny muted">{m.note}</span></span>
+                      <span><b>{tr(m.label)}</b><span className="tiny muted">{tr(m.note)}</span></span>
                     </label>
                   );
                 })}
                 {quote && (
                   <p className="tiny muted pay-due">
                     {deposit < 100
-                      ? <>Pay a {deposit}% deposit now (<b>{money(quote.total * deposit / 100)}</b>); the rest ({money(quote.total * (100 - deposit) / 100)}) on arrival.</>
-                      : <>You pay <b>{money(quote.total)}</b> now.</>}
+                      ? rich("Pay a {percent}% deposit now (<b>{now}</b>); the rest ({later}) on arrival.", { b: (c) => <b>{c}</b> }, { percent: deposit, now: money(quote.total * deposit / 100), later: money(quote.total * (100 - deposit) / 100) })
+                      : rich("You pay <b>{amount}</b> now.", { b: (c) => <b>{c}</b> }, { amount: money(quote.total) })}
                     {chosen.id === "paypal" && chosen.currency === "USD" && " PayPal charges the US-dollar equivalent at today's rate."}
                   </p>
                 )}
@@ -210,8 +228,9 @@ export default function StayDetail() {
             )}
             {errors.payment_method && <Alert kind="warn">{errors.payment_method}</Alert>}
             {state.error && !errors.payment_method && <Alert kind="error">{state.error}</Alert>}
-            <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : null} {{ paypal: "Continue to PayPal", card: "Continue to payment", bank: "Get bank details", request: "Send booking request" }[chosen.id]}</button>
-            {!payable && <p className="tiny muted">We'll confirm availability by email within a few hours. Payment is arranged directly with the host.</p>}
+            <button className="btn primary lg" disabled={state.busy}>{state.busy ? <span className="spinner" /> : null} {tr({ paypal: "Continue to PayPal", card: "Continue to payment", bank: "Get bank details", request: "Send booking request" }[chosen.id])}</button>
+            {!payable && <p className="tiny muted">{partner ? `${partner.name} will confirm your dates by email. You pay them directly; nothing is charged now.` : "We'll confirm availability by email within a few hours. Payment is arranged directly with the host."}</p>}
+            <p className="tiny muted">{rich("By booking you accept our <terms>booking and cancellation terms</terms>. See how we use your details in the <privacy>privacy policy</privacy>.", { terms: (c) => <Link to="/terms#cancel">{c}</Link>, privacy: (c) => <Link to="/privacy">{c}</Link> })}</p>
           </form>
         )}
       </Sheet>

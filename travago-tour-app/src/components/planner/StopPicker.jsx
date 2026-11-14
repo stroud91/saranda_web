@@ -3,6 +3,7 @@ import { Search, Plus } from "lucide-react";
 import { Sheet, CategoryIcon, CATEGORY_META } from "../ui";
 import { useDestinations } from "../../lib/useDestinations";
 import { normalize } from "../../lib/text";
+import { tr } from "../../i18n";
 
 export default function StopPicker({ open, onClose, onPick, near }) {
   const { list, regions } = useDestinations();
@@ -18,10 +19,10 @@ export default function StopPicker({ open, onClose, onPick, near }) {
     return Object.entries(g).sort(([a], [b]) => (order.includes(b) ? 1 : 0) - (order.includes(a) ? 1 : 0));
   }, [items, near, list]);
   return (
-    <Sheet open={open} onClose={onClose} title="Add a stop">
+    <Sheet open={open} onClose={onClose} title={tr("Add a stop")}>
       <label className="search" style={{ marginBottom: 14 }}>
         <Search size={18} />
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search places…" aria-label="Search places" />
+        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search places…")} aria-label={tr("Search places")} />
       </label>
       {grouped.map(([region, ds]) => (
         <div key={region} className="picker-group">

@@ -8,11 +8,14 @@ import { pyRound } from "./py";
 import { isPackedTrip, packTrip, tripCalendar, unpackTrip } from "./tripLink";
 
 const local = createLocalApi(staticApi, { liveData: false });
+// The published bundle hides the sample guides; these tests put them back to cover the guide flow.
+const withSamples = { ...staticApi, responses: { ...staticApi.responses, ...fixtures.sample_guides.responses } };
+const sampleLocal = createLocalApi(withSamples, { liveData: false });
 
 // What the browser client sees: the JSON body on success, {error, fields} on failure.
-async function call(path, opts) {
+async function call(path, opts, engine = local) {
   try {
-    return { status: 200, body: await local.request(path, opts) };
+    return { status: 200, body: await engine.request(path, opts) };
   } catch (e) {
     if (!e.fields) throw e;
     return { status: e.status, body: e.status === 404 ? { error: e.message } : { error: e.message, fields: e.fields } };
@@ -67,12 +70,23 @@ describe("captured GET responses", () => {
     }
   });
   it("filters guides by language and group size", async () => {
-    const all = staticApi.responses["/guides/"].guides;
+    const all = withSamples.responses["/guides/"].guides;
     const lang = all[0].languages[0];
-    const { body } = await call(`/guides/?language=${encodeURIComponent(lang)}&group=1`);
+    const { body } = await call(`/guides/?language=${encodeURIComponent(lang)}&group=1`, undefined, sampleLocal);
     expect(body.guides.length).toBeGreaterThan(0);
     expect(body.guides.every((g) => g.languages.includes(lang))).toBe(true);
-    expect((await call("/guides/?group=999")).body.guides).toEqual([]);
+    expect((await call("/guides/?group=999", undefined, sampleLocal)).body.guides).toEqual([]);
+  });
+  it("hides the sample guides in the published bundle", async () => {
+    expect((await call("/meta/config")).body.guides).toBe(false);
+    expect((await call("/guides/")).body.guides).toEqual([]);
+    expect((await call(`/guides/${withSamples.responses["/guides/"].guides[0].slug}`)).status).toBe(404);
+  });
+  it("answers guide questions like the server, with and without guides", async () => {
+    const c = fixtures.sample_guides.concierge;
+    const body = { messages: [{ role: "user", content: c.input }] };
+    expect(await call("/concierge/", { method: "POST", body }, sampleLocal)).toEqual({ status: c.status, body: c.body });
+    expect((await call("/concierge/", { method: "POST", body })).body.text).toContain("coming soon");
   });
   it("404s unknown things", async () => {
     expect((await call("/destinations/atlantis")).status).toBe(404);
@@ -89,7 +103,7 @@ describe("captured GET responses", () => {
 
 describe("handoffs instead of storage", () => {
   const hotel = staticApi.responses["/hotels/"][0];
-  const guide = staticApi.responses["/guides/"].guides[0];
+  const guide = withSamples.responses["/guides/"].guides[0];
 
   it("turns a stay booking into a ready-to-send message", async () => {
     const withContact = createLocalApi(staticApi, { liveData: false, whatsapp: "+355 69 000 0000", contactEmail: "hello@example.com" });
@@ -111,14 +125,14 @@ describe("handoffs instead of storage", () => {
   it("prices a guide request and checks the group size", async () => {
     const soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
     const base = { tour_date: soon, duration: "full", group_size: 2, name: "Ana", email: "ana@example.com" };
-    const ok = await local.request(`/guides/${guide.slug}/requests`, { method: "POST", body: base });
+    const ok = await sampleLocal.request(`/guides/${guide.slug}/requests`, { method: "POST", body: base });
     expect(ok.quoted_price).toBe(guide.price_full_day);
     expect(ok.handoff.summary).toContain(guide.name);
-    const multi = await local.request(`/guides/${guide.slug}/requests`, { method: "POST", body: { ...base, duration: "multi", days: 3 } });
+    const multi = await sampleLocal.request(`/guides/${guide.slug}/requests`, { method: "POST", body: { ...base, duration: "multi", days: 3 } });
     expect(multi.quoted_price).toBe(guide.price_full_day * 3);
-    const big = await call(`/guides/${guide.slug}/requests`, { method: "POST", body: { ...base, group_size: guide.max_group + 1 } });
+    const big = await call(`/guides/${guide.slug}/requests`, { method: "POST", body: { ...base, group_size: guide.max_group + 1 } }, sampleLocal);
     expect(big.body.error).toBe(`${guide.name} guides groups of up to ${guide.max_group}`);
-    const past = await call(`/guides/${guide.slug}/requests`, { method: "POST", body: { ...base, tour_date: "2001-01-01" } });
+    const past = await call(`/guides/${guide.slug}/requests`, { method: "POST", body: { ...base, tour_date: "2001-01-01" } }, sampleLocal);
     expect(past.body.error).toBe("Pick a date from tomorrow onwards");
   });
 

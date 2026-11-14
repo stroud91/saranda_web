@@ -14,7 +14,7 @@ guides_routes = Blueprint("guides", __name__)
 
 
 def _guide_or_404(slug):
-    guide = Guide.query.filter_by(slug=slug, is_active=True).first()
+    guide = Guide.listed().filter_by(slug=slug).first()
     if not guide:
         abort(404, description="Guide not found")
     return guide
@@ -26,7 +26,8 @@ def list_guides():
     args = query_args({"language": Field(max_len=40), "specialty": Field(max_len=40), "region": Field("slug"),
                        "vehicle": Field("bool"), "group": Field("int", min=1, max=60)})
     out = []
-    for g in Guide.query.filter_by(is_active=True).order_by(Guide.is_sample, Guide.id).all():
+    listed = Guide.listed().order_by(Guide.is_sample, Guide.id).all()
+    for g in listed:
         if args["language"] and not any(args["language"].lower() == l.lower() for l in g.languages or []):
             continue
         if args["specialty"] and not any(args["specialty"].lower() == s.lower() for s in g.specialties or []):
@@ -38,8 +39,8 @@ def list_guides():
         if args["group"] and (g.max_group or 0) < args["group"]:
             continue
         out.append(g.to_dict())
-    languages = sorted({l for g in Guide.query.filter_by(is_active=True) for l in (g.languages or [])})
-    specialties = sorted({s for g in Guide.query.filter_by(is_active=True) for s in (g.specialties or [])})
+    languages = sorted({l for g in listed for l in (g.languages or [])})
+    specialties = sorted({s for g in listed for s in (g.specialties or [])})
     return jsonify({"guides": out, "facets": {"languages": languages, "specialties": specialties}})
 
 

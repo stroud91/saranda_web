@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { tr } from "../../i18n";
 
 const WEEK = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
@@ -20,9 +21,9 @@ export default function MonthCalendar({ month, onMonth, busy = new Set(), select
   return (
     <div className="cal">
       <div className="cal-head">
-        <button className="icon-btn sm" onClick={() => shift(-1)} aria-label="Previous month" disabled={minDate && month <= minDate.slice(0, 7)}><ChevronLeft size={18} /></button>
+        <button className="icon-btn sm" onClick={() => shift(-1)} aria-label={tr("Previous month")} disabled={minDate && month <= minDate.slice(0, 7)}><ChevronLeft size={18} /></button>
         <b>{label}</b>
-        <button className="icon-btn sm" onClick={() => shift(1)} aria-label="Next month"><ChevronRight size={18} /></button>
+        <button className="icon-btn sm" onClick={() => shift(1)} aria-label={tr("Next month")}><ChevronRight size={18} /></button>
       </div>
       <div className="cal-grid" role="grid">
         {WEEK.map((w) => <span key={w} className="cal-w">{w}</span>)}
@@ -39,7 +40,7 @@ export default function MonthCalendar({ month, onMonth, busy = new Set(), select
           );
         })}
       </div>
-      <div className="cal-legend tiny muted"><span><i className="lg sel" /> Selected</span><span><i className="lg busy" /> Unavailable</span></div>
+      <div className="cal-legend tiny muted"><span><i className="lg sel" /> {tr("Selected")}</span><span><i className="lg busy" /> {tr("Unavailable")}</span></div>
     </div>
   );
 }

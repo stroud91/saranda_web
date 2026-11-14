@@ -130,7 +130,7 @@ TOOLS = [
 def _guides(language=None, specialty=None):
     from app.models import Guide
 
-    rows = Guide.query.filter_by(is_active=True).all()
+    rows = Guide.listed().all()
     out = []
     for g in rows:
         if language and not any(language.lower() in l.lower() for l in g.languages or []):

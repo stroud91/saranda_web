@@ -107,9 +107,22 @@ class Config:
     CONCIERGE_MODEL = os.environ.get("CONCIERGE_MODEL", "claude-opus-5-5")
     CONCIERGE_ENABLED = _bool("CONCIERGE_ENABLED", True)
 
+    # The seed data includes sample guide profiles so the directory can be demoed.
+    # They stay hidden from guests unless this is switched on; real guides added
+    # by the host (is_sample off) always show.
+    SHOW_SAMPLE_GUIDES = _bool("SHOW_SAMPLE_GUIDES", False)
+
     # Business contact
     WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "")
     CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "bookings@megrooms.com")
+    # Business portal: local businesses add their own profile and listings, which
+    # stay hidden until the host approves them. Needs accounts and outgoing e-mail.
+    PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
+    PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
+
+    # Contact messages and guide requests that never became a booking are deleted
+    # after this many months by `flask users cleanup` (the privacy policy says so).
+    MESSAGE_RETENTION_MONTHS = int(os.environ.get("MESSAGE_RETENTION_MONTHS", "24"))
 
 
 class TestConfig(Config):
@@ -120,6 +133,7 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     RATELIMIT_ENABLED = False
     LIVE_DATA_ENABLED = False
+    SHOW_SAMPLE_GUIDES = True  # most tests exercise the guide flow with the seeded samples
     OSRM_URL = None
     ANTHROPIC_API_KEY = None
     STRIPE_SECRET_KEY = None

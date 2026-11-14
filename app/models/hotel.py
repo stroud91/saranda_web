@@ -1,8 +1,10 @@
+from .business import Reviewable
 from .db import db, table_args, utcnow
 
 
-class Hotel(db.Model):
-    """A bookable stay. For Meg'Rooms each row is one apartment."""
+class Hotel(Reviewable, db.Model):
+    """A bookable stay. For Meg'Rooms each row is one apartment; rows with a
+    ``business_id`` belong to a partner business."""
 
     __tablename__ = "hotels"
     __table_args__ = table_args()
@@ -57,4 +59,5 @@ class Hotel(db.Model):
             "amenities": self.amenities or [],
             "min_nights": self.min_nights or 1,
             "cleaning_fee": float(self.cleaning_fee or 0),
+            "business": self.business_brief(),
         }

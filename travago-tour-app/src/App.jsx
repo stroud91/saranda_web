@@ -23,6 +23,11 @@ const ItineraryDetail = lazy(() => import("./pages/ItineraryDetail"));
 const Guides = lazy(() => import("./pages/Guides"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const GuideRequestStatus = lazy(() => import("./pages/GuideRequestStatus"));
+const Business = lazy(() => import("./pages/Business"));
+const PartnerDirectory = lazy(() => import("./pages/Partners").then((m) => ({ default: m.PartnerDirectory })));
+const PartnerProfile = lazy(() => import("./pages/Partners").then((m) => ({ default: m.PartnerProfile })));
+const Privacy = lazy(() => import("./pages/Legal").then((m) => ({ default: m.Privacy })));
+const Terms = lazy(() => import("./pages/Legal").then((m) => ({ default: m.Terms })));
 const Stays = lazy(() => import("./pages/Stays"));
 const StayDetail = lazy(() => import("./pages/StayDetail"));
 const BookingStatus = lazy(() => import("./pages/BookingStatus"));
@@ -50,6 +55,11 @@ export default function App() {
             <Route path="/guides" element={<Guides />} />
             <Route path="/guides/:slug" element={<GuideDetail />} />
             <Route path="/guide-request/:reference" element={<GuideRequestStatus />} />
+            <Route path="/business" element={<Business />} />
+            <Route path="/partners" element={<PartnerDirectory />} />
+            <Route path="/partners/:slug" element={<PartnerProfile />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/stays" element={<Stays />} />
             <Route path="/stays/:id" element={<StayDetail />} />
             <Route path="/hotels" element={<Stays />} />

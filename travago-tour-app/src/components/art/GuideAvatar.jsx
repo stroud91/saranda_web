@@ -1,6 +1,6 @@
 import { hash } from "../../lib/format";
 
-const PALETTES = {
+export const PALETTES = {
   sea: ["#0b5c7e", "#19c3c0"],
   sunset: ["#d9653b", "#f4b63f"],
   olive: ["#6e7f3a", "#a9b872"],
@@ -34,7 +34,7 @@ export default function GuideAvatar({ name = "", palette = "sea", size = 72, cla
         {pattern === 1 && <circle cx="62" cy="18" r="22" fill="#fff" opacity="0.14" />}
         {pattern === 2 && [0, 1, 2, 3, 4].map((i) => <rect key={i} x={i * 18 - 4} y="-10" width="7" height="100" fill="#fff" opacity="0.08" transform="rotate(25 40 40)" />)}
       </g>
-      <text x="40" y="47" textAnchor="middle" fontFamily="Fraunces, Georgia, serif" fontWeight="800" fontSize="26" fill="#fff">{initials}</text>
+      <text x="40" y="47" textAnchor="middle" fontFamily="'Fraunces Variable', Fraunces, Georgia, serif" fontWeight="800" fontSize="26" fill="#fff">{initials}</text>
     </svg>
   );
 }

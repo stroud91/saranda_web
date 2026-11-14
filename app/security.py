@@ -10,8 +10,8 @@ log = logging.getLogger(__name__)
 CSP = "; ".join([
     "default-src 'self'",
     "script-src 'self' https://js.stripe.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com data:",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
     "img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://*.stripe.com",
     "media-src 'self' blob:",
     "connect-src 'self' https://api.stripe.com",

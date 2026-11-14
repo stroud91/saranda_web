@@ -3,11 +3,13 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BedDouble, BookOpen, Box, CalendarRange, Clapperboard, Compass, CornerDownLeft, Map, MessageCircle, Moon, Route, Search, Sparkles, Users,
+  BedDouble, BookOpen, Box, CalendarRange, Clapperboard, Compass, CornerDownLeft, Map, MessageCircle, Moon, Route, Search, Sparkles, Store, Users,
 } from "lucide-react";
 import { useDestinations } from "../../lib/useDestinations";
 import { CategoryIcon } from "../ui";
 import { useUi } from "../../store/ui";
+import { useGuidesOn, usePartnersOn } from "../../lib/useConfig";
+import { tr } from "../../i18n";
 
 const fold = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/\p{Mn}/gu, "");
 
@@ -22,6 +24,8 @@ const PAGES = [
   { id: "p-explore", label: "Explore destinations", hint: "Beaches, castles, villages", icon: Compass, to: "/explore", words: "places beaches" },
   { id: "p-itins", label: "Ready-made itineraries", hint: "7, 10 and 14 days", icon: CalendarRange, to: "/itineraries", words: "week ideas" },
   { id: "p-films", label: "Films & video credits", hint: "Clips and licences", icon: Clapperboard, to: "/credits", words: "video credits licence" },
+  { id: "p-partners", label: "Local businesses", hint: "Hosts, rentals and tours", icon: Store, to: "/partners", words: "business partner rental shop host operator", partners: true },
+  { id: "p-business", label: "List your business", hint: "Business dashboard", icon: Store, to: "/business", words: "business owner partner add listing dashboard", partners: true },
   { id: "p-account", label: "My account", hint: "Bookings, trips and security", icon: Users, to: "/account", words: "sign in login account profile password bookings" },
   { id: "p-contact", label: "Contact us", hint: "WhatsApp or email", icon: MessageCircle, to: "/contact", words: "email whatsapp help" },
 ];
@@ -45,18 +49,21 @@ export default function CommandPalette({ open, onClose }) {
     return () => before?.focus?.();
   }, [open]);
 
+  const guidesOn = useGuidesOn();
+  const partnersOn = usePartnersOn();
   const items = useMemo(() => {
+    const pages = PAGES.filter((p) => (guidesOn || p.to !== "/guides") && (partnersOn || !p.partners));
     const actions = [
       { id: "a-ask", label: q ? `Ask the concierge: “${q}”` : "Ask the concierge", hint: "Offline travel assistant", icon: Sparkles, run: () => openConcierge(q || undefined), words: "ask question help" , always: Boolean(q) },
       ...(toggleTheme ? [{ id: "a-theme", label: "Switch light / dark theme", hint: "Appearance", icon: Moon, run: toggleTheme, words: "dark light theme night" }] : []),
     ];
     const places = list.map((d) => ({ id: `d-${d.slug}`, label: d.name, hint: regions[d.region]?.name || regions[d.region] || d.region, category: d.category, to: `/explore/${d.slug}`, words: `${d.tags?.join(" ") || ""} ${d.category}` }));
-    const all = [...PAGES, ...places, ...actions];
+    const all = [...pages, ...places, ...actions];
     const terms = fold(q).split(/\s+/).filter(Boolean);
-    if (!terms.length) return [...PAGES.slice(0, 7), ...actions.filter((a) => !a.always)];
+    if (!terms.length) return [...pages.slice(0, 7), ...actions.filter((a) => !a.always)];
     const scored = all
       .map((it) => {
-        const label = fold(it.label), hay = `${label} ${fold(it.hint)} ${fold(it.words)}`;
+        const label = fold(tr(it.label)), hay = `${label} ${fold(it.label)} ${fold(tr(it.hint))} ${fold(it.words)}`;
         if (!it.always && !terms.every((t) => hay.includes(t))) return null;
         const score = (label.startsWith(terms[0]) ? 3 : 0) + (label.includes(terms[0]) ? 2 : 0) + (it.id.startsWith("d-") ? 1 : 0) - (it.always ? 5 : 0);
         return { it, score };
@@ -65,7 +72,7 @@ export default function CommandPalette({ open, onClose }) {
       .sort((a, b) => b.score - a.score)
       .map((x) => x.it);
     return scored.slice(0, 12);
-  }, [q, list, regions, openConcierge, toggleTheme]);
+  }, [q, list, regions, openConcierge, toggleTheme, guidesOn, partnersOn]);
 
   useEffect(() => setActive(0), [q]);
   useEffect(() => {
@@ -87,7 +94,7 @@ export default function CommandPalette({ open, onClose }) {
 
   return createPortal(
     <div className="cmdk-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <motion.div className="cmdk" role="dialog" aria-modal="true" aria-label="Search" initial={{ opacity: 0, scale: 0.97, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.18 }}>
+      <motion.div className="cmdk" role="dialog" aria-modal="true" aria-label={tr("Search")} initial={{ opacity: 0, scale: 0.97, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.18 }}>
         <div className="cmdk-input">
           <Search size={18} aria-hidden="true" />
           <input
@@ -95,7 +102,7 @@ export default function CommandPalette({ open, onClose }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKey}
-            placeholder="Search places, pages, or ask anything…"
+            placeholder={tr("Search places, pages, or ask anything…")}
             role="combobox"
             aria-expanded="true"
             aria-controls="cmdk-list"
@@ -117,13 +124,13 @@ export default function CommandPalette({ open, onClose }) {
               onClick={() => choose(it)}
             >
               <span className="cmdk-icon">{it.icon ? <it.icon size={17} /> : <CategoryIcon category={it.category} size={17} />}</span>
-              <span className="cmdk-text"><b>{it.label}</b>{it.hint && <span className="tiny muted">{it.hint}</span>}</span>
+              <span className="cmdk-text"><b>{tr(it.label)}</b>{it.hint && <span className="tiny muted">{tr(it.hint)}</span>}</span>
               {i === active && <CornerDownLeft size={15} className="cmdk-enter" aria-hidden="true" />}
             </li>
           ))}
-          {!items.length && <li className="cmdk-empty muted small">No matches — try a town, beach or castle.</li>}
+          {!items.length && <li className="cmdk-empty muted small">{tr("No matches — try a town, beach or castle.")}</li>}
         </ul>
-        <div className="cmdk-foot tiny muted"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> anywhere</span></div>
+        <div className="cmdk-foot tiny muted"><span><kbd>↑</kbd><kbd>↓</kbd> {tr("move")}</span><span><kbd>↵</kbd> {tr("open")}</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> anywhere</span></div>
       </motion.div>
     </div>,
     document.body

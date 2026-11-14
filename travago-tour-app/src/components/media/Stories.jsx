@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin, Pause, Play, X } from "lucide-react";
 import { prefersReducedMotion } from "../../lib/media";
+import { tr } from "../../i18n";
 
 /**
  * Full-screen stories: clips play one after another with progress bars.
@@ -120,10 +121,10 @@ export default function Stories({ items, start = 0, onClose, placeName = (s) => 
         </div>
         <div className="stories-top">
           <span className="stories-count tiny">{i + 1} / {items.length}</span>
-          <button type="button" className="icon-btn sm" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Play" : "Pause"}>
+          <button type="button" className="icon-btn sm" onClick={() => setPaused((p) => !p)} aria-label={paused ? tr("Play") : tr("Pause")}>
             {paused ? <Play size={16} /> : <Pause size={16} />}
           </button>
-          <button type="button" className="icon-btn sm" onClick={onClose} aria-label="Close stories"><X size={18} /></button>
+          <button type="button" className="icon-btn sm" onClick={onClose} aria-label={tr("Close stories")}><X size={18} /></button>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={item.key} className="stories-media" initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.3 }}>
@@ -154,8 +155,8 @@ export default function Stories({ items, start = 0, onClose, placeName = (s) => 
             Video: <a href={item.source} target="_blank" rel="noopener noreferrer">{item.author}</a> · <a href={item.license.url} target="_blank" rel="noopener noreferrer license">{item.license.name}</a> · edited
           </p>
         </div>
-        <button type="button" className="stories-nav prev icon-btn" onClick={prev} aria-label="Previous clip" disabled={i === 0}><ChevronLeft size={22} /></button>
-        <button type="button" className="stories-nav next icon-btn" onClick={next} aria-label="Next clip"><ChevronRight size={22} /></button>
+        <button type="button" className="stories-nav prev icon-btn" onClick={prev} aria-label={tr("Previous clip")} disabled={i === 0}><ChevronLeft size={22} /></button>
+        <button type="button" className="stories-nav next icon-btn" onClick={next} aria-label={tr("Next clip")}><ChevronRight size={22} /></button>
       </div>
     </motion.div>,
     document.body

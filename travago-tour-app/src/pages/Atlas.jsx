@@ -8,6 +8,7 @@ import { hmRange, kmRange } from "../lib/format";
 import { CATEGORY_META, CategoryIcon, Skeleton } from "../components/ui";
 import { createAtlas, webglSupported } from "../components/atlas/atlasScene";
 import { prefersReducedMotion } from "../lib/media";
+import { tr } from "../i18n";
 
 const MODE_LABEL = { drive: "Drive", ferry: "Ferry", boat: "Boat" };
 
@@ -126,12 +127,12 @@ export default function Atlas() {
   return (
     <div className="atlas-page">
       <div className="atlas-stage" ref={holder}>
-        {state === "loading" && <div className="atlas-loading"><Skeleton h="100%" r={0} /><span>Raising the mountains…</span></div>}
+        {state === "loading" && <div className="atlas-loading"><Skeleton h="100%" r={0} /><span>{tr("Raising the mountains…")}</span></div>}
         {(state === "unsupported" || state === "error") && (
           <div className="atlas-fallback card pad">
-            <h2>3D isn't available on this device</h2>
-            <p className="muted">Your browser couldn't start WebGL. The interactive 2D map has every place and road.</p>
-            <Link className="btn primary" to="/map"><MapIcon size={18} /> Open the map</Link>
+            <h2>{tr("3D isn't available on this device")}</h2>
+            <p className="muted">{tr("Your browser couldn't start WebGL. The interactive 2D map has every place and road.")}</p>
+            <Link className="btn primary" to="/map"><MapIcon size={18} /> {tr("Open the map")}</Link>
           </div>
         )}
         <div className="atlas-labels" aria-hidden="true">
@@ -151,11 +152,11 @@ export default function Atlas() {
         <div className="atlas-title glass-dark">
           <Box size={18} />
           <div>
-            <b>3D Atlas</b>
-            <span className="tiny">Drag to orbit · scroll or pinch to zoom · tap a beacon</span>
+            <b>{tr("3D Atlas")}</b>
+            <span className="tiny">{tr("Drag to orbit · scroll or pinch to zoom · tap a beacon")}</span>
           </div>
-          <button type="button" className="icon-btn sm" onClick={() => setPanel((p) => !p)} aria-expanded={panel} aria-label="Route panel"><RouteIcon size={16} /></button>
-          <button type="button" className="icon-btn sm" onClick={() => engine.current?.home()} aria-label="Reset view"><HomeIcon size={16} /></button>
+          <button type="button" className="icon-btn sm" onClick={() => setPanel((p) => !p)} aria-expanded={panel} aria-label={tr("Route panel")}><RouteIcon size={16} /></button>
+          <button type="button" className="icon-btn sm" onClick={() => engine.current?.home()} aria-label={tr("Reset view")}><HomeIcon size={16} /></button>
         </div>
 
         <AnimatePresence>
@@ -166,18 +167,18 @@ export default function Atlas() {
               onSubmit={(e) => { e.preventDefault(); connect(); }}
             >
               <div className="atlas-od">
-                <label><span className="dot a" /> <span className="sr-only">From</span>
+                <label><span className="dot a" /> <span className="sr-only">{tr("From")}</span>
                   <select value={from} onChange={(e) => setFrom(e.target.value)}>{options.map((n) => <option key={n.slug} value={n.slug}>{n.name}</option>)}</select>
                 </label>
-                <label><span className="dot b" /> <span className="sr-only">To</span>
+                <label><span className="dot b" /> <span className="sr-only">{tr("To")}</span>
                   <select value={to} onChange={(e) => setTo(e.target.value)}>{nodes.map((n) => <option key={n.slug} value={n.slug}>{n.name}</option>)}</select>
                 </label>
               </div>
               <div className="row gap-sm">
-                <button className="btn sun sm" disabled={state !== "ready"}><RouteIcon size={16} /> Connect</button>
-                {route && !flight.flying && <button type="button" className="btn glass sm" onClick={() => engine.current?.fly()} disabled={reduce}><Plane size={16} /> Fly it</button>}
-                {flight.flying && <button type="button" className="btn glass sm" onClick={() => engine.current?.stopFlight()}><Square size={14} /> Stop</button>}
-                {route && <button type="button" className="icon-btn sm" onClick={clear} aria-label="Clear route"><X size={16} /></button>}
+                <button className="btn sun sm" disabled={state !== "ready"}><RouteIcon size={16} /> {tr("Connect")}</button>
+                {route && !flight.flying && <button type="button" className="btn glass sm" onClick={() => engine.current?.fly()} disabled={reduce}><Plane size={16} /> {tr("Fly it")}</button>}
+                {flight.flying && <button type="button" className="btn glass sm" onClick={() => engine.current?.stopFlight()}><Square size={14} /> {tr("Stop")}</button>}
+                {route && <button type="button" className="icon-btn sm" onClick={clear} aria-label={tr("Clear route")}><X size={16} /></button>}
               </div>
               {routeError && <p className="tiny atlas-error">{routeError}</p>}
               {route && (
@@ -194,14 +195,14 @@ export default function Atlas() {
                     ))}
                   </ol>
                   {flight.flying && <div className="atlas-progress"><i style={{ transform: `scaleX(${flight.progress})` }} /></div>}
-                  <Link className="tiny" to={`/routes?from=${route.hops[0]}&to=${route.hops[route.hops.length - 1]}`}>Open in the route planner →</Link>
+                  <Link className="tiny" to={`/routes?from=${route.hops[0]}&to=${route.hops[route.hops.length - 1]}`}>{tr("Open in the route planner →")}</Link>
                 </div>
               )}
             </motion.form>
           )}
         </AnimatePresence>
 
-        <div className="atlas-layers glass-dark" role="group" aria-label="Layers">
+        <div className="atlas-layers glass-dark" role="group" aria-label={tr("Layers")}>
           <Layers size={15} aria-hidden="true" />
           {[["contours", "Contours"], ["network", "Roads & ferries"], ["scan", "Scanner"], ["rotate", "Auto-orbit"]].map(([k, label]) => (
             <label key={k} className="atlas-toggle">
@@ -214,14 +215,14 @@ export default function Atlas() {
         <AnimatePresence>
           {sel && (
             <motion.div className="atlas-card glass-dark" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}>
-              <button type="button" className="icon-btn sm atlas-card-x" onClick={() => setSelected(null)} aria-label="Close"><X size={16} /></button>
+              <button type="button" className="icon-btn sm atlas-card-x" onClick={() => setSelected(null)} aria-label={tr("Close")}><X size={16} /></button>
               <span className="badge glass"><CategoryIcon category={sel.category} size={13} /> {meta?.label || sel.category}</span>
               <h3>{sel.name}</h3>
               {sel.summary && <p className="small">{sel.summary}</p>}
               <div className="row gap-sm wrap">
-                <Link className="btn primary sm" to={`/explore/${sel.slug}`}><Compass size={16} /> Explore</Link>
+                <Link className="btn primary sm" to={`/explore/${sel.slug}`}><Compass size={16} /> {tr("Explore")}</Link>
                 <button type="button" className="btn glass sm" onClick={() => { setFrom("sarande"); setTo(sel.slug); setPanel(true); connect("sarande", sel.slug, true); }} disabled={sel.slug === "sarande"}>
-                  <Navigation size={16} /> Fly from Sarandë
+                  <Navigation size={16} /> {tr("Fly from Sarandë")}
                 </button>
               </div>
             </motion.div>

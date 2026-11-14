@@ -3,19 +3,20 @@ import { useApi } from "../../lib/useApi";
 import { fmtDate } from "../../lib/format";
 import WeatherIcon from "./WeatherIcon";
 import { Skeleton } from "../ui";
+import { tr } from "../../i18n";
 
 const r = (n) => (n === null || n === undefined ? "–" : Math.round(n));
 
 export function WeatherChip({ place = "sarande" }) {
   const { data } = useApi(`/live/weather?place=${place}`);
-  if (!data) return <span className="live-chip"><span className="spinner" style={{ width: 14, height: 14 }} /> Loading weather</span>;
+  if (!data) return <span className="live-chip"><span className="spinner" style={{ width: 14, height: 14 }} /> {tr("Loading weather")}</span>;
   const c = data.current;
   return (
     <span className="live-chip" title={data.source}>
       <WeatherIcon icon={c.icon} isDay={c.is_day} size={16} />
       <b>{r(c.temp)}°</b> {data.place.name || "Sarandë"}
-      {c.sea_temp != null && <><span className="dot" /> <Waves size={14} /> sea <b>{r(c.sea_temp)}°</b></>}
-      {!data.live && <span className="tiny" style={{ opacity: 0.8 }}>· typical</span>}
+      {c.sea_temp != null && <><span className="dot" /> <Waves size={14} /> {tr("sea")} <b>{r(c.sea_temp)}°</b></>}
+      {!data.live && <span className="tiny" style={{ opacity: 0.8 }}>{tr("· typical")}</span>}
     </span>
   );
 }
