@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BedDouble, Bath, Users, Star, ArrowRight, MapPin, Waves, Store } from "lucide-react";
 import { useApi } from "../lib/useApi";
 import { euro } from "../lib/format";
+import { thumb } from "../lib/photos";
 import SceneArt from "../components/art/SceneArt";
 import { PageHeader, Skeleton } from "../components/ui";
 import { rich, tr } from "../i18n";
@@ -15,7 +16,7 @@ function StayCard({ h, i }) {
     <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
       <Link to={`/stays/${h.id}`} className="stay-card card hover">
         <div className="stay-art">
-          {h.image_urls?.[0] ? <img src={h.image_urls[0]} alt={h.hotel_name} loading="lazy" /> : <SceneArt scene="harbor" seed={`apt-${h.id}`} variant={VARIANTS[i % VARIANTS.length]} />}
+          {h.image_urls?.[0] ? <img src={thumb(h.image_urls[0])} alt={h.hotel_name} loading="lazy" /> : <SceneArt scene="harbor" seed={`apt-${h.id}`} variant={VARIANTS[i % VARIANTS.length]} />}
           {h.business ? <span className="badge glass stay-tag"><Store size={12} /> {h.business.name}</span> : h.tag && <span className="badge glass stay-tag">{h.tag}</span>}
           {h.airbnb_rating && <span className="stay-rating"><Star size={13} fill="currentColor" /> {h.airbnb_rating} <small>{h.rating_source}</small></span>}
         </div>

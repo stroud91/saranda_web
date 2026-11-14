@@ -93,13 +93,37 @@ async function callServer(path, { method, body, headers, timeout }) {
   } finally {
     clearTimeout(timer);
   }
+  return read(res);
+}
+
+async function read(res) {
   const isJson = (res.headers.get("content-type") || "").includes("application/json");
   const data = isJson ? await res.json() : await res.text();
   if (!res.ok) {
-    const msg = (isJson && data.error) || (res.status === 429 ? "Too many requests — please wait a moment." : "Something went wrong.");
+    const msg = (isJson && data.error) || (res.status === 429 ? "Too many requests — please wait a moment." : res.status === 413 ? "That file is too large." : "Something went wrong.");
     throw new ApiError(msg, res.status, isJson ? data.fields : null);
   }
   return data;
+}
+
+/** Send one photo for a listing. `scope` is "business" (the owner's) or "house" (the host's own). */
+export async function uploadPhoto(file, scope = "business") {
+  if ((await apiMode()) === "static") throw new ApiError("Photos can't be added on this copy of the site.", 0);
+  const form = new FormData();
+  form.append("scope", scope);
+  form.append("file", file, file.name || "photo.jpg");
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 120000);
+  let res;
+  try {
+    // No Content-Type here: the browser writes the multipart boundary itself.
+    res = await fetch("/api/uploads/", { method: "POST", body: form, headers: { Accept: "application/json", "X-Requested-With": "fetch" }, signal: ctrl.signal, credentials: "same-origin" });
+  } catch (err) {
+    throw new ApiError(err.name === "AbortError" ? "The upload took too long. Check your connection and try again." : "You appear to be offline.", 0);
+  } finally {
+    clearTimeout(timer);
+  }
+  return read(res);
 }
 
 export async function api(path, { method = "GET", body, headers, timeout = 20000, cacheable = method === "GET" } = {}) {

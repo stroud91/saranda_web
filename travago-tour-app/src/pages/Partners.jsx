@@ -6,6 +6,7 @@ import { ArrowRight, BedDouble, Car, Clock, Globe, Mail, MapPin, MessageCircle, 
 import { useApi } from "../lib/useApi";
 import { usePartnersOn, whatsappUrl } from "../lib/useConfig";
 import { euro } from "../lib/format";
+import { thumb } from "../lib/photos";
 import GuideAvatar from "../components/art/GuideAvatar";
 import SceneArt from "../components/art/SceneArt";
 import EnquirySheet from "../components/business/EnquirySheet";
@@ -95,7 +96,7 @@ export function PartnerProfile() {
           <div className="grid" style={{ "--min": "280px" }}>
             {stays.map((h) => (
               <Link key={h.id} to={`/stays/${h.id}`} className="stay-card card hover">
-                <div className="stay-art"><SceneArt scene="harbor" seed={`apt-${h.id}`} variant="golden" /></div>
+                <div className="stay-art">{h.image_urls?.[0] ? <img src={thumb(h.image_urls[0])} alt={h.hotel_name} loading="lazy" /> : <SceneArt scene="harbor" seed={`apt-${h.id}`} variant="golden" />}</div>
                 <div className="stay-body">
                   <h3>{h.hotel_name}</h3>
                   <p className="small muted clamp-2">{h.description}</p>
@@ -116,6 +117,7 @@ export function PartnerProfile() {
           <div className="grid" style={{ "--min": "280px" }}>
             {experiences.map((t) => (
               <article key={t.id} className="card pad stack" style={{ "--gap": "8px" }}>
+                {t.image_urls?.[0] && <img className="card-photo" src={thumb(t.image_urls[0])} alt={t.tour_name} loading="lazy" />}
                 <div className="row between"><h3 style={{ margin: 0 }}>{t.tour_name}</h3><span className="badge">{t.category}</span></div>
                 <p className="small muted clamp-3" style={{ margin: 0 }}>{t.description}</p>
                 <span className="small muted">{t.duration_hours ? <><Clock size={14} /> {t.duration_hours}h · </> : null}<MapPin size={14} /> {t.location}</span>
@@ -135,7 +137,7 @@ export function PartnerProfile() {
           <div className="car-list">
             {rentals.map((c) => (
               <div key={c.id} className="car-row card">
-                <span className="car-icon"><Car size={22} /></span>
+                {c.image_urls?.[0] ? <img className="car-icon photo" src={thumb(c.image_urls[0])} alt={c.car_model} loading="lazy" /> : <span className="car-icon"><Car size={22} /></span>}
                 <div className="car-main"><b>{c.car_model}</b><span className="tiny muted">{c.location}{c.description ? ` · ${c.description}` : ""}</span></div>
                 {c.seats && <span className="small muted hide-mobile"><Users size={14} /> {c.seats}</span>}
                 <span className="badge">{c.car_type}</span>

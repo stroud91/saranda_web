@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock, Store } from "lucide-react";
+import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock, Store, Images } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { post } from "../lib/api";
 import { euro, todayIso, addDays, fmtDate, goToPayPal, money } from "../lib/format";
@@ -8,6 +8,7 @@ import { useAuth } from "../store/auth";
 import { useConfig, whatsappUrl } from "../lib/useConfig";
 import SceneArt from "../components/art/SceneArt";
 import Handoff from "../components/ui/Handoff";
+import PhotoViewer from "../components/media/PhotoViewer";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, ErrorState, Field, Sheet, Skeleton, Stepper } from "../components/ui";
 import { WeatherCard } from "../components/live/Weather";
@@ -28,6 +29,7 @@ export default function StayDetail() {
   const [month, setMonth] = useState(todayIso(14).slice(0, 7));
   const [picking, setPicking] = useState("in");
   const [open, setOpen] = useState(false);
+  const [photo, setPhoto] = useState(null);
   const [form, setForm] = useState({ guest_name: "", guest_email: "", guest_phone: "", notes: "", website: "" });
   const [errors, setErrors] = useState({});
   const [state, setState] = useState({ busy: false, error: "", pay: null });
@@ -112,8 +114,17 @@ export default function StayDetail() {
 
   return (
     <div className="page container">
-      <div className="stay-gallery">
-        {h.image_urls?.length ? h.image_urls.slice(0, 3).map((u, i) => <img key={u} src={u} alt={`${h.hotel_name} photo ${i + 1}`} className={i === 0 ? "main" : ""} />) : (
+      <div className={`stay-gallery ${h.image_urls?.length ? `photos n${Math.min(h.image_urls.length, 3)}` : ""}`}>
+        {h.image_urls?.length ? (
+          <>
+            {h.image_urls.slice(0, 3).map((u, i) => (
+              <button type="button" key={u} className={i === 0 ? "main" : ""} onClick={() => setPhoto(i)} aria-label={tr("Open photo {n}", { n: i + 1 })}>
+                <img src={u} alt={`${h.hotel_name} — ${tr("Photo {n}", { n: i + 1 })}`} loading={i === 0 ? "eager" : "lazy"} />
+              </button>
+            ))}
+            {h.image_urls.length > 1 && <button type="button" className="btn sm glass gallery-all" onClick={() => setPhoto(0)}><Images size={15} /> {tr("All {n} photos", { n: h.image_urls.length })}</button>}
+          </>
+        ) : (
           <>
             <div className="main"><SceneArt scene="harbor" seed={`apt-${h.id}`} variant="golden" /></div>
             <div><SceneArt scene="beach" seed={`apt-b-${h.id}`} variant="day" /></div>
@@ -121,6 +132,7 @@ export default function StayDetail() {
           </>
         )}
       </div>
+      <PhotoViewer photos={h.image_urls || []} index={photo} onIndex={setPhoto} alt={h.hotel_name} />
       <div className="split wide-left" style={{ marginTop: 24 }}>
         <div className="stack" style={{ "--gap": "18px" }}>
           <div>

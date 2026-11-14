@@ -5,6 +5,7 @@ import { euro, fmtDate, money } from "../../lib/format";
 import { Alert, Segmented, Skeleton, toast } from "../ui";
 import { usePartnersOn } from "../../lib/useConfig";
 import PartnerReview from "./PartnerReview";
+import HostListings from "./HostListings";
 import { tr } from "../../i18n";
 
 const patch = (path, body) => api(path, { method: "PATCH", body });
@@ -128,12 +129,15 @@ export default function HostDesk() {
       <div className="row between wrap gap-sm">
         <Segmented
           options={[{ value: "todo", label: `Needs you (${count})` }, { value: "all", label: "Everything" }, { value: "messages", label: `Messages (${data.messages.length})` },
-            ...(data.partners ? [{ value: "partners", label: `Partners (${data.partners.queue.length})` }] : [])]}
+            ...(data.partners ? [{ value: "partners", label: `Partners (${data.partners.queue.length})` }] : []),
+            { value: "listings", label: "Your listings" }]}
           value={view} onChange={setView} layoutId="host-tabs"
         />
         <button type="button" className="btn sm" onClick={load}><RefreshCw size={15} /> {tr("Refresh")}</button>
       </div>
-      {view === "partners" && data.partners ? (
+      {view === "listings" ? (
+        <HostListings />
+      ) : view === "partners" && data.partners ? (
         <PartnerReview data={data.partners} onReload={load} />
       ) : view === "messages" ? (
         <section className="stack">

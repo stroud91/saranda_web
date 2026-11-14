@@ -104,7 +104,7 @@ export function Privacy() {
               <dt>Booking with, or asking, a local business</dt>
               <dd>Some stays, rentals and activities are offered by independent local businesses. When you request one or send them a question, we store your name, email, phone if given, dates, group size and message, and pass them to that business so it can answer you.</dd>
               <dt>Business accounts</dt>
-              <dd>If you list a business here: the profile you write (name, description, address and public contact details) and your listings, which are published once we've approved them, and the account details below. We use them to run the directory and to contact you about it.</dd>
+              <dd>If you list a business here: the profile you write (name, description, address and public contact details) and your listings with their photos, which are published once we've approved them, and the account details below. We use them to run the directory and to contact you about it. Photos are saved again without the location and camera details that phones store inside them. If you connect a calendar from another booking site, we read only the dates from it, never guest names.</dd>
             </>
           )}
           {accounts && (
@@ -259,8 +259,10 @@ export function Terms() {
           <p><b>If you list a business here</b>, you agree to these rules:</p>
           <ul>
             <li>List only what you really offer and are allowed to offer, with accurate descriptions and prices, and keep it up to date. You're responsible for your own licences, taxes and insurance.</li>
+            <li>Upload only photos that you took or have the right to use, and that show what you're offering as it is now. Don't upload photos in which people can be recognised unless they've agreed.</li>
+            <li>Keep your calendar up to date. If you connect calendars from other booking sites, you're still responsible for avoiding double bookings.</li>
             <li>Answer guests promptly, honour what you confirm, and use guests' details only to handle their request, in line with data protection law.</li>
-            <li>We review every profile and listing before it goes live, including later changes to their text. We may decline, edit for clarity, or take down a listing or business that breaks these rules or draws justified complaints.</li>
+            <li>We review every profile and listing before it goes live, including later changes to their text and new photos. We may decline, edit for clarity, or take down a listing or business that breaks these rules or draws justified complaints.</li>
             <li>Listing is free. You can pause or remove a listing, or delete your account, at any time.</li>
           </ul>
         </Section>

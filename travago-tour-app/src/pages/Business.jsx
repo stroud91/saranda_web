@@ -2,16 +2,15 @@
 // its apartments, rentals and activities, and the requests guests send.
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowRight, ExternalLink, Inbox, LogIn, MailWarning, Pause, Pencil, Play, Plus, ShieldCheck, Store, Trash2, UserPlus } from "lucide-react";
+import { ArrowRight, ExternalLink, Inbox, LogIn, MailWarning, ShieldCheck, Store, UserPlus } from "lucide-react";
 import { post } from "../lib/api";
 import { useAuth } from "../store/auth";
 import { useConfig } from "../lib/useConfig";
-import { KINDS, fresh, partnerDelete, partnerPut, reviewBadge } from "../lib/partners";
-import { euro } from "../lib/format";
+import { fresh, reviewBadge } from "../lib/partners";
 import { Alert, PageHeader, Segmented, Skeleton, toast } from "../components/ui";
 import GuideAvatar from "../components/art/GuideAvatar";
 import ProfileForm from "../components/business/ProfileForm";
-import ListingSheet from "../components/business/ListingSheet";
+import ListingManager from "../components/business/ListingManager";
 import Requests from "../components/business/Requests";
 import LookEditor from "../components/business/LookEditor";
 import { rich, tr } from "../i18n";
@@ -70,47 +69,7 @@ function StatusNote({ business }) {
   return null;
 }
 
-function ListingRow({ kindKey, item, onEdit, onChange, onRemove }) {
-  const kind = KINDS[kindKey];
-  const [busy, setBusy] = useState(false);
-  const badge = reviewBadge(item);
-  const run = async (fn) => {
-    setBusy(true);
-    try {
-      await fn();
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  const toggle = () => run(async () => {
-    onChange(await partnerPut(`/partner/listings/${kindKey}/${item.id}`, item.on ? kind.pause : kind.resume));
-    toast(item.on ? tr("Paused — hidden from guests") : tr("Switched back on"));
-  });
-  const remove = () => window.confirm(`Remove “${item[kind.nameField]}”? This can't be undone.`) && run(async () => {
-    await partnerDelete(`/partner/listings/${kindKey}/${item.id}`);
-    onRemove(item.id);
-    toast(tr("Removed"));
-  });
-  return (
-    <li className={`host-row ${item.review_status === "rejected" ? "needs" : ""}`}>
-      <div className="host-row-main">
-        <div className="row between"><b>{item[kind.nameField]}</b><span className={`badge ${badge.tone}`}>{tr(badge.text)}</span></div>
-        <span className="small"><b>{euro(item[kind.priceField])}</b> {tr(kind.unit)} · <span className="muted">{kind.facts(item).filter(Boolean).join(" · ")}</span></span>
-        {item.review_note && <span className="small host-why">{tr("Our note: “{note}”", { note: item.review_note })}{item.review_status === "rejected" ? ` ${tr("Edit and save to send it again.")}` : ""}</span>}
-      </div>
-      <div className="host-actions">
-        <button type="button" className="btn sm" disabled={busy} onClick={onEdit}><Pencil size={14} /> {tr("Edit")}</button>
-        <button type="button" className="btn sm" disabled={busy} onClick={toggle}>{item.on ? <><Pause size={14} /> {tr("Pause")}</> : <><Play size={14} /> {tr("Resume")}</>}</button>
-        <button type="button" className="icon-btn sm" disabled={busy} onClick={remove} aria-label={`Remove ${item[kind.nameField]}`} title={tr("Remove")}><Trash2 size={16} /></button>
-      </div>
-    </li>
-  );
-}
-
 function Listings({ data, setData }) {
-  const [sheet, setSheet] = useState(null);
   const total = Object.values(data.listings).reduce((n, rows) => n + rows.length, 0);
   const full = total >= data.max_listings;
   const put = (kindKey, row) => setData((d) => {
@@ -118,27 +77,12 @@ function Listings({ data, setData }) {
     const next = rows.some((r) => r.id === row.id) ? rows.map((r) => (r.id === row.id ? row : r)) : [...rows, row];
     return { ...d, listings: { ...d.listings, [kindKey]: next } };
   });
-  const drop = (kindKey) => (id) => setData((d) => ({ ...d, listings: { ...d.listings, [kindKey]: d.listings[kindKey].filter((r) => r.id !== id) } }));
+  const drop = (kindKey, id) => setData((d) => ({ ...d, listings: { ...d.listings, [kindKey]: d.listings[kindKey].filter((r) => r.id !== id) } }));
   return (
     <div className="stack" style={{ "--gap": "26px" }}>
       {total === 0 && <Alert kind="info">{tr("Start by adding what you offer. Each one gets its own page for guests once we've approved it.")}</Alert>}
-      {Object.entries(KINDS).map(([key, kind]) => (
-        <section key={key} className="stack">
-          <div className="row between">
-            <h2 className="h3"><kind.icon size={18} /> {tr(kind.plural)} <span className="muted small">({data.listings[key].length})</span></h2>
-            <button type="button" className="btn sm primary" disabled={full} onClick={() => setSheet({ kind: key })}><Plus size={15} /> {tr(kind.add)}</button>
-          </div>
-          {data.listings[key].length > 0 && (
-            <ul className="host-list">
-              {data.listings[key].map((item) => (
-                <ListingRow key={item.id} kindKey={key} item={item} onEdit={() => setSheet({ kind: key, item })} onChange={(row) => put(key, row)} onRemove={drop(key)} />
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
+      <ListingManager listings={data.listings} options={data.options} full={full} onPut={put} onDrop={drop} />
       <p className="tiny muted">{tr("{used} of {max} listings used.", { used: total, max: data.max_listings })}{full ? ` ${tr("Remove one to add another, or contact us if you need more.")}` : ""}</p>
-      <ListingSheet target={sheet} options={data.options} onClose={() => setSheet(null)} onSaved={put} />
     </div>
   );
 }
