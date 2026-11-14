@@ -6,8 +6,13 @@
 //   same requests are answered in the browser by src/engine/localApi.js.
 // VITE_API_MODE=static|server forces one; the default "auto" asks
 // /api/meta/health once and falls back to static if no API answers.
+import { localizeContent } from "../i18n";
+
 const cache = new Map();
 const TTL = 5 * 60 * 1000;
+// Answers that carry travel content (place guides, itineraries, advice, plans built from them).
+const CONTENT = /^\/(destinations|itineraries|essentials|planner|routes)\b/;
+const shown = (path, data) => (CONTENT.test(path) ? localizeContent(data) : data);
 const FORCED = import.meta.env.VITE_API_MODE;
 
 export class ApiError extends Error {
@@ -130,12 +135,12 @@ export async function api(path, { method = "GET", body, headers, timeout = 20000
   const key = method + path;
   if (cacheable) {
     const hit = cache.get(key);
-    if (hit && Date.now() - hit.t < TTL) return hit.v;
+    if (hit && Date.now() - hit.t < TTL) return shown(path, hit.v);
   }
   const mode = await apiMode();
   const data = mode === "static" ? await callLocal(path, method, body) : await callServer(path, { method, body, headers, timeout });
-  if (cacheable) cache.set(key, { t: Date.now(), v: data });
-  return data;
+  if (cacheable) cache.set(key, { t: Date.now(), v: data }); // kept in English; translated on the way out
+  return shown(path, data);
 }
 
 export const post = (path, body, opts) => api(path, { ...opts, method: "POST", body });

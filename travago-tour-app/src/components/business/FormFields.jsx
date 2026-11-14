@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { Field } from "../ui";
 import PhotoPicker from "./PhotoPicker";
+import TranslationFields from "./TranslationFields";
 import { useDestinations } from "../../lib/useDestinations";
 import { tr } from "../../i18n";
 
@@ -16,6 +17,10 @@ export default function FormFields({ fields, form, errors = {}, onChange, option
           // Not inside a <label>: a label would send every click to the first button in it.
           const change = (fn) => onChange((prev) => ({ ...prev, [f.name]: fn(prev[f.name] || []) }));
           return <div key={f.name} className="full"><PhotoPicker value={form[f.name] || []} onChange={change} scope={scope} error={errors[f.name]} /></div>;
+        }
+        if (f.type === "translations") {
+          const change = (fn) => onChange((prev) => ({ ...prev, [f.name]: fn(prev[f.name] || {}) }));
+          return <div key={f.name} className="full"><TranslationFields value={form[f.name] || {}} of={f.of} onChange={change} error={errors[f.name]} /></div>;
         }
         if (f.type === "checkbox") {
           const on = Boolean(form[f.name]);

@@ -18,7 +18,7 @@ import GuideAvatar from "../components/art/GuideAvatar";
 import { Skeleton } from "../components/ui";
 import { useUi } from "../store/ui";
 import { useTrip } from "../store/trip";
-import { plural, rich, tr } from "../i18n";
+import { loc, plural, rich, tr } from "../i18n";
 
 const QUICK = [
   { to: "/plan", icon: CalendarRange, title: "Plan a trip", text: "Day-by-day timelines", grad: "var(--grad-sea)" },
@@ -256,7 +256,7 @@ function GuidesPreview() {
             <GuideAvatar name={g.name} palette={g.palette} size={56} />
             <div>
               <b>{g.name}</b>
-              <p className="small muted clamp-2">{g.headline}</p>
+              <p className="small muted clamp-2">{loc(g, "headline")}</p>
               <span className="small">from <b>{euro(g.price_half_day)}</b> · {g.languages.slice(0, 3).join(", ")}</span>
             </div>
           </Link>

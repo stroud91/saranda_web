@@ -10,7 +10,7 @@ import { thumb } from "../lib/photos";
 import SceneArt from "../components/art/SceneArt";
 import { PageHeader, Segmented, Skeleton, Alert } from "../components/ui";
 import EnquirySheet from "../components/business/EnquirySheet";
-import { tr } from "../i18n";
+import { loc, tr } from "../i18n";
 
 const CATS = { all: "All", history: "History", nature: "Nature", boat: "Boat", food: "Food", active: "Active", culture: "Culture" };
 
@@ -41,11 +41,11 @@ export default function Experiences() {
               const d = bySlug[t.destination_slug];
               return (
                 <motion.article key={t.id} className="exp-card card" initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.05 }}>
-                  <div className="exp-art">{t.image_urls?.[0] ? <img src={thumb(t.image_urls[0])} alt={t.tour_name} loading="lazy" /> : <SceneArt scene={d?.scene || "harbor"} seed={`tour-${t.id}`} />}<span className="badge glass">{tr(CATS[t.category] || t.category)}</span></div>
+                  <div className="exp-art">{t.image_urls?.[0] ? <img src={thumb(t.image_urls[0])} alt={loc(t, "tour_name")} loading="lazy" /> : <SceneArt scene={d?.scene || "harbor"} seed={`tour-${t.id}`} />}<span className="badge glass">{tr(CATS[t.category] || t.category)}</span></div>
                   <div className="exp-body">
-                    <h3>{t.tour_name}</h3>
+                    <h3>{loc(t, "tour_name")}</h3>
                     {t.business && <Link className="tiny by-biz" to={`/partners/${t.business.slug}`}><Store size={12} /> {t.business.name}</Link>}
-                    <p className="small muted clamp-3">{t.description}</p>
+                    <p className="small muted clamp-3">{loc(t, "description")}</p>
                     <div className="row small muted" style={{ gap: 12 }}>
                       {t.duration_hours && <span><Clock size={14} /> {t.duration_hours}h</span>}
                       {d && <Link to={`/explore/${d.slug}`}><MapPin size={14} /> {d.name}</Link>}
@@ -70,8 +70,8 @@ export default function Experiences() {
             {!cars && <Skeleton h={300} r={26} />}
             {shownCars.map((c) => (
               <div key={c.id} className="car-row card">
-                {c.image_urls?.[0] ? <img className="car-icon photo" src={thumb(c.image_urls[0])} alt={c.car_model} loading="lazy" /> : <span className="car-icon"><Car size={22} /></span>}
-                <div className="car-main"><b>{c.car_model}</b><span className="tiny muted">{c.business ? <Link to={`/partners/${c.business.slug}`}>{c.business.name}</Link> : c.rental_company} · {c.location}</span></div>
+                {c.image_urls?.[0] ? <img className="car-icon photo" src={thumb(c.image_urls[0])} alt={loc(c, "car_model")} loading="lazy" /> : <span className="car-icon"><Car size={22} /></span>}
+                <div className="car-main"><b>{loc(c, "car_model")}</b><span className="tiny muted">{c.business ? <Link to={`/partners/${c.business.slug}`}>{c.business.name}</Link> : c.rental_company} · {c.location}</span></div>
                 <span className="small muted hide-mobile"><Users size={14} /> {c.seats || 5}</span>
                 <span className="small muted hide-mobile"><Settings2 size={14} /> {c.transmission || tr("manual")}</span>
                 <span className="badge">{c.car_type}</span>

@@ -1,9 +1,10 @@
 // The site's own listings, as the host edits them in the Host desk: the same
 // forms as the business dashboard, plus a few fields only the host sets, plus guides.
 import { Users } from "lucide-react";
-import { KINDS } from "./partners";
+import { KINDS, translationsOf } from "./partners";
 
-const plus = (kind, extra, more = {}) => ({ ...kind, ...more, fields: [...kind.fields, ...extra] });
+// Host-only fields go before the "other languages" block, which stays last in every form.
+const plus = (kind, extra, more = {}) => ({ ...kind, ...more, fields: [...kind.fields.filter((f) => f.type !== "translations"), ...extra, ...kind.fields.filter((f) => f.type === "translations")] });
 
 export const HOST_KINDS = {
   stays: plus(KINDS.stays, [
@@ -33,6 +34,7 @@ export const HOST_KINDS = {
       { name: "has_vehicle", label: "Has a vehicle", type: "checkbox", half: true },
       { name: "licensed", label: "Licensed guide", type: "checkbox", half: true },
       { name: "is_sample", label: "Sample profile (hidden from guests)", type: "checkbox", half: true },
+      { name: "translations", label: "Other languages", type: "translations", of: [{ name: "headline", label: "One line about them", max: 200 }, { name: "bio", label: "About", type: "textarea", max: 4000 }] },
     ],
     facts: (g) => [g.base_city, (g.languages || []).join(", ")],
   },

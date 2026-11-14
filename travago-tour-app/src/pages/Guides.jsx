@@ -7,7 +7,7 @@ import { useConfig, whatsappUrl } from "../lib/useConfig";
 import { euro } from "../lib/format";
 import GuideAvatar from "../components/art/GuideAvatar";
 import { PageHeader, Skeleton, Alert } from "../components/ui";
-import { tr } from "../i18n";
+import { loc, tr } from "../i18n";
 
 export default function Guides() {
   const [params, setParams] = useSearchParams();
@@ -60,7 +60,7 @@ export default function Guides() {
                   </div>
                 </div>
               </div>
-              <p className="guide-headline">{g.headline}</p>
+              <p className="guide-headline">{loc(g, "headline")}</p>
               <div className="chips">{g.specialties.map((s) => <span key={s} className="chip sm">{s}</span>)}</div>
               <div className="guide-foot">
                 <span className="small muted"><Languages size={14} /> {g.languages.join(", ")}</span>

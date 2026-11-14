@@ -117,6 +117,7 @@ def create_business():
         return jsonify({"error": "This account already has a business profile"}), 409
     data = json_body(partners.BUSINESS_SCHEMA)
     data["style"] = partners.clean_style(data["style"])
+    data["translations"] = partners.clean_translations(data["translations"], partners.BUSINESS_SCHEMA, partners.TRANSLATABLE["business"])
     business = Business(**data, owner_id=user.id, slug=partners.slugify(data["name"]), status="pending")
     db.session.add(business)
     try:
@@ -138,6 +139,8 @@ def update_business():
     data = _sent_fields(partners.BUSINESS_SCHEMA)
     if "style" in data:
         data["style"] = partners.clean_style(data["style"])
+    if "translations" in data:
+        data["translations"] = partners.clean_translations(data["translations"], partners.BUSINESS_SCHEMA, partners.TRANSLATABLE["business"])
     was_waiting = business.status == "pending" or bool(business.pending_changes)
     needs_review = partners.submit(business, data, partners.BUSINESS_LIVE, status_attr="status")
     db.session.commit()

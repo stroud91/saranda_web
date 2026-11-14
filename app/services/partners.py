@@ -22,6 +22,43 @@ from app.models.business import PALETTES, STYLE_DEFAULT, STYLE_OPTIONS
 from app.models.db import utcnow
 from app.validation import Field, ValidationError
 
+# Text a host can also give in other languages, per kind of record.
+LANGS = ("sq", "en", "fr", "it", "de")
+TRANSLATABLE = {
+    "stays": ("hotel_name", "description"), "rentals": ("car_model", "description"),
+    "experiences": ("tour_name", "description"), "guides": ("headline", "bio"), "business": ("tagline", "description"),
+}
+
+
+def clean_translations(raw, schema, fields):
+    """``{"sq": {"description": "…"}}`` checked field by field against the same limits as the
+    original text. Unknown languages or fields are refused; empty entries are dropped."""
+    if raw in (None, "", {}):
+        return None
+    if not isinstance(raw, dict):
+        raise ValidationError({"translations": "Translations are not valid"})
+    out = {}
+    for lang, texts in raw.items():
+        if lang not in LANGS or not isinstance(texts, dict):
+            raise ValidationError({"translations": "Translations are not valid"})
+        kept = {}
+        for name, value in texts.items():
+            if name not in fields:
+                raise ValidationError({"translations": "Translations are not valid"})
+            if value in (None, ""):
+                continue
+            base = schema[name]
+            try:
+                text = Field(base.kind, max_len=base.max_len).parse(name, value)
+            except ValueError as exc:
+                raise ValidationError({"translations": f"{lang.upper()}: {exc}"}) from None
+            if text:
+                kept[name] = text
+        if kept:
+            out[lang] = kept
+    return out or None
+
+
 # Photos are addresses of files uploaded through /api/uploads; nothing else is accepted.
 PHOTOS = Field("list", max_items=12, item=Field(max_len=60, pattern=r"/media/u/[a-f0-9]{32}\.jpg"), default=[], label="Photos")
 
@@ -41,6 +78,7 @@ BUSINESS_SCHEMA = {
     "website": Field(max_len=255, pattern=URL_PATTERN, label="Website (must start with https://)"),
     "palette": Field(choices=list(PALETTES), default="sea"),
     "style": Field("dict"),
+    "translations": Field("dict"),
 }
 # Looks are picked from fixed lists, so they apply at once; everything else on a live profile is reviewed.
 BUSINESS_LIVE = {"palette", "style"}
@@ -90,6 +128,7 @@ KINDS = {
             "description": Field("text", required=True, max_len=3000),
             "amenities": Field("list", max_items=40, item=Field(max_len=60), default=[]),
             "image_urls": PHOTOS,
+            "translations": Field("dict"),
             "price_per_night": Field("float", required=True, min=5, max=5000, label="Price per night"),
             "cleaning_fee": Field("float", min=0, max=1000, default=0),
             "bedrooms": Field("int", min=0, max=20, default=1),
@@ -110,6 +149,7 @@ KINDS = {
             "location": Field(required=True, max_len=120, label="Pick-up place"),
             "description": Field("text", max_len=2000),
             "image_urls": PHOTOS,
+            "translations": Field("dict"),
             "price_per_day": Field("float", required=True, min=1, max=5000, label="Price per day"),
             "seats": Field("int", min=1, max=60),
             "transmission": Field(choices=["manual", "automatic"]),
@@ -126,6 +166,7 @@ KINDS = {
             "location": Field(required=True, max_len=120, label="Meeting point"),
             "category": Field(required=True, choices=EXPERIENCE_CATEGORIES),
             "image_urls": PHOTOS,
+            "translations": Field("dict"),
             "price": Field("float", required=True, min=0, max=5000, label="Price per person"),
             "duration_hours": Field("float", min=0.5, max=240, label="Duration"),
             "destination_slug": Field("slug", label="Nearest place"),
@@ -181,6 +222,8 @@ def check_extra(kind, data, business_id):
         if owned is None:
             raise ValidationError({"image_urls": "Use photos you uploaded here"})
         data["image_urls"] = owned
+    if "translations" in data:
+        data["translations"] = clean_translations(data["translations"], kind.schema, TRANSLATABLE[kind.key])
     if kind.key == "experiences" and data.get("destination_slug") and data["destination_slug"] not in DESTINATION_INDEX:
         raise ValidationError({"destination_slug": "Pick a place from the list"})
     if kind.key == "stays" and "amenities" in data:

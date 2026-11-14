@@ -83,7 +83,18 @@ export const PROFILE_FIELDS = [
   { name: "website", label: "Website", type: "url", max: 255, half: true, placeholder: "https://…", hint: "Must start with https://" },
 ];
 
-const empty = (f) => (f.type === "photos" ? [] : f.type === "checkbox" ? Boolean(f.initial) : f.type === "tags" ? "" : f.initial ?? "");
+const empty = (f) => (f.type === "photos" ? [] : f.type === "translations" ? {} : f.type === "checkbox" ? Boolean(f.initial) : f.type === "tags" ? "" : f.initial ?? "");
+
+/** Field definition for "the same text in other languages"; `of` picks which fields by name. */
+export const translationsOf = (fields, names) => ({
+  name: "translations", label: "Other languages", type: "translations",
+  of: names.map((n) => { const f = fields.find((x) => x.name === n); return { name: n, label: f.label, type: f.type, max: f.max }; }),
+});
+
+/** Translations without the empty entries (what is sent to the server). */
+const pruned = (all) => Object.fromEntries(Object.entries(all || {})
+  .map(([lang, texts]) => [lang, Object.fromEntries(Object.entries(texts || {}).map(([k, v]) => [k, String(v || "").trim()]).filter(([, v]) => v))])
+  .filter(([, texts]) => Object.keys(texts).length));
 
 /** Blank form values for a set of fields. */
 export const blank = (fields) => Object.fromEntries(fields.map((f) => [f.name, empty(f)]));
@@ -94,6 +105,7 @@ export const toForm = (fields, item) =>
     const v = item[f.name];
     if (f.type === "tags") return [f.name, (v || []).join(", ")];
     if (f.type === "photos") return [f.name, [...(v || [])]];
+    if (f.type === "translations") return [f.name, JSON.parse(JSON.stringify(v || {}))];
     if (f.type === "checkbox") return [f.name, Boolean(v)];
     return [f.name, v ?? ""];
   }));
@@ -104,6 +116,7 @@ export const toBody = (fields, form) =>
     const v = form[f.name];
     if (f.type === "tags") return [f.name, String(v || "").split(",").map((s) => s.trim()).filter(Boolean)];
     if (f.type === "photos") return [f.name, v || []];
+    if (f.type === "translations") return [f.name, pruned(v)];
     if (f.type === "checkbox") return [f.name, Boolean(v)];
     if (f.type === "number") return [f.name, v === "" || v == null ? null : Number(v)];
     return [f.name, typeof v === "string" ? v.trim() || null : v];
@@ -125,7 +138,15 @@ const LABELS = {
   hotel_name: "Name", tour_name: "Name", car_model: "Name", car_type: "Type", price_per_night: "Price per night",
   price_per_day: "Price per day", price: "Price per person", max_guests: "Guests", min_nights: "Minimum nights",
   cleaning_fee: "Cleaning fee", duration_hours: "Duration (hours)", destination_slug: "Nearest place",
-  location: "Location", whatsapp: "WhatsApp", image_urls: "Photos",
+  location: "Location", whatsapp: "WhatsApp", image_urls: "Photos", translations: "Other languages",
 };
 export const fieldLabel = (key) => LABELS[key] || key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
-export const showValue = (v) => (Array.isArray(v) ? v.join(", ") : v === null || v === undefined || v === "" ? "—" : String(v));
+const spoken = (v) => Object.entries(v).flatMap(([lang, texts]) => Object.values(texts || {}).map((text) => `${lang.toUpperCase()}: ${text}`)).join("\n");
+export const showValue = (v) => (Array.isArray(v) ? v.join(", ") : v === null || v === undefined || v === "" ? "—"
+  : typeof v === "object" ? spoken(v) || "—" : String(v));
+
+// Every kind of listing, and the business profile, can also be written in other languages.
+KINDS.stays.fields.push(translationsOf(KINDS.stays.fields, ["hotel_name", "description"]));
+KINDS.rentals.fields.push(translationsOf(KINDS.rentals.fields, ["car_model", "description"]));
+KINDS.experiences.fields.push(translationsOf(KINDS.experiences.fields, ["tour_name", "description"]));
+PROFILE_FIELDS.push(translationsOf(PROFILE_FIELDS, ["tagline", "description"]));

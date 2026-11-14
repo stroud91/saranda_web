@@ -149,3 +149,39 @@ def test_partner_listings_and_photos_stay_out_of_the_hosts_desk(app, host, clien
     assert owner.put(f"/api/partner/listings/stays/{theirs['id']}", json={"image_urls": [house_pic]}).status_code == 400
     assert host.put("/api/admin/listings/stays/1", json={"image_urls": [house_pic]}).status_code == 200
     assert Tour.query.filter(Tour.business_id.is_(None)).count() == len(desk["experiences"])
+
+
+def test_listings_can_carry_translations(app, client, host):
+    # The seeded apartments come with their four translations.
+    seeded = client.get("/api/hotels/1").get_json()["translations"]
+    assert set(seeded) == {"sq", "fr", "it", "de"} and seeded["de"]["hotel_name"] == "Apartment 4 — Meerblick"
+    words = {"it": {"hotel_name": "Monolocale sul porto", "description": "Luminoso, a due passi dal mare."}, "sq": {"description": ""}}
+    saved = host.put("/api/admin/listings/stays/1", json={"translations": words}).get_json()
+    assert saved["translations"] == {"it": words["it"]}  # empty entries are dropped
+    assert client.get("/api/hotels/1").get_json()["translations"]["it"]["hotel_name"] == "Monolocale sul porto"
+    for bad in ({"xx": {"description": "?"}}, {"it": {"price_per_night": "1"}}, {"it": "text"}, ["it"], {"it": {"hotel_name": ["x"]}}):
+        r = host.put("/api/admin/listings/stays/1", json={"translations": bad})
+        assert r.status_code == 400 and "translations" in r.get_json()["fields"], bad
+    # Over-long text is trimmed to the same limit as the original field, and markup is stored as plain text.
+    long = host.put("/api/admin/listings/stays/1", json={"translations": {"it": {"hotel_name": "x" * 500}}}).get_json()
+    assert len(long["translations"]["it"]["hotel_name"]) == 120
+    assert host.put("/api/admin/listings/stays/1", json={"translations": None}).get_json()["translations"] == {}
+
+    guide = host.post("/api/admin/listings/guides", json={**GUIDE, "translations": {"fr": {"headline": "Butrint et le sud, à pied", "bio": "Né à Sarandë."}}}).get_json()
+    assert client.get(f"/api/guides/{guide['slug']}").get_json()["translations"]["fr"]["bio"] == "Né à Sarandë."
+    assert host.put(f"/api/admin/listings/guides/{guide['id']}", json={"translations": {"fr": {"name": "X"}}}).status_code == 400
+
+    # A partner's translations are reviewed like the rest of their text.
+    owner = account(app, "owner@bluebay.example")
+    business = owner.post("/api/partner/business", json={"name": "Blue Bay", "city": "Ksamil", "description": "Family-run since 2012.",
+                                                          "translations": {"de": {"tagline": "Familienbetrieb", "description": "Seit 2012 in Familienhand."}}})
+    assert business.status_code == 201 and business.get_json()["translations"]["de"]["tagline"] == "Familienbetrieb"
+    approve(host, "business", business.get_json()["id"])
+    stay = owner.post("/api/partner/listings/stays", json={**STAY, "translations": {"sq": {"description": "Studio e qetë me tarracë."}}}).get_json()
+    approve(host, "stays", stay["id"])
+    assert client.get(f"/api/hotels/{stay['id']}").get_json()["translations"] == {"sq": {"description": "Studio e qetë me tarracë."}}
+    edited = owner.put(f"/api/partner/listings/stays/{stay['id']}", json={"translations": {"sq": {"description": "Tekst i ri."}}}).get_json()
+    assert edited["has_pending_changes"]
+    assert client.get(f"/api/hotels/{stay['id']}").get_json()["translations"]["sq"]["description"] == "Studio e qetë me tarracë."
+    assert client.get("/api/businesses/blue-bay").get_json()["business"]["translations"]["de"]["description"] == "Seit 2012 in Familienhand."
+    assert owner.post("/api/partner/listings/stays", json={**STAY, "translations": {"sq": {"business_id": "1"}}}).status_code == 400

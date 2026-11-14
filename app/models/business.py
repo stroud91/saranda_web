@@ -43,6 +43,7 @@ class Business(db.Model):
     website = db.Column(db.String(255), nullable=True)
     palette = db.Column(db.String(20), default="sea")
     style = db.Column(db.JSON(none_as_null=True), nullable=True)  # see STYLE_OPTIONS
+    translations = db.Column(db.JSON(none_as_null=True), nullable=True)  # {"sq": {"tagline": ..., "description": ...}}
     status = db.Column(db.String(20), default="pending", nullable=False)
     review_note = db.Column(db.Text, nullable=True)
     pending_changes = db.Column(db.JSON(none_as_null=True), nullable=True)
@@ -68,6 +69,7 @@ class Business(db.Model):
 
     def to_public_dict(self):
         out = {k: getattr(self, k) for k in self.PROFILE_FIELDS}
+        out["translations"] = self.translations or {}
         out.update({"slug": self.slug, "style": self.look(), "since": self.created_at.year if self.created_at else None})
         return out
 

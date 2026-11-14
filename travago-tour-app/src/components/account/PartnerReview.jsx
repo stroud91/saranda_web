@@ -41,7 +41,7 @@ function Submission({ q }) {
   const names = (q.type === "business" ? PROFILE_FIELDS : KINDS[q.type].fields).map((f) => f.name);
   return (
     <dl className="review-diff">
-      {names.filter((k) => q.details[k] !== null && q.details[k] !== "" && !(Array.isArray(q.details[k]) && !q.details[k].length)).map((k) => (
+      {names.filter((k) => { const v = q.details[k]; return v !== null && v !== undefined && v !== "" && !(typeof v === "object" && !Object.keys(v).length); }).map((k) => (
         <div key={k}><dt>{tr(fieldLabel(k))}</dt><dd>{k === "image_urls" ? <Photos urls={q.details[k]} /> : showValue(q.details[k])}</dd></div>
       ))}
     </dl>

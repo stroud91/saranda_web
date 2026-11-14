@@ -27,7 +27,12 @@ EXTRA = {
     "rentals": {"rental_company": Field(max_len=120, label="Company")},
     "experiences": {"start_time": Field("hhmm", label="Start time")},
 }
-GUIDE_FIELDS = {**GUIDE_SCHEMA, "slug": Field("slug", label="Web address name")}
+GUIDE_FIELDS = {**GUIDE_SCHEMA, "slug": Field("slug", label="Web address name"), "translations": Field("dict")}
+
+
+def _guide_text(data):
+    if "translations" in data:
+        data["translations"] = partners.clean_translations(data["translations"], GUIDE_SCHEMA, partners.TRANSLATABLE["guides"])
 
 
 def _schema(kind_key):
@@ -101,6 +106,7 @@ def create(kind_key):
         return jsonify({"error": "Not found"}), 404
     data = json_body(schema)
     if kind_key == "guides":
+        _guide_text(data)
         if data.get("slug") and Guide.query.filter_by(slug=data["slug"]).first():
             raise ValidationError({"slug": "That web address name is taken"})
         data["slug"] = data.get("slug") or _guide_slug(data["name"])
@@ -134,6 +140,7 @@ def update(kind_key, listing_id):
         return jsonify({"error": "Not found"}), 404
     data = partial_body(schema)
     if kind_key == "guides":
+        _guide_text(data)
         data.pop("slug", None)  # the address of a guide's page doesn't change once it exists
     else:
         partners.check_extra(partners.KINDS[kind_key], data, None)
