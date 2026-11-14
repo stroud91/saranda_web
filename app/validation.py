@@ -130,3 +130,10 @@ def parse_iso_date(value, label="date"):
         return datetime.fromisoformat(str(value)[:10])
     except ValueError:
         raise ValidationError({label: f"{label} must be YYYY-MM-DD"})
+
+
+def partial_body(schema):
+    """Validate only the fields that were sent (for edits that change part of a record)."""
+    body = request.get_json(silent=True)
+    body = body if isinstance(body, dict) else {}
+    return json_body({k: v for k, v in schema.items() if k in body})

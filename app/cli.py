@@ -13,6 +13,7 @@ from flask import current_app
 from flask.cli import AppGroup
 
 from app.models import AuthToken, ContactMessage, Enquiry, GuideBooking, LoginThrottle, User, UserSession, db
+from app.services import calendars, uploads
 from app.models.db import utcnow
 from app.services import accounts
 
@@ -104,4 +105,15 @@ def cleanup():
         n += GuideBooking.query.filter(GuideBooking.status != "accepted",
                                        GuideBooking.created_at < cutoff).delete(synchronize_session=False)
     db.session.commit()
+    n += uploads.cleanup()  # photos that were uploaded but never used
     click.echo(f"Removed {n} rows.")
+
+
+calendar_commands = AppGroup("calendars", help="Calendars imported from other booking sites.")
+
+
+@calendar_commands.command("sync")
+def sync_calendars():
+    """Re-read every connected calendar (run this from cron every 30 minutes)."""
+    ok, total = calendars.sync_all()
+    click.echo(f"Synced {ok} of {total} calendars.")

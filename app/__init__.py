@@ -20,10 +20,12 @@ STATIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "trav
 
 def _register_blueprints(app):
     from .api.account_routes import account_routes
+    from .api.admin_listing_routes import admin_listing_routes
     from .api.admin_routes import admin_routes
     from .api.auth_routes import auth_routes
     from .api.bookings_routes import bookings_routes
     from .api.business_routes import business_routes
+    from .api.calendar_routes import calendar_routes
     from .api.car_rentals_routes import car_rentals_routes
     from .api.concierge_routes import concierge_routes
     from .api.contact_routes import contact_routes
@@ -35,6 +37,7 @@ def _register_blueprints(app):
     from .api.partner_routes import partner_routes
     from .api.planner_routes import planner_routes
     from .api.tours_routes import tours_routes
+    from .api.upload_routes import upload_routes
     from .api.webhooks import webhook_routes
 
     for bp, prefix in [
@@ -54,6 +57,9 @@ def _register_blueprints(app):
         (account_routes, "/api/account"),
         (partner_routes, "/api/partner"),
         (business_routes, "/api/businesses"),
+        (calendar_routes, "/api/calendar"),
+        (upload_routes, "/api/uploads"),
+        (admin_listing_routes, "/api/admin/listings"),
         (webhook_routes, "/api/webhooks"),
     ]:
         app.register_blueprint(bp, url_prefix=prefix)
@@ -139,8 +145,9 @@ def create_app(config_object=Config):
 
     from .seeds import seed_commands
     app.cli.add_command(seed_commands)
-    from .cli import user_commands
+    from .cli import calendar_commands, user_commands
     app.cli.add_command(user_commands)
+    app.cli.add_command(calendar_commands)
 
     @app.get("/api/docs")
     def api_docs():
@@ -156,6 +163,21 @@ def create_app(config_object=Config):
         # Keep the route map out of production (less reconnaissance surface).
         app.view_functions["api_docs"] = lambda: (jsonify({"error": "Not found"}), 404)
 
+    @app.get("/media/u/<name>")
+    @limiter.exempt
+    def uploaded_photo(name):
+        """A photo uploaded for a listing. Names are random and fixed in shape, the folder
+        holds nothing else, and the type is always image/jpeg whatever the file contains."""
+        from .services import uploads
+
+        path = uploads.path_for(name)
+        if not path or not os.path.isfile(path):
+            return jsonify({"error": "Not found"}), 404
+        resp = send_from_directory(os.path.dirname(path), os.path.basename(path), mimetype="image/jpeg", max_age=31536000)
+        resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        resp.headers["Content-Disposition"] = "inline"
+        return resp
+
     # The site's own pages, scripts, images and videos are not rate-limited: one
     # visit loads 30+ files, so counting them would block guests who click through
     # a few pages. Every /api endpoint keeps its limits.
@@ -163,7 +185,7 @@ def create_app(config_object=Config):
     @app.get("/<path:path>")
     @limiter.exempt
     def spa(path):
-        if path.startswith("api/"):
+        if path.startswith(("api/", "media/u/")):  # neither is ever a page
             return jsonify({"error": "Not found"}), 404
         full = os.path.join(STATIC_DIR, path)
         if path and os.path.isfile(full) and os.path.commonpath([STATIC_DIR, os.path.abspath(full)]) == STATIC_DIR:

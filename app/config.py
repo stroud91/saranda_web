@@ -120,6 +120,19 @@ class Config:
     PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
     PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
 
+    # Photos for listings: the largest file accepted, and where they are kept
+    # (default: instance/uploads, which deploys never touch).
+    UPLOAD_MAX_MB = int(os.environ.get("UPLOAD_MAX_MB", "10"))
+    UPLOAD_DIR = os.environ.get("UPLOAD_DIR") or None
+    PARTNER_MAX_PHOTOS = int(os.environ.get("PARTNER_MAX_PHOTOS", "300"))  # per business
+    HOUSE_MAX_PHOTOS = int(os.environ.get("HOUSE_MAX_PHOTOS", "3000"))
+
+    # Calendars: extra hosts whose iCal feeds may be imported (Airbnb, Booking.com, Vrbo and
+    # Google Calendar are always allowed), and how stale an imported calendar may be
+    # before a new booking triggers a fresh look.
+    CALENDAR_FEED_HOSTS = _list("CALENDAR_FEED_HOSTS")
+    CALENDAR_SYNC_MINUTES = int(os.environ.get("CALENDAR_SYNC_MINUTES", "30"))
+
     # Contact messages and guide requests that never became a booking are deleted
     # after this many months by `flask users cleanup` (the privacy policy says so).
     MESSAGE_RETENTION_MONTHS = int(os.environ.get("MESSAGE_RETENTION_MONTHS", "24"))

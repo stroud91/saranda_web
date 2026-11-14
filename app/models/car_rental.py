@@ -18,6 +18,7 @@ class CarRental(Reviewable, db.Model):
     seats = db.Column(db.Integer, nullable=True)
     transmission = db.Column(db.String(20), nullable=True)
     description = db.Column(db.Text, nullable=True)
+    image_urls = db.Column(db.JSON, nullable=True)
 
     bookings = db.relationship("Booking", backref="car_rental", lazy=True)
 
@@ -34,5 +35,6 @@ class CarRental(Reviewable, db.Model):
             "seats": self.seats,
             "transmission": self.transmission,
             "description": self.description,
+            "image_urls": self.image_urls or [],
             "business": self.business_brief(),
         }

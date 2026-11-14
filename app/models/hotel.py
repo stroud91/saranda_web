@@ -35,6 +35,8 @@ class Hotel(Reviewable, db.Model):
     min_nights = db.Column(db.Integer, default=1)
     cleaning_fee = db.Column(db.Numeric(10, 2), default=0)
     is_active = db.Column(db.Boolean(), default=True)
+    # Secret in the link other booking sites use to read this stay's busy nights.
+    calendar_token = db.Column(db.String(48), nullable=True, unique=True)
 
     bookings = db.relationship("Booking", backref="hotel", lazy=True)
 

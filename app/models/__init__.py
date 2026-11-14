@@ -8,6 +8,8 @@ from .car_rental import CarRental
 from .booking import Booking
 from .trip_plan import TripPlan
 from .contact_message import ContactMessage
+from .calendar import CalendarFeed, DateBlock
+from .upload import Upload
 
 __all__ = ["db", "environment", "SCHEMA", "User", "UserSession", "AuthToken", "LoginThrottle", "Hotel", "Guide", "GuideBooking", "Tour",
-           "CarRental", "Booking", "TripPlan", "ContactMessage", "Business", "Enquiry"]
+           "CarRental", "Booking", "TripPlan", "ContactMessage", "Business", "Enquiry", "CalendarFeed", "DateBlock", "Upload"]

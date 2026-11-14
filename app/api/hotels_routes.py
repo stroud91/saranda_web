@@ -6,7 +6,7 @@ from flask import Blueprint, abort, jsonify, request
 from app.auth import require_admin
 from app.models import Booking, Hotel, db
 from app.models.booking import ACTIVE_STATUSES
-from app.services import partners
+from app.services import calendars, partners
 from app.validation import Field, json_body, query_args
 
 hotels_routes = Blueprint("hotels", __name__)
@@ -61,6 +61,7 @@ def availability(hotel_id):
             if start <= d <= end:
                 nights.add(d.isoformat())
             d += timedelta(days=1)
+    nights |= calendars.blocked_nights(hotel_id, start, end)  # blocked by hand or taken on another site
     return jsonify({"hotel_id": hotel_id, "booked_nights": sorted(nights)})
 
 

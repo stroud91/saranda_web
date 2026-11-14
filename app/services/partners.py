@@ -22,6 +22,9 @@ from app.models.business import PALETTES, STYLE_DEFAULT, STYLE_OPTIONS
 from app.models.db import utcnow
 from app.validation import Field, ValidationError
 
+# Photos are addresses of files uploaded through /api/uploads; nothing else is accepted.
+PHOTOS = Field("list", max_items=12, item=Field(max_len=60, pattern=r"/media/u/[a-f0-9]{32}\.jpg"), default=[], label="Photos")
+
 URL_PATTERN = r"https://[^\s\"'<>\\]{3,240}"
 EXPERIENCE_CATEGORIES = ["history", "nature", "boat", "food", "active", "culture"]
 RENTAL_TYPES = ["Hatchback", "Sedan", "SUV", "Van", "Convertible", "Scooter", "Bicycle", "Boat"]
@@ -86,6 +89,7 @@ KINDS = {
             "city": Field(required=True, max_len=80, label="Town"),
             "description": Field("text", required=True, max_len=3000),
             "amenities": Field("list", max_items=40, item=Field(max_len=60), default=[]),
+            "image_urls": PHOTOS,
             "price_per_night": Field("float", required=True, min=5, max=5000, label="Price per night"),
             "cleaning_fee": Field("float", min=0, max=1000, default=0),
             "bedrooms": Field("int", min=0, max=20, default=1),
@@ -105,6 +109,7 @@ KINDS = {
             "car_type": Field(required=True, choices=RENTAL_TYPES, label="Type"),
             "location": Field(required=True, max_len=120, label="Pick-up place"),
             "description": Field("text", max_len=2000),
+            "image_urls": PHOTOS,
             "price_per_day": Field("float", required=True, min=1, max=5000, label="Price per day"),
             "seats": Field("int", min=1, max=60),
             "transmission": Field(choices=["manual", "automatic"]),
@@ -120,6 +125,7 @@ KINDS = {
             "description": Field("text", required=True, max_len=3000),
             "location": Field(required=True, max_len=120, label="Meeting point"),
             "category": Field(required=True, choices=EXPERIENCE_CATEGORIES),
+            "image_urls": PHOTOS,
             "price": Field("float", required=True, min=0, max=5000, label="Price per person"),
             "duration_hours": Field("float", min=0.5, max=240, label="Duration"),
             "destination_slug": Field("slug", label="Nearest place"),
@@ -166,8 +172,15 @@ def slugify(name):
     return candidate
 
 
-def check_extra(kind, data):
-    """Checks a schema can't express."""
+def check_extra(kind, data, business_id):
+    """Checks a schema can't express. ``business_id`` is whose listing this is (None: the site's own)."""
+    if "image_urls" in data:
+        from app.services import uploads  # local import: uploads reads the listing models
+
+        owned = uploads.check_owned(data["image_urls"], business_id)
+        if owned is None:
+            raise ValidationError({"image_urls": "Use photos you uploaded here"})
+        data["image_urls"] = owned
     if kind.key == "experiences" and data.get("destination_slug") and data["destination_slug"] not in DESTINATION_INDEX:
         raise ValidationError({"destination_slug": "Pick a place from the list"})
     if kind.key == "stays" and "amenities" in data:
@@ -186,6 +199,10 @@ def submit(obj, data, live, status_attr="review_status"):
         for key, value in data.items():
             if key in live:
                 setattr(obj, key, value)
+            elif key == "image_urls" and set(value or []) <= set(getattr(obj, key) or []):
+                # Removing or re-ordering photos that were already approved needs no second look.
+                setattr(obj, key, value)
+                pending.pop(key, None)
             elif _same(getattr(obj, key), value):
                 pending.pop(key, None)
             else:
@@ -222,10 +239,15 @@ def listing_count(business):
 
 def close(business):
     """The owner left: take everything down and forget their contact details."""
+    from app.services import calendars, uploads
+
     for kind in KINDS.values():
         for obj in kind.model.query.filter_by(business_id=business.id).all():
             kind.switch_off(obj)
-            obj.pending_changes = None
+            obj.pending_changes, obj.image_urls = None, []
+            if kind.key == "stays":
+                calendars.forget_stay(obj.id)
+    uploads.forget_business(business.id)
     business.status, business.owner_id, business.pending_changes = "closed", None, None
     business.email = business.phone = business.whatsapp = business.website = business.address = None
 

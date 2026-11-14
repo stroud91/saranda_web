@@ -157,7 +157,10 @@ def test_listings_stay_hidden_until_the_host_approves(owner, host, client):
 def test_owner_cannot_set_fields_outside_the_form(owner, host, client):
     make_business(owner)
     sneaky = {**STAY, "business_id": None, "review_status": "approved", "airbnb_rating": 5, "tag": "Featured",
-              "image_urls": ["https://evil.example/x.png"], "id": 1, "total_rooms": 99}
+              "id": 1, "total_rooms": 99}
+    # Photos must be ones uploaded here: an outside address is refused outright.
+    outside = owner.post("/api/partner/listings/stays", json={**sneaky, "image_urls": ["https://evil.example/x.png"]})
+    assert outside.status_code == 400 and "image_urls" in outside.get_json()["fields"]
     stay = owner.post("/api/partner/listings/stays", json=sneaky).get_json()
     row = db.session.get(Hotel, stay["id"])
     assert row.review_status == "pending" and row.business_id is not None

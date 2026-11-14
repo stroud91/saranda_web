@@ -13,14 +13,14 @@ Security model:
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, current_app, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import limiter
 from app.models import Booking, Business, Enquiry, Hotel, db
 from app.models.business import PALETTES, STYLE_OPTIONS
-from app.services import accounts, mailer, partners
-from app.validation import Field, json_body
+from app.services import accounts, calendars, mailer, partners
+from app.validation import Field, json_body, partial_body
 
 partner_routes = Blueprint("partner", __name__)
 
@@ -76,10 +76,7 @@ def _not_found():
     return jsonify({"error": "Not found"}), 404
 
 
-def _sent_fields(schema):
-    """Validate only the fields that were sent (partial update)."""
-    body = request.get_json(silent=True) or {}
-    return json_body({k: v for k, v in schema.items() if k in body})
+_sent_fields = partial_body
 
 
 def _tell_host(what, name):
@@ -164,7 +161,7 @@ def create_listing(kind_key):
     if partners.listing_count(business) >= limit:
         return jsonify({"error": f"You've reached the limit of {limit} listings. Remove one or contact us."}), 409
     data = json_body(kind.schema)
-    partners.check_extra(kind, data)
+    partners.check_extra(kind, data, business.id)
     extra = {"business_id": business.id, "review_status": "pending"}
     if kind.key == "stays":
         extra.update(total_rooms=1, available_rooms=1)
@@ -189,7 +186,7 @@ def update_listing(kind_key, listing_id):
     if obj is None:
         return _not_found()
     data = _sent_fields(kind.schema)
-    partners.check_extra(kind, data)
+    partners.check_extra(kind, data, g.business.id)
     was_waiting = obj.review_status == "pending" or bool(obj.pending_changes)
     needs_review = partners.submit(obj, data, kind.live)
     db.session.commit()
@@ -206,7 +203,9 @@ def remove_listing(kind_key, listing_id):
     if obj is None:
         return _not_found()
     kind.switch_off(obj)  # kept as a row so past bookings and enquiries still make sense
-    obj.review_status, obj.pending_changes = "removed", None
+    obj.review_status, obj.pending_changes, obj.image_urls = "removed", None, []
+    if kind.key == "stays":
+        calendars.forget_stay(obj.id)
     db.session.commit()
     return "", 204
 

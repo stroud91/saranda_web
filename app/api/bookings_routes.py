@@ -21,7 +21,7 @@ from sqlalchemy import select
 from app.extensions import limiter
 from app.models import Booking, Hotel, db
 from app.models.db import utcnow
-from app.services import accounts, bank_transfer, checkout, mailer, partners, payments, paypal
+from app.services import accounts, bank_transfer, calendars, checkout, mailer, partners, payments, paypal
 from app.validation import Field, ValidationError, json_body
 
 log = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def quote_booking():
     s, e = _dt(data["start_date"]), _dt(data["end_date"])
     return jsonify({"hotel_id": hotel.id, "nights": nights, "nightly": float(hotel.price_per_night),
                     "cleaning_fee": float(hotel.cleaning_fee or 0), "total": float(total), "currency": "EUR",
-                    "available": not blocking_bookings(hotel.id, s, e)})
+                    "available": not blocking_bookings(hotel.id, s, e) and not calendars.is_blocked(hotel.id, s, e)})
 
 
 def _dt(d):
@@ -127,6 +127,9 @@ def create_booking():
     data = json_body(BOOKING_SCHEMA)
     if data["website"]:
         return jsonify({"error": "Request rejected"}), 400
+    # Other booking sites may have sold these nights since the last sync: look again if it's
+    # been a while. Done before the stay is locked, because syncing saves as it goes.
+    calendars.sync_stay(data["hotel_id"], older_than_minutes=current_app.config.get("CALENDAR_SYNC_MINUTES", 30), budget_seconds=6)
     hotel, nights = _validate_stay(data, lock=True)
     available = methods_for(hotel)
     method = data["payment_method"] or available[0]
@@ -134,7 +137,7 @@ def create_booking():
         db.session.rollback()
         raise ValidationError({"payment_method": "That way to pay isn't available. Please choose another."})
     start, end = _dt(data["start_date"]), _dt(data["end_date"])
-    if blocking_bookings(hotel.id, start, end, lock=True):
+    if blocking_bookings(hotel.id, start, end, lock=True) or calendars.is_blocked(hotel.id, start, end):
         db.session.rollback()
         return jsonify({"error": "Those dates were just taken. Please choose different dates.",
                         "fields": {"start_date": "Unavailable"}}), 409

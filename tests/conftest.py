@@ -9,8 +9,9 @@ from app.services.upstream import cache
 
 
 @pytest.fixture()
-def app():
+def app(tmp_path):
     app = create_app(TestConfig)
+    app.config["UPLOAD_DIR"] = str(tmp_path / "uploads")  # never the real photo folder
     with app.app_context():
         db.create_all()
         seed_hotels()
