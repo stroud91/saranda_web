@@ -124,6 +124,20 @@ export default function BookingStatus() {
     }
   };
 
+  if (error && error.status === 404) {
+    return (
+      <div className="page container narrow">
+        <div className="empty stack" style={{ "--gap": "10px" }}>
+          <XCircle size={28} style={{ margin: "0 auto" }} />
+          <p><b>{tr("We can't find that booking")}</b></p>
+          <p className="small muted">{rich("Check that the address is the full link from your confirmation email. <account>Sign in</account> to see your bookings, or <contact>write to us</contact> with your booking reference.", {
+            account: (c) => <Link to="/account">{c}</Link>,
+            contact: (c) => <Link to="/contact">{c}</Link>,
+          })}</p>
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="page container"><ErrorState error={error} /></div>;
   if (!b) return <div className="page container"><Skeleton h={360} r={26} /></div>;
   const host = b.hosted_by;
