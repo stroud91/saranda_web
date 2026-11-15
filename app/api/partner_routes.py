@@ -20,7 +20,7 @@ from app.extensions import limiter
 from app.models import Booking, Business, Enquiry, Hotel, Review, db
 from app.models.db import utcnow
 from app.models.business import PALETTES, STYLE_OPTIONS
-from app.services import accounts, calendars, mailer, partners
+from app.services import accounts, calendars, cancellations, mailer, partners
 from app.validation import Field, json_body, partial_body
 
 partner_routes = Blueprint("partner", __name__)
@@ -240,9 +240,10 @@ def answer_booking(reference):
     allowed = {"requested": ("confirmed", "cancelled"), "confirmed": ("cancelled",)}
     if data["status"] not in allowed.get(booking.status, ()):
         return jsonify({"error": f"A {booking.status} booking can't be changed to {data['status']}"}), 409
-    booking.status = data["status"]
-    if booking.status == "cancelled" and booking.payment_status == "unpaid":
-        booking.payment_status = "cancelled"
+    if data["status"] == "cancelled":
+        cancellations.cancel(booking, by="host")
+    else:
+        booking.status = data["status"]
     db.session.commit()
     if booking.guest_email and mailer.configured():
         template = mailer.booking_confirmed if booking.status == "confirmed" else mailer.booking_cancelled

@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from app.data import essentials
 from app.models import Guide, db
-from app.services import accounts, checkout, mailer, partners, payments
+from app.services import cancellations, accounts, checkout, mailer, partners, payments
 
 meta_routes = Blueprint("meta", __name__)
 
@@ -38,6 +38,8 @@ def public_config():
         "whatsapp": cfg.get("WHATSAPP_NUMBER") or None,
         "contact_email": cfg.get("CONTACT_EMAIL"),
         "retention_months": cfg.get("MESSAGE_RETENTION_MONTHS", 24),
+        "cancellation": cancellations.policy(),
+        "reviews": bool(cfg.get("REVIEWS_ENABLED", True)),
         "edition": essentials.EDITION,
         "last_reviewed": essentials.LAST_REVIEWED,
     })

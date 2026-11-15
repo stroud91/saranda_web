@@ -224,13 +224,13 @@ export function Terms() {
       </Section>
 
       <Section id="cancel" title="Cancelling and changes">
-        <p>To cancel, email {mailto} with your booking reference. What you get back depends on how long before check-in we receive it:</p>
+        <p>To cancel, open your booking page (the link is in your confirmation email) and press <b>Cancel booking</b>; this works until the day before check-in. You can also email {mailto} with your booking reference. What you get back depends on how long before check-in you cancel:</p>
         <table className="legal-table">
           <thead><tr><th scope="col">When you cancel</th><th scope="col">What you get back</th></tr></thead>
-          <tbody>{cancellationRules().map((r) => <tr key={r.when}><td>{r.when}</td><td><b>{r.refund}</b></td></tr>)}</tbody>
+          <tbody>{cancellationRules(cfg.cancellation || business.cancellation).map((r) => <tr key={r.when}><td>{r.when}</td><td><b>{r.refund}</b></td></tr>)}</tbody>
         </table>
         <ul>
-          <li>Refunds go back the way you paid, within 14 days.</li>
+          <li>Refunds go back the way you paid, within 14 days. The booking page shows the exact amount before you confirm, and we email you when the refund is sent.</li>
           <li>If you haven't paid anything yet (a request to book), you can cancel free of charge — just let us know as early as you can.</li>
           <li><b>Changing dates:</b> ask us and we'll move your stay if the apartment is free. Moving before the full-refund deadline is free; after it, the change counts as a cancellation under the table above.</li>
           <li><b>If we have to cancel</b> — for example if the apartment can't be used — you get back everything you paid, and we'll help you find somewhere else to stay.</li>

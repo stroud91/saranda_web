@@ -120,6 +120,13 @@ class Config:
     PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
     PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
 
+    # Cancellation rules for the site's own apartments (shown on the terms page and applied
+    # when a guest cancels): full refund this many days before check-in, a partial refund
+    # down to the second number, nothing after that.
+    CANCEL_FULL_REFUND_DAYS = int(os.environ.get("CANCEL_FULL_REFUND_DAYS", "14"))
+    CANCEL_PARTIAL_REFUND_DAYS = int(os.environ.get("CANCEL_PARTIAL_REFUND_DAYS", "7"))
+    CANCEL_PARTIAL_REFUND_PERCENT = int(os.environ.get("CANCEL_PARTIAL_REFUND_PERCENT", "50"))
+
     # Guest reviews of stays (written only by guests whose stay has finished).
     REVIEWS_ENABLED = _bool("REVIEWS_ENABLED", True)
 

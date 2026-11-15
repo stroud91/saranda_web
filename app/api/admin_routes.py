@@ -4,7 +4,7 @@ from flask import Blueprint, abort, g, jsonify, request
 from app.auth import require_admin
 from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, Review, db
 from app.models.db import utcnow
-from app.services import accounts, mailer, partners, reviews
+from app.services import accounts, cancellations, mailer, partners, reviews
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -30,7 +30,7 @@ def list_bookings():
         b.status = "expired"
     if stale:
         db.session.commit()
-    return jsonify([b.to_admin_dict() for b in rows])
+    return jsonify([_admin_view(b) for b in rows])
 
 
 @admin_routes.patch("/bookings/<reference>")
@@ -46,17 +46,43 @@ def update_booking(reference):
     was_confirmed, was_cancelled = booking.status == "confirmed", booking.status == "cancelled"
     if data["paid"]:  # e.g. the bank transfer arrived
         booking.mark_paid()
+    elif data["status"] == "cancelled":
+        if not was_cancelled:
+            cancellations.cancel(booking, by="host")  # a host's cancellation always owes back everything paid
     elif data["status"]:
         booking.status = data["status"]
-        if data["status"] == "cancelled" and booking.payment_status in ("unpaid", "awaiting_transfer"):
-            booking.payment_status = "cancelled"
     db.session.commit()
     if booking.status == "confirmed" and not was_confirmed and booking.guest_email and mailer.configured():
         mailer.deliver(mailer.booking_confirmed, booking.to_public_dict(), booking.guest_email, accounts.site_url())
-    if (booking.status == "cancelled" and not was_cancelled and booking.guest_email and mailer.configured()
-            and booking.payment_status != "paid"):
+    if booking.status == "cancelled" and not was_cancelled and booking.guest_email and mailer.configured():
         mailer.deliver(mailer.booking_cancelled, booking.to_public_dict(), booking.guest_email, accounts.site_url())
-    return jsonify(booking.to_admin_dict())
+    return jsonify(_admin_view(booking))
+
+
+def _admin_view(booking):
+    out = booking.to_admin_dict()
+    out["refund_methods"] = cancellations.refund_methods(booking) if booking.refund_status == "due" else []
+    return out
+
+
+@admin_routes.post("/bookings/<reference>/refund")
+@require_admin
+def refund_booking(reference):
+    """Send the refund that is due: through PayPal or the card processor when the guest paid
+    that way, or record that it was paid back by hand (bank transfer, cash)."""
+    booking = Booking.query.filter_by(reference=reference.upper()[:20]).first() or abort(404)
+    if booking.hotel and booking.hotel.business_id:
+        abort(404)
+    data = json_body({"method": Field(required=True, choices=["paypal", "card", "manual"])})
+    try:
+        cancellations.send_refund(booking, data["method"])
+    except cancellations.RefundError as exc:
+        db.session.rollback()
+        return jsonify({"error": str(exc)}), 409
+    db.session.commit()
+    if booking.guest_email and mailer.configured():
+        mailer.deliver(mailer.refund_sent, booking.to_public_dict(), booking.guest_email, accounts.site_url())
+    return jsonify(_admin_view(booking))
 
 
 @admin_routes.get("/guide-requests")

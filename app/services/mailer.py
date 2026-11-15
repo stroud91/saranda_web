@@ -127,12 +127,19 @@ def booking_for_host(summary, guest, event, to=None, base=None):
     if not to or not configured():
         return False
     headline = {"requested": "New booking request", "transfer": "Guest says a bank transfer was sent",
-                "paid": "Booking paid", "pending": "New booking awaiting payment"}.get(event, "Booking update")
+                "paid": "Booking paid", "pending": "New booking awaiting payment",
+                "cancelled": "Booking cancelled by the guest"}.get(event, "Booking update")
     lines = _stay_lines(summary) + [f"Guest: {_clean(guest.get('name'))} <{_clean(guest.get('email'))}> {_clean(guest.get('phone'))}".strip()]
     if event == "transfer":
         lines.append("Check your bank account, then confirm the booking in the Host desk.")
+    if event == "cancelled":
+        lines.append("The dates are free again.")
+        if summary.get("refund_status") == "due":
+            lines.append(f"A refund of EUR {summary['refund_amount']:.2f} is due under your cancellation terms. Send it from the Host desk.")
     button = None
-    if partner:
+    if partner and event == "cancelled":
+        button = ("Open your requests", f"{base}/business?tab=requests") if base else None
+    elif partner:
         lines.append("Confirm or decline it in your business dashboard. The guest pays you directly.")
         button = ("Open your requests", f"{base}/business?tab=requests") if base else None
     return send_action(to, f"{headline}: {summary['reference']}", headline, lines, button)
@@ -151,10 +158,33 @@ def booking_confirmed(summary, email, base):
     return send_action(email, f"Booking confirmed: {summary['reference']}", "You're booked!", paragraphs, button)
 
 
+def _refund_line(summary):
+    if summary.get("refund_status") == "due" and summary.get("refund_amount"):
+        return f"Refund: EUR {summary['refund_amount']:.2f}. We send it back the same way you paid, within 14 days."
+    if summary.get("payment_status") == "paid":
+        return "Under the cancellation terms no refund is due for this booking."
+    return "Nothing was charged."
+
+
 def booking_cancelled(summary, email, base):
-    paragraphs = ["Unfortunately the host couldn't accept this booking, so it has been cancelled. Nothing was charged."] + _stay_lines(summary)
+    """To the guest, when the host cancels (or declines) their booking."""
+    paragraphs = ["Unfortunately the host couldn't keep this booking, so it has been cancelled.", _refund_line(summary)] + _stay_lines(summary)
     button = ("Find another stay", f"{base}/stays") if base else None
     return send_action(email, f"Booking cancelled: {summary['reference']}", "Booking cancelled", paragraphs, button)
+
+
+def booking_cancelled_by_guest(summary, email, base):
+    """To the guest, confirming a cancellation they made themselves."""
+    paragraphs = ["You cancelled this booking, and the dates are free again.", _refund_line(summary)] + _stay_lines(summary) + _hosted_by(summary)
+    button = ("View the booking", f"{base}/booking/{summary['reference']}") if base else None
+    return send_action(email, f"Booking cancelled: {summary['reference']}", "Your booking is cancelled", paragraphs, button)
+
+
+def refund_sent(summary, email, base):
+    paragraphs = [f"We have sent your refund of EUR {summary['refund_amount']:.2f} for booking {summary['reference']}.",
+                  "Depending on your bank or card it can take a few working days to arrive."] + _stay_lines(summary)
+    button = ("View the booking", f"{base}/booking/{summary['reference']}") if base else None
+    return send_action(email, f"Refund sent: {summary['reference']}", "Your refund is on its way", paragraphs, button)
 
 
 # ---- reviews -------------------------------------------------------------------

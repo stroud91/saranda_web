@@ -7,6 +7,7 @@ import { goToPayPal, money } from "../lib/format";
 import { Alert, ErrorState, Skeleton } from "../components/ui";
 import TicketCard from "../components/account/TicketCard";
 import BankTransferPanel from "../components/account/BankTransferPanel";
+import CancelPanel, { RefundNote } from "../components/stays/CancelPanel";
 import { useAuth } from "../store/auth";
 import Confetti from "../components/fx/Confetti";
 import { rich, tr } from "../i18n";
@@ -157,6 +158,8 @@ export default function BookingStatus() {
         </div>
       )}
       {payment?.open && payment.bank && <BankTransferPanel reference={reference} payment={payment} onUpdate={setB} />}
+      <RefundNote booking={b} />
+      <CancelPanel booking={b} signedIn={Boolean(user)} onCancelled={(done) => { setB(done); setPayment(null); setNotice({ kind: "info", text: tr("Your booking is cancelled. We've emailed you a confirmation.") }); }} />
 
       <p className="tiny muted center">{rich("Save your reference <b>{ref}</b> — you'll need it if you contact us.", { b: (c) => <b>{c}</b> }, { ref: b.reference })}</p>
       <div className="row" style={{ justifyContent: "center" }}>

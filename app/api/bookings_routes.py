@@ -11,6 +11,7 @@ Security model:
 - Overlapping dates are rejected; unpaid holds expire (30 minutes for online
   payments, longer for bank transfers).
 """
+import hmac
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -21,7 +22,7 @@ from sqlalchemy import select
 from app.extensions import limiter
 from app.models import Booking, Hotel, db
 from app.models.db import utcnow
-from app.services import accounts, bank_transfer, calendars, checkout, mailer, partners, payments, paypal
+from app.services import accounts, bank_transfer, calendars, cancellations, checkout, mailer, partners, payments, paypal
 from app.validation import Field, ValidationError, json_body
 
 log = logging.getLogger(__name__)
@@ -206,6 +207,41 @@ def _booking_or_404(reference):
 @bookings_routes.get("/<reference>")
 def get_booking(reference):
     return jsonify(_booking_or_404(reference).to_public_dict())
+
+
+@bookings_routes.get("/<reference>/cancellation")
+def cancellation_quote(reference):
+    """What cancelling now would mean: whether it is still possible and how much comes back."""
+    return jsonify(cancellations.quote(_booking_or_404(reference)))
+
+
+def _is_guest(booking, email):
+    """Cancelling needs more than the link: the signed-in guest of the booking, or its e-mail address."""
+    user = accounts.current_user()
+    if user and user.email_verified and (booking.user_id == user.id or (booking.guest_email or "").lower() == user.email.lower()):
+        return True
+    given, real = (email or "").strip().lower().encode(), (booking.guest_email or "").lower().encode()
+    return bool(real) and hmac.compare_digest(given, real)
+
+
+@bookings_routes.post("/<reference>/cancel")
+@limiter.limit("10 per hour")
+def cancel_booking(reference):
+    """The guest cancels their own booking. The refund follows the cancellation terms and is
+    recorded as due; the host sends it from the Host desk."""
+    booking = _booking_or_404(reference)
+    data = json_body({"email": Field("email", max_len=255)})
+    if not _is_guest(booking, data["email"]):
+        return jsonify({"error": "That email address doesn't match this booking.", "fields": {"email": "Doesn't match"}}), 403
+    if not cancellations.can_cancel(booking):
+        return jsonify({"error": "This booking can no longer be cancelled online. Please contact your host."}), 409
+    cancellations.cancel(booking, by="guest")
+    db.session.commit()
+    summary = booking.to_public_dict()
+    if booking.guest_email and mailer.configured():
+        mailer.deliver(mailer.booking_cancelled_by_guest, summary, booking.guest_email, accounts.site_url())
+    _notify_host(booking, "cancelled")
+    return jsonify(summary)
 
 
 @bookings_routes.post("/<reference>/sync")

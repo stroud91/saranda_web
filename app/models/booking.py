@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from .db import add_prefix_for_prod, db, mask_email, new_reference, table_args, utcnow
 
@@ -44,6 +44,13 @@ class Booking(db.Model):
     transfer_claimed_at = db.Column(db.DateTime, nullable=True)  # guest says the bank transfer was sent
     paid_at = db.Column(db.DateTime, nullable=True)
     # Review invitation: the key in the e-mailed link (stored hashed) and when it was sent.
+    # Cancellation: who cancelled ("guest" or "host"), what is owed back (EUR) and whether it was sent.
+    cancelled_at = db.Column(db.DateTime, nullable=True)
+    cancelled_by = db.Column(db.String(10), nullable=True)
+    refund_amount = db.Column(db.Numeric(10, 2), nullable=True)
+    refund_status = db.Column(db.String(12), nullable=True)  # none | due | refunded
+    refunded_at = db.Column(db.DateTime, nullable=True)
+    refund_ref = db.Column(db.String(64), nullable=True)
     review_key_hash = db.Column(db.String(64), nullable=True)
     review_invited_at = db.Column(db.DateTime, nullable=True)
 
@@ -96,6 +103,11 @@ class Booking(db.Model):
             "guest_first_name": (self.guest_name or "").split(" ")[0] or None,
             "guest_email_masked": mask_email(self.guest_email),
             "hold_expires_at": self.hold_expires_at.isoformat() + "Z" if self.hold_expires_at else None,
+            # Guests can cancel online up to the day before check-in.
+            "can_cancel": self.status in ACTIVE_STATUSES and bool(self.start_date) and self.start_date.date() > date.today(),
+            "cancelled_by": self.cancelled_by,
+            "refund_amount": float(self.refund_amount) if self.refund_amount is not None else None,
+            "refund_status": self.refund_status,
             "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
         }
 

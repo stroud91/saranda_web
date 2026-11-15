@@ -18,6 +18,7 @@ function attention(b) {
   if (b.payment_status === "review") return "Payment amount didn't match — check it in PayPal";
   if (b.status === "pending" && b.payment_method === "bank") return b.transfer_claimed ? "Guest says the transfer was sent — check your bank" : "Waiting for a bank transfer";
   if (b.payment_status === "refunded" && b.status === "confirmed") return "Payment was refunded — decide what happens to the stay";
+  if (b.refund_status === "due") return `Refund due: ${money(b.refund_amount)} (${b.cancelled_by === "host" ? "you cancelled" : "guest cancelled, per your terms"})`;
   return null;
 }
 
@@ -35,7 +36,21 @@ function BookingRow({ b, onChange }) {
     }
   };
   const why = attention(b);
-  const open = ["requested", "pending"].includes(b.status);
+  const open = ["requested", "pending"].includes(b.status) || (b.status === "confirmed" && b.end_date > new Date().toISOString().slice(0, 10));
+  const refund = async (method) => {
+    const ask = method === "manual" ? tr("Mark the refund of {amount} as paid back? Do this only after you've sent the money.", { amount: money(b.refund_amount) })
+      : tr("Send {amount} back to the guest now? This moves real money and can't be undone.", { amount: money(b.refund_amount) });
+    if (!window.confirm(ask)) return;
+    setBusy(true);
+    try {
+      onChange(await api(`/admin/bookings/${b.reference}/refund`, { method: "POST", body: { method } }));
+      toast(tr("Refund recorded — the guest has been emailed"));
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
   const stayed = b.status === "confirmed" && b.end_date <= new Date().toISOString().slice(0, 10);
   // For guests you talk to on WhatsApp: a personal link that lets them review this stay once.
   const reviewLink = async () => {
@@ -68,13 +83,22 @@ function BookingRow({ b, onChange }) {
         {b.notes && <span className="small host-notes">“{b.notes}”</span>}
         {why && <span className="small host-why">{why}</span>}
       </div>
+      {b.refund_status === "due" && (
+        <div className="host-actions">
+          {(b.refund_methods || []).map((m) => (
+            <button key={m} type="button" className={`btn sm ${m === "manual" ? "" : "primary"}`} disabled={busy} onClick={() => refund(m)}>
+              <Banknote size={15} /> {m === "paypal" ? tr("Refund {amount} via PayPal", { amount: money(b.refund_amount) }) : m === "card" ? tr("Refund {amount} to the card", { amount: money(b.refund_amount) }) : tr("I've paid it back")}
+            </button>
+          ))}
+        </div>
+      )}
       {stayed && <div className="host-actions"><button type="button" className="btn sm" disabled={busy} onClick={reviewLink}><Star size={15} /> {tr("Review link")}</button></div>}
       {open && (
         <div className="host-actions">
           {b.payment_method === "bank" && b.status === "pending"
             ? <button type="button" className="btn sm primary" disabled={busy} onClick={() => act({ paid: true }, "Marked as paid and confirmed")}><Banknote size={15} /> {tr("Money received")}</button>
             : b.status === "requested" && <button type="button" className="btn sm primary" disabled={busy} onClick={() => act({ status: "confirmed" }, "Booking confirmed")}><Check size={15} /> {tr("Confirm")}</button>}
-          <button type="button" className="btn sm" disabled={busy} onClick={() => window.confirm(`Cancel booking ${b.reference}?`) && act({ status: "cancelled" }, "Booking cancelled")}><X size={15} /> {tr("Cancel")}</button>
+          <button type="button" className="btn sm" disabled={busy} onClick={() => window.confirm(b.payment_status === "paid" ? tr("Cancel booking {ref}? The guest has paid: everything they paid will be owed back.", { ref: b.reference }) : tr("Cancel booking {ref}?", { ref: b.reference })) && act({ status: "cancelled" }, "Booking cancelled")}><X size={15} /> {tr("Cancel")}</button>
         </div>
       )}
     </li>
