@@ -82,6 +82,9 @@ def require_admin(fn):
                 return jsonify({"error": "Please sign in"}), 401
             if not user.is_admin:
                 return jsonify({"error": "Admin access required"}), 403
+            if current_app.config.get("REQUIRE_TWO_STEP_FOR_HOSTS") and not (user.totp_enabled_at and user.totp_secret):
+                return jsonify({"error": "Switch on two-step sign-in under My account → Security to open the Host desk.",
+                                "code": "two_step_required"}), 403
             g.claims = {"sub": f"account:{user.id}", "email": user.email}
             return fn(*args, **kwargs)
         try:

@@ -13,7 +13,7 @@ from flask import current_app
 from flask.cli import AppGroup
 
 from app.models import AuthToken, ContactMessage, Enquiry, GuideBooking, LoginThrottle, User, UserSession, db
-from app.services import calendars, reviews, uploads
+from app.services import calendars, reviews, twofactor, uploads
 from app.models.db import utcnow
 from app.services import accounts
 
@@ -85,6 +85,18 @@ def list_users():
     for u in User.query.order_by(User.created_at).limit(500):
         flags = ", ".join(f for f, on in (("host", u.is_admin), ("verified", u.email_verified)) if on)
         click.echo(f"{u.id:>4}  {u.email:<40} {u.name or '':<24} {flags}")
+
+
+@user_commands.command("disable-two-step")
+@click.argument("email")
+def disable_two_step(email):
+    """Switch two-step sign-in off for an account that lost its phone and its recovery codes.
+    Only run this when you are sure who is asking. Every device is signed out."""
+    user = _find(email)
+    twofactor.switch_off(user)
+    accounts.revoke_sessions(user)
+    db.session.commit()
+    click.echo(f"Two-step sign-in is off for {user.email}. They can sign in with their password and set it up again.")
 
 
 @user_commands.command("cleanup")

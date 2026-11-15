@@ -833,3 +833,10 @@ h2.h3 { font-size: 1.25rem; }
 .star-input button:hover { transform: scale(1.08); }
 .star-input > span { margin-left: 8px; }
 @media (max-width: 520px) { .review-head { grid-template-columns: 1fr; gap: 12px; } }
+
+/* ---------- Two-step sign-in ---------- */
+.code-input { font-size: 1.5rem; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; text-align: center; font-weight: 700; }
+.two-step-qr { width: 200px; height: 200px; border-radius: 14px; background: #fff; padding: 6px; border: 1px solid var(--line); }
+.two-step-key { display: inline-block; font-size: 0.85rem; letter-spacing: 0.06em; word-break: break-all; user-select: all; }
+.recovery-codes { list-style: none; margin: 0; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; background: var(--bg-sunk); border-radius: 14px; }
+.recovery-codes code { font-size: 0.95rem; letter-spacing: 0.04em; user-select: all; }

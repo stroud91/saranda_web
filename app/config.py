@@ -120,6 +120,10 @@ class Config:
     PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
     PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
 
+    # Two-step sign-in is optional for everyone. Set this to make host accounts use it:
+    # the Host desk then refuses to open until the host has switched it on.
+    REQUIRE_TWO_STEP_FOR_HOSTS = _bool("REQUIRE_TWO_STEP_FOR_HOSTS", False)
+
     # Cancellation rules for the site's own apartments (shown on the terms page and applied
     # when a guest cancels): full refund this many days before check-in, a partial refund
     # down to the second number, nothing after that.

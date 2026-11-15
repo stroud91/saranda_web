@@ -36,6 +36,11 @@ class User(db.Model):
     last_login_at = db.Column(db.DateTime, nullable=True)
     password_changed_at = db.Column(db.DateTime, nullable=True)
     clerk_user_id = db.Column(db.String(64), unique=True, index=True, nullable=True)
+    # Two-step sign-in (see services/twofactor.py): the secret is encrypted, recovery codes are hashes.
+    totp_secret = db.Column(db.String(255), nullable=True)
+    totp_enabled_at = db.Column(db.DateTime, nullable=True)
+    totp_last_step = db.Column(db.BigInteger, nullable=True)
+    recovery_codes = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
@@ -89,6 +94,7 @@ class User(db.Model):
             "phone": self.phone_number or "",
             "email_verified": self.email_verified,
             "is_admin": self.is_admin,
+            "two_step": bool(self.totp_enabled_at and self.totp_secret),
             "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
         }
 

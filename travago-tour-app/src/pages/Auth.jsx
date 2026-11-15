@@ -5,6 +5,7 @@ import { post } from "../lib/api";
 import { safeNext, useAuth } from "../store/auth";
 import AuthShell from "../components/auth/AuthShell";
 import PasswordField from "../components/auth/PasswordField";
+import { CodeInput } from "../components/account/TwoStep";
 import { Alert, Field, Skeleton } from "../components/ui";
 import { rich, tr } from "../i18n";
 
@@ -35,6 +36,9 @@ export function SignIn() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [state, setState] = useState({ busy: false, error: "" });
+  const [ticket, setTicket] = useState(""); // set once the password is accepted and a code is needed
+  const [code, setCode] = useState("");
+  const [recovery, setRecovery] = useState(false);
 
   if (!ready) return <div className="page container"><Skeleton h={420} r={26} /></div>;
   if (!available) return <Unavailable />;
@@ -45,12 +49,43 @@ export function SignIn() {
     setState({ busy: true, error: "" });
     try {
       const res = await post("/auth/login", { email, password, remember });
+      if (res.two_step) {
+        setTicket(res.ticket);
+        setPassword("");
+        return setState({ busy: false, error: "" });
+      }
       setUser(res.user);
       navigate(next, { replace: true });
     } catch (err) {
       setState({ busy: false, error: err.message });
     }
   };
+  const submitCode = async (e) => {
+    e.preventDefault();
+    setState({ busy: true, error: "" });
+    try {
+      const res = await post("/auth/login/code", { ticket, code, remember });
+      setUser(res.user);
+      navigate(next, { replace: true });
+    } catch (err) {
+      setCode("");
+      if (err.status === 401 && !err.fields?.code) setTicket(""); // the five minutes ran out: back to the password
+      setState({ busy: false, error: err.message });
+    }
+  };
+  if (ticket) {
+    return (
+      <AuthShell hour={19.2} eyebrow={tr("One more step")} title={tr("Enter your code")} lead={tr("Open your authenticator app and type the 6-digit code for Saranda Companion.")}
+        footer={<button type="button" className="link-btn" onClick={() => { setTicket(""); setCode(""); setState({ busy: false, error: "" }); }}>{tr("Start again")}</button>}>
+        <form className="stack" onSubmit={submitCode} noValidate>
+          <CodeInput value={code} onChange={setCode} recovery={recovery} autoFocus />
+          {state.error && <Alert kind="error">{state.error}</Alert>}
+          <button className="btn primary lg" disabled={state.busy || code.trim().length < 6}>{state.busy ? <span className="spinner" /> : <LogIn size={18} />} {tr("Sign in")}</button>
+          <button type="button" className="link-btn small" onClick={() => { setRecovery((r) => !r); setCode(""); }}>{recovery ? tr("Use a code from my app") : tr("Lost your phone? Use a recovery code")}</button>
+        </form>
+      </AuthShell>
+    );
+  }
   return (
     <AuthShell hour={19.2} eyebrow={tr("Welcome back")} title={tr("Sign in")} lead={tr("See your bookings, guide requests and saved trips.")}
       footer={rich("New here? <a>Create an account</a>", { a: (c) => <Link to={`/signup?next=${encodeURIComponent(next)}`}>{c}</Link> })}>

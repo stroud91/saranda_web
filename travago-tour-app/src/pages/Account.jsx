@@ -9,6 +9,7 @@ import { useGuidesOn, usePartnersOn } from "../lib/useConfig";
 import { euro, fmtDate } from "../lib/format";
 import { Alert, Field, Segmented, Skeleton, toast } from "../components/ui";
 import TicketCard from "../components/account/TicketCard";
+import TwoStep from "../components/account/TwoStep";
 import PasswordField from "../components/auth/PasswordField";
 import { tr } from "../i18n";
 
@@ -193,6 +194,7 @@ function Security({ user, onUser }) {
         <p className="tiny muted">{tr("Changing it signs out every other device.")}</p>
       </form>
 
+      <TwoStep user={user} onUser={onUser} />
       <div className="card pad stack">
         <h2 className="h3"><MonitorSmartphone size={18} /> {tr("Signed-in devices")}</h2>
         {!sessions ? <Skeleton h={80} r={12} /> : (
