@@ -43,6 +43,9 @@ def public_config():
         "cancellation": cancellations.policy(),
         "reviews": bool(cfg.get("REVIEWS_ENABLED", True)),
         "stats": stats.enabled(),
+        # For the privacy policy: how long backups are kept, and whether a copy is stored elsewhere.
+        "backup_months": int(cfg.get("BACKUP_KEEP_MONTHLY", 6)),
+        "backup_offsite": bool(cfg.get("BACKUP_UPLOAD_URL")),
         "edition": essentials.EDITION,
         "last_reviewed": essentials.LAST_REVIEWED,
     })

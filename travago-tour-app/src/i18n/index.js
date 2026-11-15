@@ -79,6 +79,19 @@ export async function applyLang(code) {
   return current;
 }
 
+/**
+ * Add a page's own table to the language in use. Long texts that only one page
+ * shows (the privacy policy, the booking terms) live in their own file, so other
+ * pages don't download them: addTable(() => import("./legal.js")).
+ */
+export async function addTable(importer) {
+  const code = current;
+  if (code === "en" || !cache[code]) return;
+  const { default: rows } = await importer();
+  const col = COLUMN[code];
+  for (const row of rows) if (row[col]) cache[code].set(row[0], row[col]);
+}
+
 const fill = (text, vars) => (vars ? text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : text);
 
 /** Translate a piece of interface text. Unknown text comes back unchanged. */
