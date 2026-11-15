@@ -132,7 +132,7 @@ export function SignUp() {
       <form className="stack" onSubmit={submit} noValidate>
         <Field label={tr("Name")} error={state.fields.name}><input className="input" value={form.name} onChange={up("name")} autoComplete="name" maxLength={120} required autoFocus={FINE_POINTER} /></Field>
         <Field label={tr("Email")} error={state.fields.email}><input className="input" type="email" value={form.email} onChange={up("email")} autoComplete="username" maxLength={255} required /></Field>
-        <PasswordField value={form.password} onChange={up("password")} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
+        <PasswordField value={form.password} onChange={up("password")} error={state.fields.password} autoComplete="new-password" meter hint={tr(PW_HINT)} />
         <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
         {state.error && !Object.keys(state.fields).length && <Alert kind="error">{state.error}</Alert>}
         {state.fields.email === "Already registered" && <Alert kind="info">That email already has an account. <Link to="/signin">Sign in</Link> or <Link to="/forgot-password">reset the password</Link>.</Alert>}
@@ -204,7 +204,7 @@ export function ResetPassword() {
       footer={<Link to="/forgot-password">{tr("Ask for a new link")}</Link>}>
       {!token ? <Alert kind="warn">{tr("This page needs the link from your reset email.")}</Alert> : (
         <form className="stack" onSubmit={submit} noValidate>
-          <PasswordField label={tr("New password")} value={password} onChange={setPassword} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
+          <PasswordField label={tr("New password")} value={password} onChange={setPassword} error={state.fields.password} autoComplete="new-password" meter hint={tr(PW_HINT)} />
           {state.error && !state.fields.password && <Alert kind="error">{state.error}</Alert>}
           <button className="btn primary lg" disabled={state.busy || !password}>{state.busy ? <span className="spinner" /> : <KeyRound size={18} />} {tr("Save password")}</button>
         </form>

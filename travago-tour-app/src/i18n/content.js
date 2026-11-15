@@ -457,4 +457,11 @@ export default [
   ["October–April", "Tetor–prill", "Octobre–avril", "Ottobre–aprile", "Oktober–April"],
   ["Better for culture, food, hiking and city breaks; many seasonal beach businesses reduce hours.", "Më mirë për kulturë, ushqim, ecje në natyrë dhe udhëtime në qytete; shumë biznese sezonale të plazhit shkurtojnë orarin.", "Mieux pour la culture, la table, la randonnée et les escapades urbaines ; beaucoup de commerces saisonniers de plage réduisent leurs horaires.", "Meglio per cultura, cibo, escursioni e city break; molte attività stagionali di spiaggia riducono gli orari.", "Besser für Kultur, Essen, Wandern und Städtereisen; viele saisonale Strandbetriebe verkürzen ihre Öffnungszeiten."],
   ["Culture season", "Sezoni i kulturës", "Saison culturelle", "Stagione della cultura", "Kultursaison"],
+  ["€4–€12 pp", "€4–€12 për person", "4–12 € par personne", "€4–€12 a persona", "4–12 € pro Person"],
+  ["€7–€15 pp", "€7–€15 për person", "7–15 € par personne", "€7–€15 a persona", "7–15 € pro Person"],
+  ["€12–€30+ pp", "€12–€30+ për person", "12–30 €+ par personne", "€12–€30+ a persona", "12–30+ € pro Person"],
+  ["€2–€15+ pp depending on site", "€2–€15+ për person, sipas vendit", "2–15 €+ par personne selon le site", "€2–€15+ a persona a seconda del sito", "2–15+ € pro Person, je nach Ort"],
+  ["Highly seasonal — confirm locally", "Shumë sezonale; konfirmojeni në vend", "Très saisonnier : renseignez-vous sur place", "Molto stagionale: verifica sul posto", "Stark saisonabhängig; vor Ort erfragen"],
+  ["Often €30–€70+ / day depending on season, car and insurance", "Shpesh €30–€70+ në ditë, sipas sezonit, makinës dhe sigurimit", "Souvent 30–70 €+ par jour selon la saison, la voiture et l'assurance", "Spesso €30–€70+ al giorno a seconda di stagione, auto e assicurazione", "Oft 30–70+ € pro Tag, je nach Saison, Auto und Versicherung"],
+  ["Highly variable — quote by route and group", "Shumë e ndryshueshme; çmimi sipas itinerarit dhe grupit", "Très variable : devis selon l'itinéraire et le groupe", "Molto variabile: preventivo in base a percorso e gruppo", "Sehr unterschiedlich; Angebot je nach Route und Gruppe"],
 ];

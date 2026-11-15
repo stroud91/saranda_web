@@ -18,7 +18,7 @@ import AlbaniaMap from "../components/map/AlbaniaMap";
 import RouteSketch from "../components/art/RouteSketch";
 import CalendarButton from "../components/planner/CalendarButton";
 import { Alert, Segmented, Sheet, Skeleton, Stat, toast } from "../components/ui";
-import { tr } from "../i18n";
+import { rich, tr } from "../i18n";
 
 const DAY_COLORS = ["#d9653b", "#0b5c7e", "#19c3c0", "#6e7f3a", "#d63c7a", "#f4b63f", "#0e8fb0", "#8e3b5f"];
 
@@ -241,7 +241,11 @@ export default function Planner() {
           <div className="card pad helper">
             <Sparkles size={18} />
             <div className="small">
-              Not sure where to go next? <button className="linklike" onClick={() => openConcierge(`I'm planning ${t.days.length} days starting in ${name(t.days[0]?.stops[0])}. What should I add?`)}>Ask the concierge</button>, browse <Link to="/itineraries">itineraries</Link>{guides ? <>, or <Link to="/guides">book a guide</Link> for a day</> : null}.
+              {rich(guides ? "Not sure where to go next? <ask>Ask the concierge</ask>, browse <it>itineraries</it>, or <g>book a guide</g> for a day." : "Not sure where to go next? <ask>Ask the concierge</ask> or browse <it>itineraries</it>.", {
+                ask: (c) => <button className="linklike" onClick={() => openConcierge(`I'm planning ${t.days.length} days starting in ${name(t.days[0]?.stops[0])}. What should I add?`)}>{c}</button>,
+                it: (c) => <Link to="/itineraries">{c}</Link>,
+                g: (c) => <Link to="/guides">{c}</Link>,
+              })}
             </div>
           </div>
         </section>

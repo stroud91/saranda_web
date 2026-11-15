@@ -30,7 +30,7 @@ export default function Experiences() {
   const carTypes = useMemo(() => ["all", ...new Set(["Hatchback", "Sedan", "SUV", ...(cars || []).map((c) => c.car_type)])], [cars]);
   return (
     <div className="page container">
-      <PageHeader eyebrow={tr("Experiences & transport")} icon={Ticket} title={tr("Things to do, ways to get there")} lead={`Day tours around Sarandë and rental cars for the Riviera road.${guides ? " For a private day, pair any of these with a local guide." : ""}`} />
+      <PageHeader eyebrow={tr("Experiences & transport")} icon={Ticket} title={tr("Things to do, ways to get there")} lead={tr("Day tours around Sarandë and rental cars for the Riviera road.") + (guides ? " " + tr("For a private day, pair any of these with a local guide.") : "")} />
       <Segmented layoutId="exp" value={tab} onChange={setTab} options={[{ value: "tours", label: "Experiences" }, { value: "cars", label: "Rentals" }]} />
       {tab === "tours" ? (
         <>

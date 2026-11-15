@@ -3,6 +3,7 @@ import { Car, Ship, Sailboat, Utensils, MapPin, Flag, Home, AlertTriangle, Info,
 import { Link } from "react-router-dom";
 import { hm, hmRange, kmRange } from "../../lib/format";
 import { tr } from "../../i18n";
+import { stepTitle, warningText } from "../../lib/timelineText";
 
 const ICON = { depart: Flag, drive: Car, ferry: Ship, boat: Sailboat, lunch: Utensils, visit: MapPin, arrive: Home };
 
@@ -12,8 +13,8 @@ export default function Timeline({ day, compact = false }) {
   return (
     <div className="timeline-wrap">
       <div className="tl-summary">
-        <span><b>{s.start}</b> → <b>{s.end}</b>{s.end_latest !== s.end && <span className="muted"> (latest {s.end_latest})</span>}</span>
-        {s.moving_minutes_max > 0 && <span className="muted">· on the move {hmRange(s.moving_minutes_min, s.moving_minutes_max)}</span>}
+        <span><b>{s.start}</b> → <b>{s.end}</b>{s.end_latest !== s.end && <span className="muted"> {tr("(latest {time})", { time: s.end_latest })}</span>}</span>
+        {s.moving_minutes_max > 0 && <span className="muted">· {tr("on the move {time}", { time: hmRange(s.moving_minutes_min, s.moving_minutes_max) })}</span>}
         {s.km_max > 0 && <span className="muted">· {kmRange(s.km_min, s.km_max)}</span>}
         {day.directions_url && s.moving_minutes_max > 0 && (
           <a className="tiny" href={day.directions_url} target="_blank" rel="noopener noreferrer"><Navigation size={12} /> {tr("Directions")}</a>
@@ -24,7 +25,7 @@ export default function Timeline({ day, compact = false }) {
           {day.warnings.map((w) => (
             <div key={w.text} className={`alert ${w.level === "warn" ? "warn" : "info"}`}>
               {w.level === "warn" ? <AlertTriangle size={16} /> : <Info size={16} />}
-              <span className="small">{w.text}</span>
+              <span className="small">{warningText(w)}</span>
             </div>
           ))}
         </div>
@@ -44,17 +45,17 @@ export default function Timeline({ day, compact = false }) {
               <span className="tl-icon"><Icon size={14} /></span>
               <div className="tl-body">
                 <div className="tl-title">
-                  {e.type === "visit" && e.slug ? <Link to={`/explore/${e.slug}`}>{e.title}</Link> : e.title}
+                  {e.type === "visit" && e.slug ? <Link to={`/explore/${e.slug}`}>{stepTitle(e.title)}</Link> : stepTitle(e.title)}
                 </div>
                 {e.minutes > 0 && (
                   <div className="tl-meta tiny muted">
                     {["drive", "ferry", "boat"].includes(e.type)
-                      ? `${hm(e.minutes)} expected · range ${hmRange(e.min_minutes, e.max_minutes)} · ${kmRange(e.km_min, e.km_max)}`
+                      ? `${tr("{time} expected", { time: hm(e.minutes) })} · ${tr("range {range}", { range: hmRange(e.min_minutes, e.max_minutes) })} · ${kmRange(e.km_min, e.km_max)}`
                       : `${e.start}–${e.end} · ${hm(e.minutes)}`}
-                    {e.source === "planner" && <span className="badge sea" style={{ marginLeft: 6 }}>Planner</span>}
+                    {e.source === "planner" && <span className="badge sea" style={{ marginLeft: 6 }}>{tr("Planner")}</span>}
                   </div>
                 )}
-                {!compact && e.note && <div className="tl-note tiny">{e.note}</div>}
+                {!compact && e.note && <div className="tl-note tiny">{tr(e.note)}</div>}
               </div>
             </motion.li>
           );

@@ -106,7 +106,7 @@ export const CONTENT_KEYS = new Set([
   "name", "summary", "best_for", "planning_note", "highlights", "tags", "blurb", "label", "category_label", "region_name", "note",
   "audience", "tagline", "title", "transport", "plan", "options", "why", "alternative", "beach_rule", "boat_day", "booking_strategy",
   "item", "choices", "checklist", "idea", "length", "promise", "disclaimer", "edition", "service", "final_check", "what", "money",
-  "price_note", "quick_start", "restaurant_tip", "road_trip_tip", "tip", "topic", "save_money", "months", "text", "verdict",
+  "price_note", "quick_start", "restaurant_tip", "road_trip_tip", "tip", "topic", "save_money", "months", "text", "verdict", "range",
 ]);
 
 function swap(node, key) {

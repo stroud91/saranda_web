@@ -105,7 +105,7 @@ export default function Stories({ items, start = 0, onClose, placeName = (s) => 
       className="stories"
       role="dialog"
       aria-modal="true"
-      aria-label={`Video stories, ${i + 1} of ${items.length}: ${item.title}`}
+      aria-label={tr("Video stories, {n} of {total}: {title}", { n: i + 1, total: items.length, title: tr(item.title) })}
       tabIndex={-1}
       ref={dialog}
       initial={{ opacity: 0 }}
@@ -146,8 +146,8 @@ export default function Stories({ items, start = 0, onClose, placeName = (s) => 
           </motion.div>
         </AnimatePresence>
         <div className="stories-caption">
-          <h3>{item.title}</h3>
-          <p className="small">{item.caption}</p>
+          <h3>{tr(item.title)}</h3>
+          <p className="small">{tr(item.caption)}</p>
           <div className="row wrap gap-sm">
             <Link className="btn sm glass" to={`/explore/${item.place}`} onClick={onClose}><MapPin size={14} /> {placeName(item.place)}</Link>
           </div>

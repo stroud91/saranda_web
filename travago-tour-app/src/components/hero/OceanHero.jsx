@@ -133,20 +133,20 @@ export default function OceanHero({ scrollProgress, surfaceRef }) {
               id="ocean-hour" type="range" min={MIN_H} max={MAX_H} step={0.05} value={hour}
               onChange={(e) => { setLive(false); setHour(Number(e.target.value)); }}
               aria-valuetext={`${fmtHour(hour)}, ${mood}`}
-              aria-label="Time of day over the bay"
+              aria-label={tr("Time of day over the bay")}
             />
             {!live && (
-              <button type="button" className="icon-btn sm" onClick={() => setLive(true)} title="Back to the real time in Sarandë" aria-label="Back to the real time in Sarandë">
+              <button type="button" className="icon-btn sm" onClick={() => setLive(true)} title={tr("Back to the real time in Sarandë")} aria-label={tr("Back to the real time in Sarandë")}>
                 <Radio size={15} />
               </button>
             )}
             {soundAvailable() && (
-              <button type="button" className="icon-btn sm" onClick={toggleSound} aria-pressed={sound} title={sound ? "Mute the sea" : "Hear the sea"} aria-label={sound ? "Mute the sea" : "Hear the sea"}>
+              <button type="button" className="icon-btn sm" onClick={toggleSound} aria-pressed={sound} title={sound ? tr("Mute the sea") : tr("Hear the sea")} aria-label={sound ? tr("Mute the sea") : tr("Hear the sea")}>
                 {sound ? <Volume2 size={15} /> : <VolumeX size={15} />}
               </button>
             )}
           </div>
-          {mode === "live" && hint && <div className="ocean-hint tiny">Tap the water · drag the time{hour >= 20.5 ? " · tap the stars" : ""}</div>}
+          {mode === "live" && hint && <div className="ocean-hint tiny">{tr("Tap the water · drag the time")}{hour >= 20.5 ? ` · ${tr("tap the stars")}` : ""}</div>}
         </div>
       )}
     </>
