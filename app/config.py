@@ -120,6 +120,9 @@ class Config:
     PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
     PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
 
+    # Guest reviews of stays (written only by guests whose stay has finished).
+    REVIEWS_ENABLED = _bool("REVIEWS_ENABLED", True)
+
     # Photos for listings: the largest file accepted, and where they are kept
     # (default: instance/uploads, which deploys never touch).
     UPLOAD_MAX_MB = int(os.environ.get("UPLOAD_MAX_MB", "10"))

@@ -811,3 +811,25 @@ h2.h3 { font-size: 1.25rem; }
 .field.translations { display: grid; gap: 8px; padding: 14px; border: 1px dashed var(--line-strong); border-radius: 16px; }
 .field.translations .chips { margin: 2px 0; }
 .review-diff dd { white-space: pre-wrap; }
+
+/* ---------- Guest reviews ---------- */
+.stars { display: inline-flex; gap: 1px; color: #e8a317; vertical-align: -2px; }
+.review-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
+.review-score { display: grid; justify-items: start; gap: 2px; }
+.review-score > b { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; }
+.review-bars { display: grid; gap: 4px; max-width: 320px; }
+.review-bars > div { display: grid; grid-template-columns: 12px minmax(0, 1fr) 22px; gap: 8px; align-items: center; }
+.review-bars i { display: block; height: 7px; border-radius: 99px; background: var(--bg-sunk); overflow: hidden; }
+.review-bars i b { display: block; height: 100%; background: #e8a317; border-radius: 99px; }
+.review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.review { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.review-list.desk .review { padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.review-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-reply { margin-left: 14px; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--bg-sunk); border-radius: 0 12px 12px 0; }
+.review-reply p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.92rem; }
+.star-input { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.star-input button { border: 0; background: none; padding: 4px; color: var(--line-strong); border-radius: 10px; min-width: 44px; min-height: 44px; display: grid; place-items: center; transition: color 0.15s, transform 0.15s; }
+.star-input button.on { color: #e8a317; }
+.star-input button:hover { transform: scale(1.08); }
+.star-input > span { margin-left: 8px; }
+@media (max-width: 520px) { .review-head { grid-template-columns: 1fr; gap: 12px; } }

@@ -2,8 +2,9 @@
 from flask import Blueprint, abort, g, jsonify, request
 
 from app.auth import require_admin
-from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, db
-from app.services import accounts, mailer, partners
+from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, Review, db
+from app.models.db import utcnow
+from app.services import accounts, mailer, partners, reviews
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -127,6 +128,55 @@ def update_guide(slug):
 def list_messages():
     rows = ContactMessage.query.order_by(ContactMessage.created_at.desc()).limit(500).all()
     return jsonify([m.to_admin_dict() for m in rows])
+
+
+# ---- guest reviews --------------------------------------------------------------
+@admin_routes.get("/reviews")
+@require_admin
+def list_reviews():
+    """Every review on the site, newest first, hidden ones included."""
+    rows = Review.query.order_by(Review.created_at.desc()).limit(500).all()
+    return jsonify([r.to_host_dict() for r in rows])
+
+
+@admin_routes.patch("/reviews/<int:review_id>")
+@require_admin
+def moderate_review(review_id):
+    """Hide or show a review, or reply to one about the site's own stays."""
+    review = db.session.get(Review, review_id) or abort(404)
+    data = json_body({"action": Field(choices=["hide", "publish"]), "reason": Field(max_len=300),
+                      "reply": Field("text", max_len=1500)})
+    body = request.get_json(silent=True) or {}
+    if data["action"] == "hide":
+        if not data["reason"] or len(data["reason"]) < 5:
+            return jsonify({"error": "Say why it is hidden (abusive, off-topic, personal details…)", "fields": {"reason": "Required"}}), 400
+        review.status, review.hidden_reason = "hidden", data["reason"]
+    elif data["action"] == "publish":
+        review.status, review.hidden_reason = "published", None
+    if "reply" in body:
+        if reviews.hosted_by(review) is not None:
+            return jsonify({"error": "The business that hosts this stay replies to its own reviews."}), 409
+        review.reply = data["reply"] or None
+        review.replied_at = utcnow() if review.reply else None
+    db.session.commit()
+    return jsonify(review.to_host_dict())
+
+
+@admin_routes.post("/bookings/<reference>/review-link")
+@require_admin
+def review_link(reference):
+    """A fresh review link for a finished stay of the site's own, to send by WhatsApp when
+    e-mail isn't set up. Making a new one cancels the previous link."""
+    booking = Booking.query.filter_by(reference=reference.upper()[:20]).first() or abort(404)
+    if booking.hotel and booking.hotel.business_id:
+        abort(404)
+    why = reviews.can_review(booking)
+    if why:
+        return jsonify({"error": why}), 409
+    key = reviews.new_key(booking)
+    booking.review_invited_at = booking.review_invited_at or utcnow()
+    db.session.commit()
+    return jsonify({"url": f"{accounts.site_url() or request.host_url.rstrip('/')}/review/{booking.reference}?key={key}"})
 
 
 # ---- partner businesses: review what they submit ------------------------------

@@ -6,10 +6,11 @@ from flask import Blueprint, abort, jsonify, request
 from app.auth import require_admin
 from app.models import Booking, Hotel, db
 from app.models.booking import ACTIVE_STATUSES
-from app.services import calendars, partners
+from app.services import calendars, partners, reviews
 from app.validation import Field, json_body, query_args
 
 hotels_routes = Blueprint("hotels", __name__)
+NO_REVIEWS = {"average": None, "count": 0}
 
 
 def _hotel_or_404(hotel_id):
@@ -37,12 +38,14 @@ def list_hotels():
     # The site's own apartments first, then partners', each by price.
     hotels = (Hotel.query.filter(Hotel.is_active.isnot(False), partners.public_filter(Hotel))
               .order_by(Hotel.business_id.isnot(None), Hotel.price_per_night).all())
-    return jsonify([h.to_dict() for h in hotels])
+    rated = reviews.summary([h.id for h in hotels])
+    return jsonify([{**h.to_dict(), "reviews": rated.get(h.id, NO_REVIEWS)} for h in hotels])
 
 
 @hotels_routes.get("/<int:hotel_id>")
 def get_hotel(hotel_id):
-    return jsonify(_hotel_or_404(hotel_id).to_dict())
+    hotel = _hotel_or_404(hotel_id)
+    return jsonify({**hotel.to_dict(), "reviews": reviews.summary([hotel.id]).get(hotel.id, NO_REVIEWS)})
 
 
 @hotels_routes.get("/<int:hotel_id>/availability")

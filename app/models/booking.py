@@ -43,6 +43,9 @@ class Booking(db.Model):
     charge_amount = db.Column(db.Numeric(10, 2), nullable=True)
     transfer_claimed_at = db.Column(db.DateTime, nullable=True)  # guest says the bank transfer was sent
     paid_at = db.Column(db.DateTime, nullable=True)
+    # Review invitation: the key in the e-mailed link (stored hashed) and when it was sent.
+    review_key_hash = db.Column(db.String(64), nullable=True)
+    review_invited_at = db.Column(db.DateTime, nullable=True)
 
     def start_hold(self, minutes=HOLD_MINUTES):
         self.hold_expires_at = utcnow() + timedelta(minutes=minutes)

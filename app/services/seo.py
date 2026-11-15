@@ -66,7 +66,7 @@ PAGES = {
 ALIASES = {"hotels": "stays", "tours": "experiences", "about-us": "contact"}
 # Pages that only make sense to the person looking at them.
 PRIVATE = {"account", "signin", "signup", "forgot-password", "reset-password", "verify-email"}
-PRIVATE_PREFIXES = ("booking/", "guide-request/", "trip/")
+PRIVATE_PREFIXES = ("booking/", "guide-request/", "trip/", "review/")
 ASSET = re.compile(r"\.(js|mjs|css|map|png|jpe?g|webp|gif|svg|ico|mp4|webm|woff2?|ttf|json|txt|xml|webmanifest)$", re.I)
 
 
@@ -109,6 +109,11 @@ def _stay(hotel_id, lang):
         "priceRange": f"from €{price} per night", "image": photos[:6],
         "amenityFeature": [{"@type": "LocationFeatureSpecification", "name": a, "value": True} for a in (hotel.amenities or [])[:20]],
     }
+    from app.services import reviews  # local import, as above
+
+    rated = reviews.summary([hotel.id]).get(hotel.id)
+    if rated:  # only real, published reviews from guests who stayed
+        data["aggregateRating"] = {"@type": "AggregateRating", "ratingValue": rated["average"], "reviewCount": rated["count"], "bestRating": 5, "worstRating": 1}
     return Meta(f"{name} in {hotel.city} · from €{price} a night · {host}", _short(text), f"stays/{hotel.id}",
                 image=photos[0] if photos else None, kind="place", data=[data])
 

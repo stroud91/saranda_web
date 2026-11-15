@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BedDouble, Check, Inbox, Landmark, Mail, RefreshCw, Users, X } from "lucide-react";
+import { Banknote, BedDouble, Check, Inbox, Landmark, Mail, RefreshCw, Star, Users, X } from "lucide-react";
 import { api } from "../../lib/api";
 import { euro, fmtDate, money } from "../../lib/format";
 import { Alert, Segmented, Skeleton, toast } from "../ui";
 import { usePartnersOn } from "../../lib/useConfig";
 import PartnerReview from "./PartnerReview";
 import HostListings from "./HostListings";
+import ReviewDesk from "./ReviewDesk";
 import { tr } from "../../i18n";
 
 const patch = (path, body) => api(path, { method: "PATCH", body });
@@ -35,6 +36,24 @@ function BookingRow({ b, onChange }) {
   };
   const why = attention(b);
   const open = ["requested", "pending"].includes(b.status);
+  const stayed = b.status === "confirmed" && b.end_date <= new Date().toISOString().slice(0, 10);
+  // For guests you talk to on WhatsApp: a personal link that lets them review this stay once.
+  const reviewLink = async () => {
+    setBusy(true);
+    try {
+      const { url } = await api(`/admin/bookings/${b.reference}/review-link`, { method: "POST", body: {} });
+      try {
+        await navigator.clipboard.writeText(url);
+        toast(tr("Review link copied — send it to the guest"));
+      } catch {
+        window.prompt(tr("Copy this link"), url);
+      }
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <li className={`host-row ${why ? "needs" : ""}`}>
       <div className="host-row-main">
@@ -49,6 +68,7 @@ function BookingRow({ b, onChange }) {
         {b.notes && <span className="small host-notes">“{b.notes}”</span>}
         {why && <span className="small host-why">{why}</span>}
       </div>
+      {stayed && <div className="host-actions"><button type="button" className="btn sm" disabled={busy} onClick={reviewLink}><Star size={15} /> {tr("Review link")}</button></div>}
       {open && (
         <div className="host-actions">
           {b.payment_method === "bank" && b.status === "pending"
@@ -130,13 +150,15 @@ export default function HostDesk() {
         <Segmented
           options={[{ value: "todo", label: `Needs you (${count})` }, { value: "all", label: "Everything" }, { value: "messages", label: `Messages (${data.messages.length})` },
             ...(data.partners ? [{ value: "partners", label: `Partners (${data.partners.queue.length})` }] : []),
-            { value: "listings", label: "Your listings" }]}
+            { value: "listings", label: "Your listings" }, { value: "reviews", label: "Reviews" }]}
           value={view} onChange={setView} layoutId="host-tabs"
         />
         <button type="button" className="btn sm" onClick={load}><RefreshCw size={15} /> {tr("Refresh")}</button>
       </div>
       {view === "listings" ? (
         <HostListings />
+      ) : view === "reviews" ? (
+        <ReviewDesk mode="host" />
       ) : view === "partners" && data.partners ? (
         <PartnerReview data={data.partners} onReload={load} />
       ) : view === "messages" ? (

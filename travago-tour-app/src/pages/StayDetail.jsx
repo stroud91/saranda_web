@@ -9,6 +9,7 @@ import { useConfig, whatsappUrl } from "../lib/useConfig";
 import SceneArt from "../components/art/SceneArt";
 import Handoff from "../components/ui/Handoff";
 import PhotoViewer from "../components/media/PhotoViewer";
+import Reviews from "../components/stays/Reviews";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, ErrorState, Field, Sheet, Skeleton, Stepper } from "../components/ui";
 import { WeatherCard } from "../components/live/Weather";
@@ -142,6 +143,7 @@ export default function StayDetail() {
               <span><BedDouble size={16} /> {plural(h.bedrooms, "{n} bedroom", "{n} bedrooms")} · {plural(h.beds, "{n} bed", "{n} beds")}</span>
               <span><Bath size={16} /> {h.bathrooms} bath</span>
               <span><Users size={16} /> {tr("up to {n} guests", { n: h.max_guests })}</span>
+              {h.reviews?.count > 0 && <a href="#reviews"><Star size={16} fill="currentColor" /> {h.reviews.average.toFixed(1)} · {plural(h.reviews.count, "{n} review", "{n} reviews")}</a>}
               {h.airbnb_rating && <span><Star size={16} fill="currentColor" /> {h.airbnb_rating} on {h.rating_source}</span>}
             </div>
           </div>
@@ -171,6 +173,7 @@ export default function StayDetail() {
           ) : (
             <div className="card pad"><h3>{tr("Sarandë weather")}</h3><WeatherCard compact /></div>
           )}
+          <Reviews stayId={h.id} />
         </div>
         <aside className="card pad sticky-col booking-widget">
           <div className="row between">

@@ -157,6 +157,27 @@ def booking_cancelled(summary, email, base):
     return send_action(email, f"Booking cancelled: {summary['reference']}", "Booking cancelled", paragraphs, button)
 
 
+# ---- reviews -------------------------------------------------------------------
+def review_invitation(summary, email, link):
+    paragraphs = [f"Thank you for staying at {_clean(summary['hotel_name'])}. We hope you had a good time in Sarandë.",
+                  "Would you tell future guests how it was? It takes two minutes, and honest feedback helps us too.",
+                  "The link is personal to your stay and works once."]
+    return send_action(email, "How was your stay?", "How was your stay?", paragraphs, ("Write a review", link))
+
+
+def review_received(review, to=None, base=None, partner=False):
+    """Tell whoever hosts the stay that a guest reviewed it. ``review`` is Review.to_host_dict()."""
+    to = to or current_app.config.get("CONTACT_EMAIL")
+    if not to or not configured():
+        return False
+    lines = [f"{_clean(review['hotel_name'])}: {review['rating']} out of 5 from {_clean(review['author'])}.",
+             _clean(review["text"], 600), "It is already public. You can post one public reply."]
+    button = None
+    if base:
+        button = ("Reply in your dashboard", f"{base}/business?tab=reviews") if partner else ("Open the Host desk", f"{base}/account?tab=host")
+    return send_action(to, f"New review: {review['rating']}/5 for {_clean(review['hotel_name'], 80)}", "A guest left a review", lines, button)
+
+
 # ---- partner businesses --------------------------------------------------------
 def partner_review_needed(what, name, business_name, base):
     """Tell the site's host that something from a business is waiting for approval."""

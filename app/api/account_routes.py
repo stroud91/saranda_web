@@ -8,7 +8,7 @@ from sqlalchemy import and_, func, or_
 from app.extensions import limiter
 from app.models import Booking, Business, Enquiry, GuideBooking, TripPlan, UserSession, db
 from app.models.db import utcnow
-from app.services import accounts, partners
+from app.services import accounts, partners, reviews
 
 account_routes = Blueprint("account", __name__)
 
@@ -75,7 +75,9 @@ def overview():
     user = accounts.current_user()
     return jsonify({
         "user": user.to_dict(),
-        "bookings": [b.to_public_dict() for b in _bookings(user)],
+        # A finished stay can be reviewed once, by the account that booked it.
+        "bookings": [{**b.to_public_dict(), "can_review": reviews.owns(b, user) and reviews.can_review(b) is None}
+                     for b in _bookings(user)],
         "guide_requests": [g.to_public_dict() for g in _guide_requests(user)],
         "enquiries": [e.to_public_dict() for e in _enquiries(user)],
         "trips": [_trip_summary(t) for t in _trips(user)],
@@ -151,6 +153,7 @@ def delete_account():
     Booking.query.filter_by(user_id=user.id).update({"user_id": None}, synchronize_session=False)
     GuideBooking.query.filter_by(user_id=user.id).update({"user_id": None}, synchronize_session=False)
     Enquiry.query.filter_by(user_id=user.id).update({"user_id": None}, synchronize_session=False)
+    reviews.forget_author(email=user.email if user.email_verified else None, user_id=user.id)
     business = Business.query.filter_by(owner_id=user.id).first()
     if business:
         partners.close(business)

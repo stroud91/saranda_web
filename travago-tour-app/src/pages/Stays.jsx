@@ -18,7 +18,9 @@ function StayCard({ h, i }) {
         <div className="stay-art">
           {h.image_urls?.[0] ? <img src={thumb(h.image_urls[0])} alt={stayName(h)} loading="lazy" /> : <SceneArt scene="harbor" seed={`apt-${h.id}`} variant={VARIANTS[i % VARIANTS.length]} />}
           {h.business ? <span className="badge glass stay-tag"><Store size={12} /> {h.business.name}</span> : h.tag && <span className="badge glass stay-tag">{tr(h.tag)}</span>}
-          {h.airbnb_rating && <span className="stay-rating"><Star size={13} fill="currentColor" /> {h.airbnb_rating} <small>{h.rating_source}</small></span>}
+          {h.reviews?.count > 0
+            ? <span className="stay-rating"><Star size={13} fill="currentColor" /> {h.reviews.average.toFixed(1)} <small>({h.reviews.count})</small></span>
+            : h.airbnb_rating && <span className="stay-rating"><Star size={13} fill="currentColor" /> {h.airbnb_rating} <small>{h.rating_source}</small></span>}
         </div>
         <div className="stay-body">
           <h3>{stayName(h)}</h3>

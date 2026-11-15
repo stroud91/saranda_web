@@ -37,6 +37,7 @@ def _register_blueprints(app):
     from .api.partner_routes import partner_routes
     from .api.planner_routes import planner_routes
     from .api.tours_routes import tours_routes
+    from .api.review_routes import review_routes
     from .api.upload_routes import upload_routes
     from .api.webhooks import webhook_routes
 
@@ -59,6 +60,7 @@ def _register_blueprints(app):
         (business_routes, "/api/businesses"),
         (calendar_routes, "/api/calendar"),
         (upload_routes, "/api/uploads"),
+        (review_routes, "/api/reviews"),
         (admin_listing_routes, "/api/admin/listings"),
         (webhook_routes, "/api/webhooks"),
     ]:

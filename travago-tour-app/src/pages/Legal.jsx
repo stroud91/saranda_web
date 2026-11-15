@@ -103,6 +103,8 @@ export function Privacy() {
             <>
               <dt>Booking with, or asking, a local business</dt>
               <dd>Some stays, rentals and activities are offered by independent local businesses. When you request one or send them a question, we store your name, email, phone if given, dates, group size and message, and pass them to that business so it can answer you.</dd>
+              <dt>Reviews</dt>
+              <dd>If you review a stay, we publish the rating and text you write with your first name, the first letter of your surname and the month you stayed. The host may reply in public. If you delete your account, your name is removed from your reviews.</dd>
               <dt>Business accounts</dt>
               <dd>If you list a business here: the profile you write (name, description, address and public contact details) and your listings with their photos, which are published once we've approved them, and the account details below. We use them to run the directory and to contact you about it. Photos are saved again without the location and camera details that phones store inside them. If you connect a calendar from another booking site, we read only the dates from it, never guest names.</dd>
             </>
@@ -199,7 +201,7 @@ export function Terms() {
         <p className="tiny muted">Last updated {updated}</p>
       </PageHeader>
       <EnglishOnly />
-      <Contents items={[["us", "Who you book with"], ["booking", "How booking works"], ["cancel", "Cancelling and changes"], ["stay", "During your stay"], ["guides", "Guides and tours"], ...(partners ? [["partners", "Local businesses"]] : []), ["info", "Travel information"], ["other", "Everything else"]]} />
+      <Contents items={[["us", "Who you book with"], ["booking", "How booking works"], ["cancel", "Cancelling and changes"], ["stay", "During your stay"], ["reviews", "Reviews"], ["guides", "Guides and tours"], ...(partners ? [["partners", "Local businesses"]] : []), ["info", "Travel information"], ["other", "Everything else"]]} />
 
       <Section id="us" title="Who you book with">
         <BusinessCard email={email} mailto={mailto} />
@@ -242,6 +244,14 @@ export function Terms() {
           <li>We'll ask to see a passport or ID card for each adult when you arrive.</li>
           <li>Only the number of guests in your booking may stay overnight.</li>
           <li>Please treat the apartment as your own home and follow the house rules we send with your confirmation. You're responsible for damage caused during your stay beyond normal wear and tear.</li>
+        </ul>
+      </Section>
+
+      <Section id="reviews" title="Reviews">
+        <ul>
+          <li>Only guests who booked on this website and finished their stay can review it, once per stay. We email a personal link the day after check-out.</li>
+          <li>Reviews are published as written, positive or negative, as soon as they are sent. We don't write reviews ourselves or pay for them.</li>
+          <li>We hide a review only if it is abusive, off-topic, advertising, or reveals someone's personal details. The host may post one public reply.</li>
         </ul>
       </Section>
 

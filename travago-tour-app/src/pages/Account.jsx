@@ -2,8 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BedDouble, CalendarRange, Compass, Download, KeyRound, LogOut, MailWarning, MonitorSmartphone, ShieldCheck, Trash2, UserRound, Users, Store,
-} from "lucide-react";
+  BedDouble, CalendarRange, Compass, Download, KeyRound, LogOut, MailWarning, MonitorSmartphone, ShieldCheck, Trash2, UserRound, Users, Store, Star } from "lucide-react";
 import { api, post } from "../lib/api";
 import { useAuth } from "../store/auth";
 import { useGuidesOn, usePartnersOn } from "../lib/useConfig";
@@ -68,7 +67,9 @@ function Stays({ data }) {
           <h2 className="h3"><BedDouble size={18} /> {tr("Your stays")}</h2>
           {data.bookings.map((b, i) => (
             <motion.div key={b.reference} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <TicketCard booking={b} to={`/booking/${b.reference}`} />
+              <TicketCard booking={b} to={`/booking/${b.reference}`}>
+                {b.can_review && <Link className="btn sm" to={`/review/${b.reference}`}><Star size={14} /> {tr("Write a review")}</Link>}
+              </TicketCard>
             </motion.div>
           ))}
         </section>

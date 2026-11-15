@@ -10,6 +10,7 @@ from .trip_plan import TripPlan
 from .contact_message import ContactMessage
 from .calendar import CalendarFeed, DateBlock
 from .upload import Upload
+from .review import Review
 
 __all__ = ["db", "environment", "SCHEMA", "User", "UserSession", "AuthToken", "LoginThrottle", "Hotel", "Guide", "GuideBooking", "Tour",
-           "CarRental", "Booking", "TripPlan", "ContactMessage", "Business", "Enquiry", "CalendarFeed", "DateBlock", "Upload"]
+           "CarRental", "Booking", "TripPlan", "ContactMessage", "Business", "Enquiry", "CalendarFeed", "DateBlock", "Upload", "Review"]

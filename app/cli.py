@@ -13,7 +13,7 @@ from flask import current_app
 from flask.cli import AppGroup
 
 from app.models import AuthToken, ContactMessage, Enquiry, GuideBooking, LoginThrottle, User, UserSession, db
-from app.services import calendars, uploads
+from app.services import calendars, reviews, uploads
 from app.models.db import utcnow
 from app.services import accounts
 
@@ -106,7 +106,8 @@ def cleanup():
                                        GuideBooking.created_at < cutoff).delete(synchronize_session=False)
     db.session.commit()
     n += uploads.cleanup()  # photos that were uploaded but never used
-    click.echo(f"Removed {n} rows.")
+    invited = reviews.send_invitations()  # guests who checked out yesterday are asked for a review
+    click.echo(f"Removed {n} rows." + (f" Sent {invited} review invitations." if invited else ""))
 
 
 calendar_commands = AppGroup("calendars", help="Calendars imported from other booking sites.")

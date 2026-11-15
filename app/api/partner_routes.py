@@ -17,7 +17,8 @@ from flask import Blueprint, current_app, g, jsonify
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import limiter
-from app.models import Booking, Business, Enquiry, Hotel, db
+from app.models import Booking, Business, Enquiry, Hotel, Review, db
+from app.models.db import utcnow
 from app.models.business import PALETTES, STYLE_OPTIONS
 from app.services import accounts, calendars, mailer, partners
 from app.validation import Field, json_body, partial_body
@@ -247,6 +248,35 @@ def answer_booking(reference):
         template = mailer.booking_confirmed if booking.status == "confirmed" else mailer.booking_cancelled
         mailer.deliver(template, booking.to_public_dict(), booking.guest_email, accounts.site_url())
     return jsonify(booking.to_host_dict())
+
+
+# ---- reviews of the business's stays ---------------------------------------------
+def _own_reviews(business):
+    return Review.query.join(Hotel, Review.hotel_id == Hotel.id).filter(Hotel.business_id == business.id)
+
+
+@partner_routes.get("/reviews")
+@owner
+def own_reviews():
+    """Published reviews of this business's stays. Hidden ones are not shown here either."""
+    rows = _own_reviews(g.business).filter(Review.status == "published").order_by(Review.created_at.desc()).limit(300).all()
+    return jsonify([r.to_host_dict() for r in rows])
+
+
+@partner_routes.patch("/reviews/<int:review_id>")
+@verified
+@owner
+@limiter.limit("60 per hour")
+def reply_to_review(review_id):
+    """One public reply per review. A business can answer a review, never edit or remove it."""
+    review = _own_reviews(g.business).filter(Review.id == review_id, Review.status == "published").first()
+    if not review:
+        return _not_found()
+    data = json_body({"reply": Field("text", max_len=1500)})
+    review.reply = data["reply"] or None
+    review.replied_at = utcnow() if review.reply else None
+    db.session.commit()
+    return jsonify(review.to_host_dict())
 
 
 @partner_routes.patch("/enquiries/<reference>")
