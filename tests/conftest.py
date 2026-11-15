@@ -12,6 +12,8 @@ from app.services.upstream import cache
 def app(tmp_path):
     app = create_app(TestConfig)
     app.config["UPLOAD_DIR"] = str(tmp_path / "uploads")  # never the real photo folder
+    app.config["BACKUP_DIR"] = str(tmp_path / "backups")  # nor the real backups and health notes
+    app.config["MONITOR_FILE"] = str(tmp_path / "monitor.json")
     with app.app_context():
         db.create_all()
         seed_hotels()

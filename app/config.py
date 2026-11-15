@@ -124,6 +124,31 @@ class Config:
     STATS_ENABLED = _bool("STATS_ENABLED", True)
     STATS_KEEP_DAYS = int(os.environ.get("STATS_KEEP_DAYS", "760"))
 
+    # Backups (`flask backup run`, daily from cron). Kept in instance/backups unless BACKUP_DIR
+    # says otherwise. With a passphrase every file is encrypted; a copy is sent to
+    # BACKUP_UPLOAD_URL (an https WebDAV folder) only when a passphrase is set.
+    BACKUP_DIR = os.environ.get("BACKUP_DIR") or None
+    BACKUP_PASSPHRASE = os.environ.get("BACKUP_PASSPHRASE", "")
+    BACKUP_KEEP_DAILY = int(os.environ.get("BACKUP_KEEP_DAILY", "7"))
+    BACKUP_KEEP_WEEKLY = int(os.environ.get("BACKUP_KEEP_WEEKLY", "4"))
+    BACKUP_KEEP_MONTHLY = int(os.environ.get("BACKUP_KEEP_MONTHLY", "6"))
+    BACKUP_KEEP_PHOTOS = int(os.environ.get("BACKUP_KEEP_PHOTOS", "2"))
+    BACKUP_PHOTOS_EVERY_DAYS = int(os.environ.get("BACKUP_PHOTOS_EVERY_DAYS", "7"))
+    BACKUP_MAX_AGE_HOURS = int(os.environ.get("BACKUP_MAX_AGE_HOURS", "36"))  # older than this = alert
+    BACKUP_UPLOAD_URL = os.environ.get("BACKUP_UPLOAD_URL", "")
+    BACKUP_UPLOAD_USER = os.environ.get("BACKUP_UPLOAD_USER", "")
+    BACKUP_UPLOAD_PASSWORD = os.environ.get("BACKUP_UPLOAD_PASSWORD", "")
+
+    # Alerts (`flask monitor check`, hourly from cron). Sent to ALERT_EMAIL, or else to
+    # CONTACT_EMAIL. The heartbeat address is pinged after each check.
+    ALERT_EMAIL = os.environ.get("ALERT_EMAIL", "")
+    ALERT_HEARTBEAT_URL = os.environ.get("ALERT_HEARTBEAT_URL", "")
+    ALERT_MIN_FREE_MB = int(os.environ.get("ALERT_MIN_FREE_MB", "500"))
+    ALERT_REPEAT_HOURS = int(os.environ.get("ALERT_REPEAT_HOURS", "24"))
+    ALERT_ERROR_MINUTES = int(os.environ.get("ALERT_ERROR_MINUTES", "60"))
+    ALERT_CALENDAR_HOURS = int(os.environ.get("ALERT_CALENDAR_HOURS", "24"))
+    ALERT_CERT_DAYS = int(os.environ.get("ALERT_CERT_DAYS", "10"))
+
     # Two-step sign-in is optional for everyone. Set this to make host accounts use it:
     # the Host desk then refuses to open until the host has switched it on.
     REQUIRE_TWO_STEP_FOR_HOSTS = _bool("REQUIRE_TWO_STEP_FOR_HOSTS", False)

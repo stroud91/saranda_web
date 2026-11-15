@@ -100,6 +100,8 @@ def _register_errors(app):
     def _unhandled(exc):
         logging.getLogger(__name__).exception("unhandled error")
         db.session.rollback()
+        from .services import monitor
+        monitor.record_error(exc)  # counted, and the host is e-mailed (at most once an hour)
         return jsonify({"error": "Something went wrong on our side. Please try again."}), 500
 
 
@@ -163,9 +165,11 @@ def create_app(config_object=Config):
 
     from .seeds import seed_commands
     app.cli.add_command(seed_commands)
-    from .cli import calendar_commands, user_commands
+    from .cli import backup_commands, calendar_commands, monitor_commands, user_commands
     app.cli.add_command(user_commands)
     app.cli.add_command(calendar_commands)
+    app.cli.add_command(backup_commands)
+    app.cli.add_command(monitor_commands)
 
     @app.get("/api/docs")
     def api_docs():

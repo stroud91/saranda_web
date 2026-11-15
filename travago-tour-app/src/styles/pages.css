@@ -630,6 +630,10 @@ a.ticket-body:hover .ticket-title { color: var(--accent); }
 .pay-methods, .pay-method { text-align: left; }
 .pay-methods legend { margin-bottom: 6px; }
 
+.site-health ul { margin: 6px 0 0; padding-left: 18px; }
+.site-health li { margin: 4px 0; }
+.site-health p { margin: 0; }
+
 /* Host desk: visitors. One chart colour (--chart-1); text keeps the text colours. */
 .visitors h3 { font-size: 1.05rem; margin: 0; }
 .visitors .card.pad { padding: 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }

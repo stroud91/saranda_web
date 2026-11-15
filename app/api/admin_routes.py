@@ -4,7 +4,7 @@ from flask import Blueprint, abort, g, jsonify, request
 from app.auth import require_admin
 from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, Review, db
 from app.models.db import utcnow
-from app.services import accounts, cancellations, mailer, partners, reviews, stats
+from app.services import accounts, cancellations, mailer, monitor, partners, reviews, stats
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -163,6 +163,16 @@ def visitor_stats():
     """Visitors, page views and bookings per day, plus the top pages and where visitors came from."""
     args = query_args({"days": Field("int", min=1, max=366, default=30)})
     return jsonify({**stats.report(args["days"]), "enabled": stats.enabled()})
+
+
+@admin_routes.get("/health")
+@require_admin
+def site_health():
+    """What needs the host to keep the site running (failed backups, calendars that stopped
+    updating, a full disk…) and when the last backup was made. The checks that use the
+    network run only from `flask monitor check`."""
+    found = monitor.checks(deep=False)
+    return jsonify({"ok": not [item for item in found if item["level"] == "problem"], "problems": found, **monitor.facts()})
 
 
 # ---- guest reviews --------------------------------------------------------------

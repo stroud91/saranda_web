@@ -8,6 +8,7 @@ import PartnerReview from "./PartnerReview";
 import HostListings from "./HostListings";
 import ReviewDesk from "./ReviewDesk";
 import VisitorStats from "./VisitorStats";
+import SiteHealth from "./SiteHealth";
 import { tr } from "../../i18n";
 
 const patch = (path, body) => api(path, { method: "PATCH", body });
@@ -206,6 +207,7 @@ export default function HostDesk() {
         </section>
       ) : (
         <>
+          {view === "todo" && <SiteHealth />}
           {view === "todo" && count === 0 && <Alert kind="ok">{tr("You're all caught up. New requests and transfers will appear here.")}</Alert>}
           {bookings.length > 0 && (
             <section className="stack">
