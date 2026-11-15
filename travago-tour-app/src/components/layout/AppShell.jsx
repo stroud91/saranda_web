@@ -9,6 +9,8 @@ import { ToastHost } from "../ui";
 import { useUi } from "../../store/ui";
 import Interactions from "../fx/Interactions";
 import { useAuth } from "../../store/auth";
+import { useConfig } from "../../lib/useConfig";
+import { countView } from "../../lib/hits";
 import { tr } from "../../i18n";
 
 const CommandPalette = lazy(() => import("../fx/CommandPalette"));
@@ -67,6 +69,9 @@ export default function AppShell({ children }) {
   usePaletteKeys();
   const loadAuth = useAuth((s) => s.load);
   useEffect(() => { loadAuth(); }, [loadAuth]);
+  // Visitor statistics for the host: one cookie-less count per page opened (see lib/hits.js).
+  const statsOn = useConfig().stats === true;
+  useEffect(() => { if (statsOn) countView(location.pathname); }, [statsOn, location.pathname]);
   const paletteOpen = useUi((s) => s.paletteOpen);
   const closePalette = useUi((s) => s.closePalette);
   useEffect(() => {

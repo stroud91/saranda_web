@@ -4,7 +4,7 @@ from flask import Blueprint, abort, g, jsonify, request
 from app.auth import require_admin
 from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, Review, db
 from app.models.db import utcnow
-from app.services import accounts, cancellations, mailer, partners, reviews
+from app.services import accounts, cancellations, mailer, partners, reviews, stats
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -154,6 +154,15 @@ def update_guide(slug):
 def list_messages():
     rows = ContactMessage.query.order_by(ContactMessage.created_at.desc()).limit(500).all()
     return jsonify([m.to_admin_dict() for m in rows])
+
+
+# ---- visitor statistics ---------------------------------------------------------
+@admin_routes.get("/stats")
+@require_admin
+def visitor_stats():
+    """Visitors, page views and bookings per day, plus the top pages and where visitors came from."""
+    args = query_args({"days": Field("int", min=1, max=366, default=30)})
+    return jsonify({**stats.report(args["days"]), "enabled": stats.enabled()})
 
 
 # ---- guest reviews --------------------------------------------------------------

@@ -120,6 +120,10 @@ class Config:
     PARTNERS_ENABLED = _bool("PARTNERS_ENABLED", True)
     PARTNER_MAX_LISTINGS = int(os.environ.get("PARTNER_MAX_LISTINGS", "40"))
 
+    # Visitor statistics without cookies (Host desk → Visitors). Counters are kept this many days.
+    STATS_ENABLED = _bool("STATS_ENABLED", True)
+    STATS_KEEP_DAYS = int(os.environ.get("STATS_KEEP_DAYS", "760"))
+
     # Two-step sign-in is optional for everyone. Set this to make host accounts use it:
     # the Host desk then refuses to open until the host has switched it on.
     REQUIRE_TWO_STEP_FOR_HOSTS = _bool("REQUIRE_TWO_STEP_FOR_HOSTS", False)

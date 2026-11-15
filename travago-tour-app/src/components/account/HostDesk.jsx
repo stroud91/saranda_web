@@ -7,6 +7,7 @@ import { usePartnersOn } from "../../lib/useConfig";
 import PartnerReview from "./PartnerReview";
 import HostListings from "./HostListings";
 import ReviewDesk from "./ReviewDesk";
+import VisitorStats from "./VisitorStats";
 import { tr } from "../../i18n";
 
 const patch = (path, body) => api(path, { method: "PATCH", body });
@@ -174,7 +175,7 @@ export default function HostDesk() {
         <Segmented
           options={[{ value: "todo", label: `Needs you (${count})` }, { value: "all", label: "Everything" }, { value: "messages", label: `Messages (${data.messages.length})` },
             ...(data.partners ? [{ value: "partners", label: `Partners (${data.partners.queue.length})` }] : []),
-            { value: "listings", label: "Your listings" }, { value: "reviews", label: "Reviews" }]}
+            { value: "listings", label: "Your listings" }, { value: "reviews", label: "Reviews" }, { value: "visitors", label: "Visitors" }]}
           value={view} onChange={setView} layoutId="host-tabs"
         />
         <button type="button" className="btn sm" onClick={load}><RefreshCw size={15} /> {tr("Refresh")}</button>
@@ -183,6 +184,8 @@ export default function HostDesk() {
         <HostListings />
       ) : view === "reviews" ? (
         <ReviewDesk mode="host" />
+      ) : view === "visitors" ? (
+        <VisitorStats />
       ) : view === "partners" && data.partners ? (
         <PartnerReview data={data.partners} onReload={load} />
       ) : view === "messages" ? (

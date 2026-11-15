@@ -1,9 +1,11 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import text
 
 from app.data import essentials
+from app.extensions import limiter
 from app.models import Guide, db
-from app.services import cancellations, accounts, checkout, mailer, partners, payments
+from app.services import accounts, cancellations, checkout, mailer, partners, payments, stats
+from app.validation import Field, json_body
 
 meta_routes = Blueprint("meta", __name__)
 
@@ -40,6 +42,21 @@ def public_config():
         "retention_months": cfg.get("MESSAGE_RETENTION_MONTHS", 24),
         "cancellation": cancellations.policy(),
         "reviews": bool(cfg.get("REVIEWS_ENABLED", True)),
+        "stats": stats.enabled(),
         "edition": essentials.EDITION,
         "last_reviewed": essentials.LAST_REVIEWED,
     })
+
+
+@meta_routes.post("/hit")
+@limiter.limit("240 per hour")
+def hit():
+    """Count one page view (see services/stats.py). Sets no cookie and keeps nothing about the visitor.
+    The host's own visits are left out, and so is anyone whose browser asks not to be tracked."""
+    data = json_body({"path": Field(required=True, max_len=200), "referrer": Field(max_len=500), "lang": Field(max_len=5)})
+    user = accounts.current_user()
+    opted_out = request.headers.get("Sec-GPC") == "1" or request.headers.get("DNT") == "1"
+    if not opted_out and not (user and user.is_admin):
+        stats.record(data["path"], referrer=data["referrer"] or "", lang=data["lang"] or "en", ip=request.remote_addr or "",
+                     agent=request.headers.get("User-Agent", "")[:300], own_host=request.host)
+    return "", 204

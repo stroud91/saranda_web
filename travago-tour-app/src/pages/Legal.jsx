@@ -75,6 +75,7 @@ export function Privacy() {
   const isStatic = cfg.mode === "static";
   const months = cfg.retention_months ?? 24;
   const partners = cfg.partners === true;
+  const counting = cfg.stats === true && !isStatic; // cookie-less visit counts (server only)
   useEffect(() => { document.title = "Privacy policy · Meg'Rooms"; }, []);
   return (
     <div className="page container narrow legal">
@@ -122,6 +123,12 @@ export function Privacy() {
             Like every website, the server sees your IP address. We use it only to limit how fast requests can be made, and those counts live briefly in memory and aren't saved. Our web host keeps standard server logs (IP address, page and time) for security.
             {accounts && <> Failed sign-ins are counted against a scrambled code of the email address, not the address itself. When you choose a password, we check it against passwords leaked in other breaches using Have I Been Pwned: only the first 5 characters of a hash of your password ever leave our server, never the password.</>}
           </dd>
+          {counting && (
+            <>
+              <dt>Counting visits</dt>
+              <dd>We count how many people open each page, the name of the site they arrived from, the language they use and whether they're on a phone or a computer, so we know what is useful. No cookie is used and nothing is stored on your device. To count each visitor only once a day, your IP address and browser type are turned into a scrambled code with a key that changes every day. The code is deleted the next day, so we can't recognise you from one day to the next or follow what you read. If your browser sends “Do Not Track” or “Global Privacy Control”, your visit isn't counted at all.</dd>
+            </>
+          )}
           {(cfg.concierge?.enabled ?? true) && (
             <>
               <dt>The travel concierge</dt>
@@ -149,7 +156,7 @@ export function Privacy() {
       </Section>
 
       <Section id="storage" title="Cookies and browser storage">
-        <p>We use no advertising or analytics cookies, so there's no cookie banner. What your browser stores only makes the site work:</p>
+        <p>We use no advertising or analytics cookies, so there's no cookie banner.{counting && " Visits are counted without any cookie (see “Counting visits” above)."} What your browser stores only makes the site work:</p>
         <ul>
           {accounts && <li><code>__Host-sc_session</code> — a cookie that keeps you signed in. Set only when you sign in; removed when you sign out. It holds a random code, not your details.</li>}
           <li><code>saranda-ui</code> — your light/dark theme and language choice.</li>
@@ -167,6 +174,7 @@ export function Privacy() {
           <li><b>Messages to us{partners ? " and questions to local businesses" : ""}:</b> up to {months} months, then deleted.</li>
           {partners && <li><b>Business profiles and listings:</b> until the owner removes them or deletes the account; the page then comes down and its contact details are erased.</li>}
           {accounts && <li><b>Your account:</b> until you delete it. Sign-in sessions and email links expire on their own and are cleared out regularly. If you delete your account, your saved trips go with it; bookings stay with us as business records but are no longer linked to an account.</li>}
+          {counting && <li><b>Visit counts:</b> the one-day visitor codes are deleted the next day. What stays is daily totals (so many visitors, so many views of a page) with nothing in them about any person.</li>}
           <li><b>Server logs:</b> as long as our web host keeps them for security.</li>
         </ul>
       </Section>
