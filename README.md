@@ -25,7 +25,7 @@ All of it respects `prefers-reduced-motion` (still frames, no fly-throughs), pau
 ## Architecture
 
 ```
-app/                    Flask 3 API (Python 3.10+)
+app/                    Flask 3 API (Python 3.11+)
   data/                 Versioned travel knowledge from the planner:
                         destinations, route legs, itineraries, essentials
   services/             routing (Dijkstra), timeline, budget, live providers,
@@ -106,7 +106,7 @@ The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain roo
 
    | Field | Value |
    |---|---|
-   | Python | 3.10+ |
+   | Python | 3.11+ (the photo library needs it) |
    | Application root | `megrooms_flask` |
    | URL | your domain, empty path |
    | Startup file | `wsgi.py` |
