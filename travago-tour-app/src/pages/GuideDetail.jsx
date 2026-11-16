@@ -13,7 +13,7 @@ import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, CategoryIcon, ErrorState, Field, Segmented, Skeleton, Stepper } from "../components/ui";
 import { useTrip } from "../store/trip";
 import { useAuth } from "../store/auth";
-import { tr } from "../i18n";
+import { loc, tr } from "../i18n";
 
 function RequestForm({ guide }) {
   const trip = useTrip();
@@ -147,7 +147,7 @@ export default function GuideDetail() {
               {g.is_sample && <span className="badge">{tr("Sample profile")}</span>}
             </div>
             <h1>{g.name}</h1>
-            <p className="lead">{g.headline}</p>
+            <p className="lead">{loc(g, "headline")}</p>
           </div>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function GuideDetail() {
           </div>
           <div className="card pad">
             <h3>{tr("About")}</h3>
-            <p>{g.bio}</p>
+            <p>{loc(g, "bio")}</p>
             <div className="row" style={{ gap: 8 }}><Languages size={16} /> {g.languages.map((l) => <span key={l} className="chip sm">{l}</span>)}</div>
             <div className="row" style={{ gap: 8, marginTop: 10 }}><Award size={16} /> {g.specialties.map((s) => <span key={s} className="chip sm">{s}</span>)}</div>
           </div>

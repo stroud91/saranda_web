@@ -24,7 +24,9 @@ const COLUMN = { sq: 1, fr: 2, it: 3, de: 4 }; // position in each table.js row
 
 let current = "en";
 let dict = null; // English text -> translation, for the current language
+let content = null; // the same for travel content (place summaries, itineraries, advice)
 const cache = {};
+const contentCache = {};
 
 export const isLang = (code) => CODES.includes(code);
 export const currentLang = () => current;
@@ -51,6 +53,16 @@ async function load(code) {
   return cache[code];
 }
 
+async function loadContent(code) {
+  if (code === "en") return null;
+  if (!contentCache[code]) {
+    const { default: rows } = await import("./content.js");
+    const col = COLUMN[code];
+    contentCache[code] = new Map(rows.filter((r) => r[col]).map((r) => [r[0], r[col]]));
+  }
+  return contentCache[code];
+}
+
 /** Make `code` the language tr() answers in. Resolves once its words are loaded. */
 export async function applyLang(code) {
   const next = isLang(code) ? code : "en";
@@ -61,8 +73,23 @@ export async function applyLang(code) {
     dict = null; // the table didn't load (offline?): stay readable in English
     current = "en";
   }
+  // Travel content is a separate, larger file. If it doesn't load, guides show in English.
+  content = current === "en" ? null : await loadContent(current).catch(() => null);
   if (typeof document !== "undefined") document.documentElement.lang = current;
   return current;
+}
+
+/**
+ * Add a page's own table to the language in use. Long texts that only one page
+ * shows (the privacy policy, the booking terms) live in their own file, so other
+ * pages don't download them: addTable(() => import("./legal.js")).
+ */
+export async function addTable(importer) {
+  const code = current;
+  if (code === "en" || !cache[code]) return;
+  const { default: rows } = await importer();
+  const col = COLUMN[code];
+  for (const row of rows) if (row[col]) cache[code].set(row[0], row[col]);
 }
 
 const fill = (text, vars) => (vars ? text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : text);
@@ -72,6 +99,41 @@ export function tr(text, vars) {
   if (typeof text !== "string" || !text) return text;
   return fill((dict && dict.get(text)) || text, vars);
 }
+
+// Fields of the travel API that hold sentences. Identifiers (slug, region, category,
+// pace, access…) are never touched, so nothing that code compares against changes.
+export const CONTENT_KEYS = new Set([
+  "name", "summary", "best_for", "planning_note", "highlights", "tags", "blurb", "label", "category_label", "region_name", "note",
+  "audience", "tagline", "title", "transport", "plan", "options", "why", "alternative", "beach_rule", "boat_day", "booking_strategy",
+  "item", "choices", "checklist", "idea", "length", "promise", "disclaimer", "edition", "service", "final_check", "what", "money",
+  "price_note", "quick_start", "restaurant_tip", "road_trip_tip", "tip", "topic", "save_money", "months", "text", "verdict", "range",
+]);
+
+function swap(node, key) {
+  if (typeof node === "string") return CONTENT_KEYS.has(key) ? content.get(node) || node : node;
+  if (Array.isArray(node)) return node.map((v) => swap(v, key));
+  if (!node || typeof node !== "object") return node;
+  const out = {};
+  for (const [k, v] of Object.entries(node)) {
+    // The packing list is keyed by its group headings, so those are translated too.
+    if (k === "packing" && v && typeof v === "object" && !Array.isArray(v)) {
+      out[k] = Object.fromEntries(Object.entries(v).map(([group, items]) => [content.get(group) || group, swap(items, "item")]));
+    } else out[k] = swap(v, k);
+  }
+  return out;
+}
+
+/** A copy of a travel API answer with its sentences in the visitor's language (English: returned as is). */
+export const localizeContent = (data) => (content && data && typeof data === "object" ? swap(data, "") : data);
+
+/**
+ * A listing's own text in the visitor's language, if its host wrote one:
+ * loc(stay, "description"). Falls back to the text as the host first wrote it.
+ */
+export const loc = (item, field) => (item && item.translations && item.translations[current] && item.translations[current][field]) || (item ? item[field] : undefined);
+
+/** A stay's name on cards: its translation, else its short name, else its full name. */
+export const stayName = (stay) => (stay && stay.translations && stay.translations[current] && stay.translations[current].hotel_name) || (stay ? stay.apartment_name || stay.hotel_name : undefined);
 
 /** One or many: plural(n, "{n} night", "{n} nights"). */
 export const plural = (n, one, many) => tr(n === 1 ? one : many, { n });

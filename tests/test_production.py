@@ -58,7 +58,7 @@ def test_migrations_run_on_sqlite_in_production(tmp_path):
         r = subprocess.run(flask + cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
         assert r.returncode == 0, r.stderr[-2000:]
     con = sqlite3.connect(db)
-    assert con.execute("select version_num from alembic_version").fetchone()[0] == "f7b2d90c4a13"
+    assert con.execute("select version_num from alembic_version").fetchone()[0] == "f2b4d8a70c63"
     assert con.execute("select count(*) from guides").fetchone()[0] == 8
     tables = {r[0] for r in con.execute("select name from sqlite_master where type='table'")}
     assert {"user_sessions", "auth_tokens", "login_throttles", "businesses", "enquiries"} <= tables
@@ -72,7 +72,7 @@ def test_migrations_run_on_sqlite_in_production(tmp_path):
         r = subprocess.run(flask + cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
         assert r.returncode == 0, r.stderr[-2000:]
     con = sqlite3.connect(db)
-    assert con.execute("select version_num from alembic_version").fetchone()[0] == "f7b2d90c4a13"
+    assert con.execute("select version_num from alembic_version").fetchone()[0] == "f2b4d8a70c63"
     assert con.execute("select count(*) from hotels where review_status = 'approved'").fetchone()[0] > 0
 
 

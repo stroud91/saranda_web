@@ -26,9 +26,9 @@ Open `travago-tour-app/src/data/business.json` and fill in:
 - `nipt`: your NIPT (tax number).
 - `email` and `phone`: the contact details guests should use.
 - `check_in_from` and `check_out_by`: for example `"14:00"` and `"11:00"`.
-- `cancellation`: the refund rules. The defaults are a full refund 14+ days before check-in, 50% at 7–13 days, and nothing within 7 days.
+- `cancellation`: the refund rules. The defaults are a full refund 14+ days before check-in, 50% at 7–13 days, and nothing within 7 days. With the Python app, the rules guests are actually held to come from `CANCEL_FULL_REFUND_DAYS`, `CANCEL_PARTIAL_REFUND_DAYS` and `CANCEL_PARTIAL_REFUND_PERCENT` in `.env` (step 5); keep both the same.
 
-These details appear on **/privacy** and **/terms**. Empty fields are just left off. The pages are written to match what the site really does, but they aren't legal advice: have a local lawyer or accountant read both once.
+These details appear on **/privacy** and **/terms**. Empty fields are just left off. The pages are written to match what the site really does, but they aren't legal advice: have a local lawyer or accountant read both once. Both pages are also shown in Albanian, French, Italian and German, and say that the English version applies; if your lawyer changes a sentence, its translations in `travago-tour-app/src/i18n/legal.js` need the same change (the tests name each one).
 
 ## 3. Create the Python app
 
@@ -36,13 +36,15 @@ cPanel → **Setup Python App** → *Create Application*:
 
 | Field | Value |
 |---|---|
-| Python version | 3.10 or newer (the newest offered) |
+| Python version | 3.11 or newer (pick the newest offered; 3.10 can't install the photo library) |
 | Application root | `megrooms_flask` |
 | Application URL | your domain, path left empty |
 | Application startup file | `wsgi.py` |
 | Application Entry point | `app` |
 
 Click **Create**. At the top of the app's page, cPanel shows a command that starts with `source /home/…/virtualenv/megrooms_flask/…/bin/activate`. Copy it; steps 6, 7 and 11 use it.
+
+**Check the server is new enough.** cPanel → **Terminal**, run `ldd --version`. The first line ends with a version number, which must be **2.28 or higher** (for example `ldd (GNU libc) 2.28`). The photo library (Pillow) only installs ready-made on those servers. If it shows 2.17, ask Namecheap support to move your account to a CloudLinux 8 server before deploying.
 
 ## 4. Create the mailbox
 
@@ -77,8 +79,22 @@ Click **Create**. At the top of the app's page, cPanel shows a command that star
    # Open-Meteo's free plan is for non-commercial use. Leave this false until you
    # buy their commercial plan; the site then shows typical-season figures.
    LIVE_DATA_ENABLED=false
+
+   # Backups are encrypted with this. Make a second long random value as in step 1,
+   # and keep a copy somewhere safe OFF the server: without it no backup can be opened.
+   BACKUP_PASSPHRASE=<another long random value>
+
+   # Host accounts must use two-step sign-in (an authenticator app on your phone).
+   REQUIRE_TWO_STEP_FOR_HOSTS=true
+
+   # Your cancellation rules (the same as in business.json, step 2).
+   CANCEL_FULL_REFUND_DAYS=14
+   CANCEL_PARTIAL_REFUND_DAYS=7
+   CANCEL_PARTIAL_REFUND_PERCENT=50
    ```
 4. Save. Right-click `.env` → **Change Permissions** → `600` (only you can read it).
+
+> **Never change `SECRET_KEY` after launch.** Sign-ins, email links and the two-step sign-in secrets depend on it. If it changes, everyone is signed out and nobody who uses two-step sign-in can sign in until you reset it for them (`flask --app app users disable-two-step their@email`).
 
 Payments are added in step 9. Leave them out for now, and the site takes "request to book, pay on arrival" bookings.
 
@@ -107,7 +123,13 @@ flask --app app seed all                           # first time only; refuses if
 flask --app app users create-host bookings@yourdomain --name "Your name"
 ```
 
-The last command asks for a password twice. Sign in on the site with that email and password, and **My account → Host desk** appears. That's where you see and confirm bookings, guide requests and messages.
+The last command asks for a password twice. Sign in on the site with that email and password. Because `REQUIRE_TWO_STEP_FOR_HOSTS=true`, the site first asks you to switch on two-step sign-in:
+
+1. Install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password or Aegis).
+2. *My account → Security → Two-step sign-in → Set it up*, type your password, scan the QR code and type the 6-digit code.
+3. Write down or print the ten recovery codes it shows, and keep them away from your phone. Each one lets you in once if the phone is lost.
+
+**My account → Host desk** then opens. That's where you see and confirm bookings, guide requests and messages, send refunds, answer reviews and see your visitor numbers.
 
 ## 8. First check
 
@@ -118,6 +140,8 @@ Setup Python App → **Restart**, then open these:
 - **Sign up** with a personal email: the confirmation email arrives (check spam). **Forgot password** sends a link.
 - **/privacy** and **/terms** show your business details.
 - **/guides** says guides are on their way. The sample profiles stay hidden from guests (see step 10).
+- `https://yourdomain/sitemap.xml` lists your pages with your domain, and `https://yourdomain/robots.txt` points to it.
+- Open the site with `?lang=sq` at the end of the address: it switches to Albanian, and so do **/privacy** and **/terms**.
 
 ## 9. Payments
 
@@ -153,11 +177,34 @@ The guest sees your details, the exact amount, the booking reference and a QR co
 
 `PAYMENT_DEPOSIT_PERCENT=30` takes 30% when booking; the rest is shown as due on arrival. The booking terms update automatically.
 
+### Refunds
+
+When a guest cancels on their booking page, they see what they'll get back under your rules, and the booking appears in **Host desk → Needs you** as *Refund due*. Nothing is paid back until you press a button:
+
+- Paid by PayPal or card: **Refund … via PayPal** (or **to the card**) sends it through the provider straight away.
+- Paid by bank transfer: send the money back from your bank, then press **I've paid it back**.
+
+The guest is emailed either way, and the hourly check reminds you of refunds still due after three days. The booking terms promise refunds within 14 days.
+
 ## 10. Content to replace before launch
 
-- **Guides.** The eight seeded guide profiles are samples, and guests don't see them. Once you have real guides, they need adding to the database (ask your developer, or use the admin API `POST /api/admin/guides`). The guide pages and links reappear by themselves. `SHOW_SAMPLE_GUIDES=true` shows the samples again, for demos only.
-- **Tours and rental cars** on /experiences are sample data too. Replace them, or ask for that page to be hidden.
-- **Apartments:** check every name, photo and nightly price on /stays, and get anything wrong corrected before you take bookings.
+You do all of this yourself in **My account → Host desk → Your listings**. Changes show on the site as soon as you press Save.
+
+- **Apartments.** Press **Edit** on each one. Check the name, description, price and guest numbers, then press **Add photos** and pick 5–12 photos from your phone or computer. Put the best one first with the arrows; it is the cover on the /stays cards.
+- **Tours and rental cars** on /experiences are sample data. Edit them into your real offers, **Pause** the ones you don't offer, or **Remove** them.
+- **Guides.** The eight seeded guide profiles are samples, and guests don't see them. Press **Add a guide** for each real guide, or edit a sample into a real person and untick *Sample profile*. The guide pages and links appear by themselves once one real guide exists. `SHOW_SAMPLE_GUIDES=true` shows the samples again, for demos only.
+
+### Stop double bookings (Airbnb, Booking.com)
+
+If an apartment is also listed on another site, connect the two calendars so a night sold on one is blocked on the other. Do this for each apartment, in **Your listings → Calendar**:
+
+1. **Bring the other site's bookings here.** On Airbnb: *Calendar → Availability → Connect calendars → Export calendar*, and copy the link. On Booking.com: *Calendar → Sync calendars → Export calendar*. Paste the link under **Connect a calendar**, choose the site and press **Connect**. Its reserved nights turn orange in the calendar.
+2. **Send this site's bookings there.** Under the site you just connected, press **Copy the link to paste into Airbnb** (or Booking.com). On that site, choose *Import calendar* and paste it.
+3. Add the cron job in step 11 so the calendars are checked every 30 minutes.
+
+For anything else (repairs, family visiting, a booking taken by phone), use **Block nights** in the same screen.
+
+Other sites read our link every few hours, not instantly. After a last-minute booking here, block the same nights on the other site by hand, and the other way round.
 
 ### Local businesses (the business portal)
 
@@ -169,19 +216,56 @@ Other businesses can list their own apartments, rentals and activities at `https
 
 Each business can also style its own page (background, colours, header picture) under **Page style** in its dashboard. The choices come from fixed lists, so they need no review.
 
+Businesses can add photos and manage a calendar for each of their stays, the same way you do. New photos show in the review queue as small pictures; click one to see it full size before you approve.
+
 Guests book and pay those businesses directly; no money for them passes through your PayPal or bank account. Read the "Listings from local businesses" section on **/terms** and adjust it with your lawyer if you want different rules. To switch the whole feature off, put `PARTNERS_ENABLED=false` in `.env`.
 
-## 11. Daily clean-up and backups
+## 11. Scheduled jobs: clean-up, backups and alerts
 
-**Cron job.** cPanel → **Cron Jobs** → *Once Per Day*. Take the `source …/bin/activate` command from step 3, drop `source ` from the front and change `activate` at the end to `flask`. That gives the full path of the app's `flask`, for example `/home/<user>/virtualenv/megrooms_flask/3.11/bin/flask`. The command is then:
+Four jobs keep the site healthy. Add each one in cPanel → **Cron Jobs**. Each command needs the full path of the app's `flask`: take the `source …/bin/activate` command from step 3, drop `source ` from the front and change `activate` at the end to `flask`, for example `/home/<user>/virtualenv/megrooms_flask/3.11/bin/flask`. Below, `FLASK` stands for that path and `<user>` for your cPanel username.
+
+| How often | Cron setting | Command |
+|---|---|---|
+| Once a day | `15 3 * * *` | `cd /home/<user>/megrooms_flask && FLASK --app app users cleanup >/dev/null 2>&1` |
+| Once a day | `45 3 * * *` | `cd /home/<user>/megrooms_flask && FLASK --app app backup run >/dev/null 2>&1` |
+| Every hour | `20 * * * *` | `cd /home/<user>/megrooms_flask && FLASK --app app monitor check --quiet >/dev/null 2>&1` |
+| Twice an hour | `0,30 * * * *` | `cd /home/<user>/megrooms_flask && FLASK --app app calendars sync >/dev/null 2>&1` |
+
+- **Clean-up** removes expired sign-ins and email links, photos that were uploaded but never used, yesterday's visitor codes, and contact messages, questions to partner businesses and unconfirmed guide requests older than 24 months, as the privacy policy promises (`MESSAGE_RETENTION_MONTHS`). It also emails guests whose stay ended yesterday a link to review it.
+- **Backup** saves the database every day and the photos when they changed, encrypted with `BACKUP_PASSPHRASE`, in `megrooms_flask/instance/backups/`. It keeps one per day for a week, one per week for a month and one per month for six months, and deletes the rest.
+- **Check** emails you (at `CONTACT_EMAIL`, or `ALERT_EMAIL` if you set it) when something needs you: a failed or missing backup, a connected calendar that stopped updating, low disk space, mail that stopped working, the site not answering or its certificate about to run out, booking requests waiting more than a day, refunds not sent. You get one email, a reminder each day while it lasts, and a note when it's solved. The same list shows at the top of the Host desk. Errors on the site are emailed as they happen, at most one an hour.
+- **Calendars** re-reads the calendars you connected from Airbnb, Booking.com and others. Skip it if no apartment is connected to another site.
+
+Then, in the terminal (after the `source …/activate` command):
 ```bash
-cd /home/<user>/megrooms_flask && /home/<user>/virtualenv/megrooms_flask/3.11/bin/flask --app app users cleanup >/dev/null 2>&1
+cd ~/megrooms_flask
+flask --app app backup run        # the first backup, now
+flask --app app backup verify     # opens it and checks it: "… is good"
+flask --app app monitor test      # a test alert: check that it arrives
+flask --app app monitor check     # should end with "All good: nothing needs you."
 ```
-It removes expired sign-ins and email links. It also removes contact messages, questions sent to partner businesses and unconfirmed guide requests older than 24 months, as the privacy policy promises (`MESSAGE_RETENTION_MONTHS`).
 
-**Backups.** At least weekly, download `megrooms_flask/instance/saranda.db` (your bookings and accounts) and `megrooms_flask/.env`, and keep them somewhere private. Or use cPanel → **Backup** / **JetBackup** if your plan has it.
+**Keep a copy off the server.** A backup on the same server is lost with the server. Do at least one of these:
 
-## 12. Optional extras (paid, off until you add keys)
+- Once a month, download the newest `data-….tar.gz.enc` (and `photos-….tar.gz.enc` after adding photos) from `megrooms_flask/instance/backups/` in File Manager, and keep them with your passphrase.
+- Or set `BACKUP_UPLOAD_URL` to a WebDAV folder at a storage provider (many offer one, for example Koofr, pCloud or Hetzner Storage Box), with `BACKUP_UPLOAD_USER` and `BACKUP_UPLOAD_PASSWORD`. Each backup is then copied there automatically, encrypted.
+- cPanel → **Backup** or **JetBackup**, if your plan has it, covers the whole account as well.
+
+Keep `megrooms_flask/.env` somewhere safe too: it holds your keys, and the backups don't include it.
+
+**Know when the server itself is down.** The alerts above come from the server, so they can't tell you when it's off. Create a free check at healthchecks.io (or a similar service) set to "every hour", and put its address in `.env` as `ALERT_HEARTBEAT_URL=https://hc-ping.com/…`. The service then emails you if the hourly check stops arriving or reports a problem.
+
+**Restoring.** `flask --app app backup list` shows the backups. `flask --app app backup restore data-<date>.tar.gz.enc` puts the database back: it first saves the current one as a new backup, so this can be undone. Then run `flask --app app db upgrade` and press **Restart** in Setup Python App. `backup restore photos-<date>.tar.gz.enc` copies back photos that are missing.
+
+## 12. Search engines
+
+1. Go to search.google.com/search-console, add your domain and confirm it (the *HTML tag* or *DNS* method; cPanel → **Zone Editor** for DNS).
+2. Under *Sitemaps*, submit `https://yourdomain/sitemap.xml`.
+3. Do the same at bing.com/webmasters if you like; it can import the site from Search Console.
+
+Each page already has its own title, description and preview image in every language, and your apartments show their price and review rating to search engines. Reviews start arriving the day after your first guests check out.
+
+## 13. Optional extras (paid, off until you add keys)
 
 | Extra | Setting | Cost |
 |---|---|---|

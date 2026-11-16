@@ -17,6 +17,13 @@ OUT="$APP/dist/saranda-public_html.zip"
 cd "$APP"
 [ -d node_modules ] || npm ci
 npm run build:static
+# Per-page titles, descriptions and a sitemap for search engines. Needs the Python packages;
+# set PUBLIC_BASE_URL=https://yourdomain for canonical links and the sitemap.
+if python3 -c "import flask" 2>/dev/null; then
+  (cd "$ROOT" && python3 scripts/prerender_static.py "$APP/build")
+else
+  echo "Skipping per-page titles (Python packages not installed: pip install -r requirements.txt)."
+fi
 rm -f "$OUT"
 mkdir -p "$(dirname "$OUT")"
 # Zip the *contents* of build/ (including .htaccess) so they extract into public_html.

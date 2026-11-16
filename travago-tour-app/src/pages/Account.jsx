@@ -2,14 +2,14 @@ import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BedDouble, CalendarRange, Compass, Download, KeyRound, LogOut, MailWarning, MonitorSmartphone, ShieldCheck, Trash2, UserRound, Users, Store,
-} from "lucide-react";
+  BedDouble, CalendarRange, Compass, Download, KeyRound, LogOut, MailWarning, MonitorSmartphone, ShieldCheck, Trash2, UserRound, Users, Store, Star } from "lucide-react";
 import { api, post } from "../lib/api";
 import { useAuth } from "../store/auth";
 import { useGuidesOn, usePartnersOn } from "../lib/useConfig";
 import { euro, fmtDate } from "../lib/format";
 import { Alert, Field, Segmented, Skeleton, toast } from "../components/ui";
 import TicketCard from "../components/account/TicketCard";
+import TwoStep from "../components/account/TwoStep";
 import PasswordField from "../components/auth/PasswordField";
 import { tr } from "../i18n";
 
@@ -68,7 +68,9 @@ function Stays({ data }) {
           <h2 className="h3"><BedDouble size={18} /> {tr("Your stays")}</h2>
           {data.bookings.map((b, i) => (
             <motion.div key={b.reference} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <TicketCard booking={b} to={`/booking/${b.reference}`} />
+              <TicketCard booking={b} to={`/booking/${b.reference}`}>
+                {b.can_review && <Link className="btn sm" to={`/review/${b.reference}`}><Star size={14} /> {tr("Write a review")}</Link>}
+              </TicketCard>
             </motion.div>
           ))}
         </section>
@@ -192,6 +194,7 @@ function Security({ user, onUser }) {
         <p className="tiny muted">{tr("Changing it signs out every other device.")}</p>
       </form>
 
+      <TwoStep user={user} onUser={onUser} />
       <div className="card pad stack">
         <h2 className="h3"><MonitorSmartphone size={18} /> {tr("Signed-in devices")}</h2>
         {!sessions ? <Skeleton h={80} r={12} /> : (

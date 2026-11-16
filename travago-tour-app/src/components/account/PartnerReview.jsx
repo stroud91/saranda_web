@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Ban, Check, ExternalLink, MessageSquareWarning, RotateCcw, Store } from "lucide-react";
 import { KINDS, PROFILE_FIELDS, fieldLabel, partnerPatch, showValue } from "../../lib/partners";
 import { fmtDate } from "../../lib/format";
+import { thumb } from "../../lib/photos";
 import { Alert, toast } from "../ui";
 import { tr } from "../../i18n";
 
@@ -10,13 +11,29 @@ const TYPE_LABEL = { business: "Business profile", stays: "Apartment", rentals: 
 const STATUS_TONE = { approved: "olive", pending: "sun", rejected: "terracotta", suspended: "terracotta" };
 const reviewPath = (q) => (q.type === "business" ? `/admin/partners/businesses/${q.id}` : `/admin/partners/listings/${q.type}/${q.id}`);
 
+/** Small photos the host can open full-size before approving them. */
+function Photos({ urls, fresh = [] }) {
+  if (!urls?.length) return <span className="muted">—</span>;
+  return (
+    <span className="review-photos">
+      {urls.map((u) => (
+        <a key={u} href={u} target="_blank" rel="noopener noreferrer" className={fresh.includes(u) ? "new" : ""} title={fresh.includes(u) ? tr("New photo") : undefined}>
+          <img src={thumb(u)} alt={tr("Open photo")} loading="lazy" />
+        </a>
+      ))}
+    </span>
+  );
+}
+
 /** What was submitted: every field on a first review, or only what changed on an edit. */
 function Submission({ q }) {
   if (!q.first_review) {
     return (
       <dl className="review-diff">
         {Object.entries(q.changes).map(([k, c]) => (
-          <div key={k}><dt>{fieldLabel(k)}</dt><dd><del>{showValue(c.from)}</del><ins>{showValue(c.to)}</ins></dd></div>
+          <div key={k}><dt>{tr(fieldLabel(k))}</dt><dd>{k === "image_urls"
+            ? <Photos urls={c.to} fresh={(c.to || []).filter((u) => !(c.from || []).includes(u))} />
+            : <><del>{showValue(c.from)}</del><ins>{showValue(c.to)}</ins></>}</dd></div>
         ))}
       </dl>
     );
@@ -24,8 +41,8 @@ function Submission({ q }) {
   const names = (q.type === "business" ? PROFILE_FIELDS : KINDS[q.type].fields).map((f) => f.name);
   return (
     <dl className="review-diff">
-      {names.filter((k) => q.details[k] !== null && q.details[k] !== "" && !(Array.isArray(q.details[k]) && !q.details[k].length)).map((k) => (
-        <div key={k}><dt>{fieldLabel(k)}</dt><dd>{showValue(q.details[k])}</dd></div>
+      {names.filter((k) => { const v = q.details[k]; return v !== null && v !== undefined && v !== "" && !(typeof v === "object" && !Object.keys(v).length); }).map((k) => (
+        <div key={k}><dt>{tr(fieldLabel(k))}</dt><dd>{k === "image_urls" ? <Photos urls={q.details[k]} /> : showValue(q.details[k])}</dd></div>
       ))}
     </dl>
   );

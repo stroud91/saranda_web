@@ -29,6 +29,7 @@ export function createLocalApi(staticApi, { contactEmail, whatsapp, liveData = t
     whatsapp: whatsapp || responses["/meta/config"].whatsapp || null,
     contact_email: contactEmail || responses["/meta/config"].contact_email,
     road_geometry: Boolean(liveData && osrmUrl),
+    stats: false, // nothing counts visits on a plain-files copy
   };
   const todayIso = () => (today ? today() : new Date().toISOString().slice(0, 10));
   const addDaysIso = (iso, n) => new Date(Date.parse(iso + "T00:00:00Z") + n * 86400000).toISOString().slice(0, 10);

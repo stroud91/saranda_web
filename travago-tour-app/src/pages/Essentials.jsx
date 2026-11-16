@@ -69,11 +69,11 @@ export default function Essentials() {
   const { data: e } = useApi("/essentials");
   const { checklist, toggleCheck } = useTrip();
   const ask = useUi((s) => s.openConcierge);
-  useEffect(() => { document.title = "Know before you go · Saranda Companion"; }, []);
+  useEffect(() => { document.title = `${tr("Know before you go")} · Saranda Companion`; }, []);
   if (!e) return <div className="page container"><Skeleton h={500} r={26} /></div>;
   return (
     <div className="page container essentials">
-      <PageHeader eyebrow={`Know before you go · ${e.edition}`} icon={BookOpen} title={tr("Everything practical, in one place")} lead={tr("Seasons, money, budgets, food, beaches, packing, safety and the Corfu connection — from The Ultimate Albania Travel Planner 2027.")} />
+      <PageHeader eyebrow={`${tr("Know before you go")} · ${e.edition}`} icon={BookOpen} title={tr("Everything practical, in one place")} lead={tr("Seasons, money, budgets, food, beaches, packing, safety and the Corfu connection — from The Ultimate Albania Travel Planner 2027.")} />
       <div className="quick-start card pad">
         <b>{tr("Quick start")}</b>
         <ol>{e.quick_start.map((q) => <li key={q}>{q}</li>)}</ol>

@@ -8,10 +8,14 @@ alembic==1.20.0
 flask-cors==6.0.5
 flask-limiter==3.12
 pyjwt[crypto]==2.15.1
+# Seals two-step sign-in secrets and encrypts backups (also what pyjwt[crypto] uses)
+cryptography==50.0.2
 requests==2.34.2
 stripe==15.6.1
 # EPC "SEPA QR" codes for bank-transfer payments (pure Python)
 segno==1.6.6
+# Checks and re-encodes uploaded photos
+pillow==13.0.0
 anthropic==1.9.0
 python-dotenv==1.2.3
 gunicorn==26.2.0

@@ -1,6 +1,7 @@
 from app.models import Hotel, db
 
 from ._util import truncate
+from .hotel_translations import TRANSLATIONS
 
 COMMON_AMENITIES = [
     "Free WiFi", "Air Conditioning", "Sea View", "Fully Equipped Kitchen",
@@ -147,7 +148,10 @@ def seed_hotels():
         image_urls=[],
     )
 
-    db.session.add_all([apt_4, apt_11, apt_17, apt_23, apt_booking])
+    apartments = [apt_4, apt_11, apt_17, apt_23, apt_booking]
+    for apartment in apartments:
+        apartment.translations = TRANSLATIONS.get(apartment.hotel_name)
+    db.session.add_all(apartments)
     db.session.commit()
 
 

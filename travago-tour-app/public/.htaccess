@@ -17,9 +17,15 @@ RewriteRule ^api/ - [R=404,L]
 RewriteRule (^|/)\.(?!well-known/) - [F,L]
 RewriteRule \.map$ - [R=404,L]
 
-# Serve existing files and directories directly
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
+# Pages prepared with their own title and description (scripts/prerender_static.py) live in
+# <address>/index.html. Serve them at the address itself, without a redirect to "<address>/".
+DirectorySlash Off
+RewriteCond %{REQUEST_URI} !\.[A-Za-z0-9]+$
+RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+RewriteRule ^(.+?)/?$ $1/index.html [L]
+
+# Serve existing files directly
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
 # Everything else is a page of the single-page app

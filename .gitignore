@@ -7,6 +7,10 @@ venv/
 .DS_Store
 .vscode/
 instance/*.db
+instance/uploads/
+# Backups and health notes hold guests' personal details: never commit them
+instance/backups/
+instance/monitor.json*
 !instance/dev.db
 node_modules/
 travago-tour-app/build/

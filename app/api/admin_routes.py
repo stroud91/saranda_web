@@ -2,8 +2,9 @@
 from flask import Blueprint, abort, g, jsonify, request
 
 from app.auth import require_admin
-from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, db
-from app.services import accounts, mailer, partners
+from app.models import Booking, Business, ContactMessage, Guide, GuideBooking, Hotel, Review, db
+from app.models.db import utcnow
+from app.services import accounts, cancellations, mailer, monitor, partners, reviews, stats
 from app.validation import Field, json_body, query_args
 
 admin_routes = Blueprint("admin", __name__)
@@ -29,7 +30,7 @@ def list_bookings():
         b.status = "expired"
     if stale:
         db.session.commit()
-    return jsonify([b.to_admin_dict() for b in rows])
+    return jsonify([_admin_view(b) for b in rows])
 
 
 @admin_routes.patch("/bookings/<reference>")
@@ -45,17 +46,43 @@ def update_booking(reference):
     was_confirmed, was_cancelled = booking.status == "confirmed", booking.status == "cancelled"
     if data["paid"]:  # e.g. the bank transfer arrived
         booking.mark_paid()
+    elif data["status"] == "cancelled":
+        if not was_cancelled:
+            cancellations.cancel(booking, by="host")  # a host's cancellation always owes back everything paid
     elif data["status"]:
         booking.status = data["status"]
-        if data["status"] == "cancelled" and booking.payment_status in ("unpaid", "awaiting_transfer"):
-            booking.payment_status = "cancelled"
     db.session.commit()
     if booking.status == "confirmed" and not was_confirmed and booking.guest_email and mailer.configured():
         mailer.deliver(mailer.booking_confirmed, booking.to_public_dict(), booking.guest_email, accounts.site_url())
-    if (booking.status == "cancelled" and not was_cancelled and booking.guest_email and mailer.configured()
-            and booking.payment_status != "paid"):
+    if booking.status == "cancelled" and not was_cancelled and booking.guest_email and mailer.configured():
         mailer.deliver(mailer.booking_cancelled, booking.to_public_dict(), booking.guest_email, accounts.site_url())
-    return jsonify(booking.to_admin_dict())
+    return jsonify(_admin_view(booking))
+
+
+def _admin_view(booking):
+    out = booking.to_admin_dict()
+    out["refund_methods"] = cancellations.refund_methods(booking) if booking.refund_status == "due" else []
+    return out
+
+
+@admin_routes.post("/bookings/<reference>/refund")
+@require_admin
+def refund_booking(reference):
+    """Send the refund that is due: through PayPal or the card processor when the guest paid
+    that way, or record that it was paid back by hand (bank transfer, cash)."""
+    booking = Booking.query.filter_by(reference=reference.upper()[:20]).first() or abort(404)
+    if booking.hotel and booking.hotel.business_id:
+        abort(404)
+    data = json_body({"method": Field(required=True, choices=["paypal", "card", "manual"])})
+    try:
+        cancellations.send_refund(booking, data["method"])
+    except cancellations.RefundError as exc:
+        db.session.rollback()
+        return jsonify({"error": str(exc)}), 409
+    db.session.commit()
+    if booking.guest_email and mailer.configured():
+        mailer.deliver(mailer.refund_sent, booking.to_public_dict(), booking.guest_email, accounts.site_url())
+    return jsonify(_admin_view(booking))
 
 
 @admin_routes.get("/guide-requests")
@@ -127,6 +154,74 @@ def update_guide(slug):
 def list_messages():
     rows = ContactMessage.query.order_by(ContactMessage.created_at.desc()).limit(500).all()
     return jsonify([m.to_admin_dict() for m in rows])
+
+
+# ---- visitor statistics ---------------------------------------------------------
+@admin_routes.get("/stats")
+@require_admin
+def visitor_stats():
+    """Visitors, page views and bookings per day, plus the top pages and where visitors came from."""
+    args = query_args({"days": Field("int", min=1, max=366, default=30)})
+    return jsonify({**stats.report(args["days"]), "enabled": stats.enabled()})
+
+
+@admin_routes.get("/health")
+@require_admin
+def site_health():
+    """What needs the host to keep the site running (failed backups, calendars that stopped
+    updating, a full disk…) and when the last backup was made. The checks that use the
+    network run only from `flask monitor check`."""
+    found = monitor.checks(deep=False)
+    return jsonify({"ok": not [item for item in found if item["level"] == "problem"], "problems": found, **monitor.facts()})
+
+
+# ---- guest reviews --------------------------------------------------------------
+@admin_routes.get("/reviews")
+@require_admin
+def list_reviews():
+    """Every review on the site, newest first, hidden ones included."""
+    rows = Review.query.order_by(Review.created_at.desc()).limit(500).all()
+    return jsonify([r.to_host_dict() for r in rows])
+
+
+@admin_routes.patch("/reviews/<int:review_id>")
+@require_admin
+def moderate_review(review_id):
+    """Hide or show a review, or reply to one about the site's own stays."""
+    review = db.session.get(Review, review_id) or abort(404)
+    data = json_body({"action": Field(choices=["hide", "publish"]), "reason": Field(max_len=300),
+                      "reply": Field("text", max_len=1500)})
+    body = request.get_json(silent=True) or {}
+    if data["action"] == "hide":
+        if not data["reason"] or len(data["reason"]) < 5:
+            return jsonify({"error": "Say why it is hidden (abusive, off-topic, personal details…)", "fields": {"reason": "Required"}}), 400
+        review.status, review.hidden_reason = "hidden", data["reason"]
+    elif data["action"] == "publish":
+        review.status, review.hidden_reason = "published", None
+    if "reply" in body:
+        if reviews.hosted_by(review) is not None:
+            return jsonify({"error": "The business that hosts this stay replies to its own reviews."}), 409
+        review.reply = data["reply"] or None
+        review.replied_at = utcnow() if review.reply else None
+    db.session.commit()
+    return jsonify(review.to_host_dict())
+
+
+@admin_routes.post("/bookings/<reference>/review-link")
+@require_admin
+def review_link(reference):
+    """A fresh review link for a finished stay of the site's own, to send by WhatsApp when
+    e-mail isn't set up. Making a new one cancels the previous link."""
+    booking = Booking.query.filter_by(reference=reference.upper()[:20]).first() or abort(404)
+    if booking.hotel and booking.hotel.business_id:
+        abort(404)
+    why = reviews.can_review(booking)
+    if why:
+        return jsonify({"error": why}), 409
+    key = reviews.new_key(booking)
+    booking.review_invited_at = booking.review_invited_at or utcnow()
+    db.session.commit()
+    return jsonify({"url": f"{accounts.site_url() or request.host_url.rstrip('/')}/review/{booking.reference}?key={key}"})
 
 
 # ---- partner businesses: review what they submit ------------------------------

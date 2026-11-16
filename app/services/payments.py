@@ -47,6 +47,19 @@ def retrieve_status(intent_id):
         raise PaymentError("Could not verify payment status") from None
 
 
+def refund(intent_id, amount_cents, reference):
+    """Send part or all of a card payment back. Returns Stripe's refund id."""
+    import stripe
+
+    try:
+        made = _client().v1.refunds.create(params={"payment_intent": intent_id, "amount": int(amount_cents),
+                                                   "metadata": {"reference": reference}},
+                                           options={"idempotency_key": f"refund-{reference}"})
+        return made.id
+    except stripe.StripeError:
+        raise PaymentError("The card refund could not be sent. Refund it in your Stripe dashboard, then mark it as sent here.") from None
+
+
 def cancel_intent(intent_id):
     import stripe
 

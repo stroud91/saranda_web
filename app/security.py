@@ -29,6 +29,7 @@ PERMISSIONS = "camera=(), microphone=(), geolocation=(self), payment=(self \"htt
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 # Endpoints that legitimately receive non-JSON bodies.
 RAW_BODY_PATHS = {"/api/webhooks/stripe"}
+UPLOAD_PATH = "/api/uploads/"  # the one place a file (multipart form) is accepted
 # Server-to-server callers: no browser, no cookies, authenticated by signature.
 WEBHOOK_PREFIX = "/api/webhooks/"
 
@@ -69,8 +70,13 @@ def init_security(app):
         if (request.method in WRITE_METHODS and request.path.startswith("/api/")
                 and not request.path.startswith(WEBHOOK_PREFIX) and _cross_site_write()):
             return jsonify({"error": "Cross-site request blocked"}), 403
+        if request.method == "POST" and request.path == UPLOAD_PATH:
+            # Photos are bigger than any JSON request: raise the size limit for this one route only.
+            request.max_content_length = int(cfg.get("UPLOAD_MAX_MB", 10)) * 1024 * 1024 + 64 * 1024
+            if request.mimetype != "multipart/form-data":
+                return jsonify({"error": "Send the photo as a form upload"}), 415
         # JSON-only writes: blocks cross-site HTML form posts (CSRF) outright.
-        if (request.method in WRITE_METHODS and request.path.startswith("/api/")
+        elif (request.method in WRITE_METHODS and request.path.startswith("/api/")
                 and request.path not in RAW_BODY_PATHS and request.content_length):
             if not request.is_json:
                 return jsonify({"error": "Content-Type must be application/json"}), 415

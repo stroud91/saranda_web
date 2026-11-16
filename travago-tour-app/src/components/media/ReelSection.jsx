@@ -53,7 +53,7 @@ export default function ReelSection() {
               <span className="reel-rec" aria-hidden="true" />
               <div className="reel-now">
                 <span className="tiny">{tr("Now showing")}</span>
-                <b>{current?.title}</b>
+                <b>{tr(current?.title)}</b>
               </div>
               <button type="button" className="icon-btn sm" onClick={() => setStory(Math.max(0, CLIPS.findIndex((c) => c.key === current?.key)))} aria-label={tr("Watch full screen")}>
                 <Maximize2 size={16} />
@@ -62,7 +62,7 @@ export default function ReelSection() {
             <div className="reel-chapters" role="tablist" aria-label={tr("Places in this film")}>
               {chapters.map((c, k) => (
                 <button key={c.key} type="button" role="tab" aria-selected={k === chapter} className={`chip ${k === chapter ? "on" : ""}`} onClick={() => jump(k)}>
-                  {clipByKey[c.key]?.short || clipByKey[c.key]?.title}
+                  {tr(clipByKey[c.key]?.short || clipByKey[c.key]?.title)}
                 </button>
               ))}
             </div>
@@ -84,7 +84,7 @@ export default function ReelSection() {
             >
               <span className="story-thumb"><img src={c.src.thumb} alt="" loading="lazy" decoding="async" /><Play size={14} fill="currentColor" /></span>
               <span className="story-text">
-                <b>{c.title}</b>
+                <b>{tr(c.title)}</b>
                 <span className="tiny muted">{name(c.place)} · {Math.round(c.seconds)}s</span>
               </span>
             </motion.button>

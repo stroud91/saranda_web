@@ -37,6 +37,7 @@ TOUCH_SECONDS = 300         # how often last_seen_at is refreshed
 
 VERIFY_TTL = timedelta(hours=48)
 RESET_TTL = timedelta(hours=1)
+TWO_STEP_TTL = timedelta(minutes=5)   # time to type the authenticator code after the password
 
 MAX_FAILURES = 5            # per window, per e-mail address
 WINDOW = timedelta(minutes=15)
@@ -254,10 +255,20 @@ def issue_token(user, purpose):
     """Create a fresh single-use token (older ones for the same purpose stop working)."""
     AuthToken.query.filter_by(user_id=user.id, purpose=purpose, used_at=None).delete(synchronize_session=False)
     raw = secrets.token_urlsafe(32)
-    ttl = VERIFY_TTL if purpose == "verify" else RESET_TTL
+    ttl = {"verify": VERIFY_TTL, "2fa": TWO_STEP_TTL}.get(purpose, RESET_TTL)
     db.session.add(AuthToken(user_id=user.id, purpose=purpose, token_hash=hash_token(raw),
                              expires_at=utcnow() + ttl))
     return raw
+
+
+def peek_token(raw, purpose):
+    """A valid, unused token without marking it used (the caller does that once its check passes)."""
+    if not isinstance(raw, str) or not 20 <= len(raw) <= 128:
+        return None
+    token = AuthToken.query.filter_by(token_hash=hash_token(raw), purpose=purpose).first()
+    if not token or token.used_at is not None or token.expires_at < utcnow():
+        return None
+    return token
 
 
 def consume_token(raw, purpose):

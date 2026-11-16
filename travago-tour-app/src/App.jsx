@@ -31,6 +31,7 @@ const Terms = lazy(() => import("./pages/Legal").then((m) => ({ default: m.Terms
 const Stays = lazy(() => import("./pages/Stays"));
 const StayDetail = lazy(() => import("./pages/StayDetail"));
 const BookingStatus = lazy(() => import("./pages/BookingStatus"));
+const ReviewStay = lazy(() => import("./pages/ReviewStay"));
 const Essentials = lazy(() => import("./pages/Essentials"));
 const Experiences = lazy(() => import("./pages/Experiences"));
 const TripShare = lazy(() => import("./pages/TripShare"));
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/hotels" element={<Stays />} />
             <Route path="/hotels/:id" element={<StayDetail />} />
             <Route path="/booking/:reference" element={<BookingStatus />} />
+            <Route path="/review/:reference" element={<ReviewStay />} />
             <Route path="/essentials" element={<Essentials />} />
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/tours" element={<Experiences />} />

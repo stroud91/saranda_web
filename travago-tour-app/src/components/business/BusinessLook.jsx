@@ -6,7 +6,7 @@
 import { MapPin, Store } from "lucide-react";
 import GuideAvatar, { PALETTES } from "../art/GuideAvatar";
 import SceneArt from "../art/SceneArt";
-import { tr } from "../../i18n";
+import { loc, tr } from "../../i18n";
 
 export const DEFAULT_LOOK = { background: "plain", scene: "harbor", variant: "golden", cards: "soft" };
 
@@ -66,7 +66,7 @@ export function BusinessHero({ business: b, children }) {
       <div className="stack" style={{ "--gap": "8px", minWidth: 0 }}>
         <div className="eyebrow"><Store size={14} /> {tr("Local business")}{b.since ? ` · ${tr("on Saranda Companion since {year}", { year: b.since })}` : ""}</div>
         <h1>{b.name || tr("Your business")}</h1>
-        {b.tagline && <p className="lead" style={{ margin: 0 }}>{b.tagline}</p>}
+        {loc(b, "tagline") && <p className="lead" style={{ margin: 0 }}>{loc(b, "tagline")}</p>}
         {(b.address || b.city) && <span className="small muted"><MapPin size={14} /> {[b.address, b.city].filter(Boolean).join(", ")}</span>}
         <div className="row">{children}</div>
       </div>

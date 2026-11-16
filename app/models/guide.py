@@ -32,6 +32,7 @@ class Guide(db.Model):
     # Sample profiles ship with the seed data and must be replaced before launch.
     is_sample = db.Column(db.Boolean(), default=True)
     is_active = db.Column(db.Boolean(), default=True)
+    translations = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
@@ -80,6 +81,7 @@ class Guide(db.Model):
             "review_count": self.review_count or 0,
             "palette": self.palette,
             "is_sample": self.is_sample,
+            "translations": self.translations or {},
         }
 
 

@@ -13,14 +13,15 @@ Security model:
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, current_app, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import limiter
-from app.models import Booking, Business, Enquiry, Hotel, db
+from app.models import Booking, Business, Enquiry, Hotel, Review, db
+from app.models.db import utcnow
 from app.models.business import PALETTES, STYLE_OPTIONS
-from app.services import accounts, mailer, partners
-from app.validation import Field, json_body
+from app.services import accounts, calendars, cancellations, mailer, partners
+from app.validation import Field, json_body, partial_body
 
 partner_routes = Blueprint("partner", __name__)
 
@@ -76,10 +77,7 @@ def _not_found():
     return jsonify({"error": "Not found"}), 404
 
 
-def _sent_fields(schema):
-    """Validate only the fields that were sent (partial update)."""
-    body = request.get_json(silent=True) or {}
-    return json_body({k: v for k, v in schema.items() if k in body})
+_sent_fields = partial_body
 
 
 def _tell_host(what, name):
@@ -120,6 +118,7 @@ def create_business():
         return jsonify({"error": "This account already has a business profile"}), 409
     data = json_body(partners.BUSINESS_SCHEMA)
     data["style"] = partners.clean_style(data["style"])
+    data["translations"] = partners.clean_translations(data["translations"], partners.BUSINESS_SCHEMA, partners.TRANSLATABLE["business"])
     business = Business(**data, owner_id=user.id, slug=partners.slugify(data["name"]), status="pending")
     db.session.add(business)
     try:
@@ -141,6 +140,8 @@ def update_business():
     data = _sent_fields(partners.BUSINESS_SCHEMA)
     if "style" in data:
         data["style"] = partners.clean_style(data["style"])
+    if "translations" in data:
+        data["translations"] = partners.clean_translations(data["translations"], partners.BUSINESS_SCHEMA, partners.TRANSLATABLE["business"])
     was_waiting = business.status == "pending" or bool(business.pending_changes)
     needs_review = partners.submit(business, data, partners.BUSINESS_LIVE, status_attr="status")
     db.session.commit()
@@ -164,7 +165,7 @@ def create_listing(kind_key):
     if partners.listing_count(business) >= limit:
         return jsonify({"error": f"You've reached the limit of {limit} listings. Remove one or contact us."}), 409
     data = json_body(kind.schema)
-    partners.check_extra(kind, data)
+    partners.check_extra(kind, data, business.id)
     extra = {"business_id": business.id, "review_status": "pending"}
     if kind.key == "stays":
         extra.update(total_rooms=1, available_rooms=1)
@@ -189,7 +190,7 @@ def update_listing(kind_key, listing_id):
     if obj is None:
         return _not_found()
     data = _sent_fields(kind.schema)
-    partners.check_extra(kind, data)
+    partners.check_extra(kind, data, g.business.id)
     was_waiting = obj.review_status == "pending" or bool(obj.pending_changes)
     needs_review = partners.submit(obj, data, kind.live)
     db.session.commit()
@@ -206,7 +207,9 @@ def remove_listing(kind_key, listing_id):
     if obj is None:
         return _not_found()
     kind.switch_off(obj)  # kept as a row so past bookings and enquiries still make sense
-    obj.review_status, obj.pending_changes = "removed", None
+    obj.review_status, obj.pending_changes, obj.image_urls = "removed", None, []
+    if kind.key == "stays":
+        calendars.forget_stay(obj.id)
     db.session.commit()
     return "", 204
 
@@ -237,14 +240,44 @@ def answer_booking(reference):
     allowed = {"requested": ("confirmed", "cancelled"), "confirmed": ("cancelled",)}
     if data["status"] not in allowed.get(booking.status, ()):
         return jsonify({"error": f"A {booking.status} booking can't be changed to {data['status']}"}), 409
-    booking.status = data["status"]
-    if booking.status == "cancelled" and booking.payment_status == "unpaid":
-        booking.payment_status = "cancelled"
+    if data["status"] == "cancelled":
+        cancellations.cancel(booking, by="host")
+    else:
+        booking.status = data["status"]
     db.session.commit()
     if booking.guest_email and mailer.configured():
         template = mailer.booking_confirmed if booking.status == "confirmed" else mailer.booking_cancelled
         mailer.deliver(template, booking.to_public_dict(), booking.guest_email, accounts.site_url())
     return jsonify(booking.to_host_dict())
+
+
+# ---- reviews of the business's stays ---------------------------------------------
+def _own_reviews(business):
+    return Review.query.join(Hotel, Review.hotel_id == Hotel.id).filter(Hotel.business_id == business.id)
+
+
+@partner_routes.get("/reviews")
+@owner
+def own_reviews():
+    """Published reviews of this business's stays. Hidden ones are not shown here either."""
+    rows = _own_reviews(g.business).filter(Review.status == "published").order_by(Review.created_at.desc()).limit(300).all()
+    return jsonify([r.to_host_dict() for r in rows])
+
+
+@partner_routes.patch("/reviews/<int:review_id>")
+@verified
+@owner
+@limiter.limit("60 per hour")
+def reply_to_review(review_id):
+    """One public reply per review. A business can answer a review, never edit or remove it."""
+    review = _own_reviews(g.business).filter(Review.id == review_id, Review.status == "published").first()
+    if not review:
+        return _not_found()
+    data = json_body({"reply": Field("text", max_len=1500)})
+    review.reply = data["reply"] or None
+    review.replied_at = utcnow() if review.reply else None
+    db.session.commit()
+    return jsonify(review.to_host_dict())
 
 
 @partner_routes.patch("/enquiries/<reference>")

@@ -25,6 +25,7 @@ export const KINDS = {
       { name: "city", label: "Town", required: true, max: 80, half: true, placeholder: "Sarandë" },
       { name: "address", label: "Address", required: true, max: 255, half: true },
       { name: "description", label: "Description", type: "textarea", required: true, max: 3000, hint: "What makes it special, what's nearby, anything guests should know." },
+      { name: "image_urls", label: "Photos", type: "photos" },
       { name: "price_per_night", label: "Price per night (€)", type: "number", required: true, min: 5, max: 5000, half: true },
       { name: "cleaning_fee", label: "Cleaning fee (€)", type: "number", min: 0, max: 1000, half: true, initial: 0 },
       { name: "max_guests", label: "Guests", type: "number", min: 1, max: 40, half: true, initial: 2 },
@@ -48,6 +49,7 @@ export const KINDS = {
       { name: "seats", label: "Seats", type: "number", min: 1, max: 60, third: true },
       { name: "transmission", label: "Gearbox", type: "select", options: ["manual", "automatic"], optional: "Not applicable", third: true },
       { name: "description", label: "Details", type: "textarea", max: 2000, hint: "Insurance, deposit, minimum age, delivery, fuel policy." },
+      { name: "image_urls", label: "Photos", type: "photos" },
     ],
     facts: (l) => [l.car_type, l.location, l.seats ? `${l.seats} seats` : null],
   },
@@ -61,6 +63,7 @@ export const KINDS = {
       { name: "destination_slug", label: "Nearest place", type: "destination", half: true },
       { name: "location", label: "Meeting point", required: true, max: 120 },
       { name: "description", label: "Description", type: "textarea", required: true, max: 3000, hint: "What happens, what's included, what to bring." },
+      { name: "image_urls", label: "Photos", type: "photos" },
       { name: "price", label: "Price per person (€)", type: "number", required: true, min: 0, max: 5000, half: true },
       { name: "duration_hours", label: "Duration (hours)", type: "number", min: 0.5, max: 240, step: 0.5, half: true },
     ],
@@ -80,18 +83,41 @@ export const PROFILE_FIELDS = [
   { name: "website", label: "Website", type: "url", max: 255, half: true, placeholder: "https://…", hint: "Must start with https://" },
 ];
 
+const empty = (f) => (f.type === "photos" ? [] : f.type === "translations" ? {} : f.type === "checkbox" ? Boolean(f.initial) : f.type === "tags" ? "" : f.initial ?? "");
+
+/** Field definition for "the same text in other languages"; `of` picks which fields by name. */
+export const translationsOf = (fields, names) => ({
+  name: "translations", label: "Other languages", type: "translations",
+  of: names.map((n) => { const f = fields.find((x) => x.name === n); return { name: n, label: f.label, type: f.type, max: f.max }; }),
+});
+
+/** Translations without the empty entries (what is sent to the server). */
+const pruned = (all) => Object.fromEntries(Object.entries(all || {})
+  .map(([lang, texts]) => [lang, Object.fromEntries(Object.entries(texts || {}).map(([k, v]) => [k, String(v || "").trim()]).filter(([, v]) => v))])
+  .filter(([, texts]) => Object.keys(texts).length));
+
 /** Blank form values for a set of fields. */
-export const blank = (fields) => Object.fromEntries(fields.map((f) => [f.name, f.type === "tags" ? "" : f.initial ?? ""]));
+export const blank = (fields) => Object.fromEntries(fields.map((f) => [f.name, empty(f)]));
 
 /** Form values from a saved item. */
 export const toForm = (fields, item) =>
-  Object.fromEntries(fields.map((f) => [f.name, f.type === "tags" ? (item[f.name] || []).join(", ") : item[f.name] ?? ""]));
+  Object.fromEntries(fields.map((f) => {
+    const v = item[f.name];
+    if (f.type === "tags") return [f.name, (v || []).join(", ")];
+    if (f.type === "photos") return [f.name, [...(v || [])]];
+    if (f.type === "translations") return [f.name, JSON.parse(JSON.stringify(v || {}))];
+    if (f.type === "checkbox") return [f.name, Boolean(v)];
+    return [f.name, v ?? ""];
+  }));
 
 /** What to send: numbers as numbers, tags as a list, empty optional values as null. */
 export const toBody = (fields, form) =>
   Object.fromEntries(fields.map((f) => {
     const v = form[f.name];
     if (f.type === "tags") return [f.name, String(v || "").split(",").map((s) => s.trim()).filter(Boolean)];
+    if (f.type === "photos") return [f.name, v || []];
+    if (f.type === "translations") return [f.name, pruned(v)];
+    if (f.type === "checkbox") return [f.name, Boolean(v)];
     if (f.type === "number") return [f.name, v === "" || v == null ? null : Number(v)];
     return [f.name, typeof v === "string" ? v.trim() || null : v];
   }));
@@ -103,6 +129,7 @@ export function reviewBadge(item) {
   if (status === "rejected") return { tone: "terracotta", text: "Needs changes" };
   if (status === "suspended") return { tone: "terracotta", text: "Suspended" };
   if (item.on === false) return { tone: "", text: "Paused" };
+  if (item.is_sample) return { tone: "sun", text: "Sample profile" };
   if (item.has_pending_changes) return { tone: "sun", text: "Live · changes in review" };
   return { tone: "olive", text: "Live" };
 }
@@ -111,7 +138,15 @@ const LABELS = {
   hotel_name: "Name", tour_name: "Name", car_model: "Name", car_type: "Type", price_per_night: "Price per night",
   price_per_day: "Price per day", price: "Price per person", max_guests: "Guests", min_nights: "Minimum nights",
   cleaning_fee: "Cleaning fee", duration_hours: "Duration (hours)", destination_slug: "Nearest place",
-  location: "Location", whatsapp: "WhatsApp",
+  location: "Location", whatsapp: "WhatsApp", image_urls: "Photos", translations: "Other languages",
 };
 export const fieldLabel = (key) => LABELS[key] || key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
-export const showValue = (v) => (Array.isArray(v) ? v.join(", ") : v === null || v === undefined || v === "" ? "—" : String(v));
+const spoken = (v) => Object.entries(v).flatMap(([lang, texts]) => Object.values(texts || {}).map((text) => `${lang.toUpperCase()}: ${text}`)).join("\n");
+export const showValue = (v) => (Array.isArray(v) ? v.join(", ") : v === null || v === undefined || v === "" ? "—"
+  : typeof v === "object" ? spoken(v) || "—" : String(v));
+
+// Every kind of listing, and the business profile, can also be written in other languages.
+KINDS.stays.fields.push(translationsOf(KINDS.stays.fields, ["hotel_name", "description"]));
+KINDS.rentals.fields.push(translationsOf(KINDS.rentals.fields, ["car_model", "description"]));
+KINDS.experiences.fields.push(translationsOf(KINDS.experiences.fields, ["tour_name", "description"]));
+PROFILE_FIELDS.push(translationsOf(PROFILE_FIELDS, ["tagline", "description"]));

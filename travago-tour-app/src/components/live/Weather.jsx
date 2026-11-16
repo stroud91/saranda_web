@@ -31,7 +31,7 @@ export function WeatherCard({ place = "sarande", compact = false }) {
         <div className="weather-icon-lg"><WeatherIcon icon={c.icon} isDay={c.is_day} size={40} /></div>
         <div>
           <div className="weather-temp">{r(c.temp)}°</div>
-          <div className="weather-label">{c.label}</div>
+          <div className="weather-label">{tr(c.label)}</div>
         </div>
         <div className="weather-meta">
           {c.sea_temp != null && <span><Waves size={14} /> Sea {r(c.sea_temp)}°C</span>}
@@ -54,10 +54,10 @@ export function WeatherCard({ place = "sarande", compact = false }) {
         </div>
       )}
       {!compact && data.daily?.[0]?.sunset && (
-        <div className="tiny muted row" style={{ gap: 6, marginTop: 10 }}><Sunset size={14} /> Sunset today {data.daily[0].sunset}</div>
+        <div className="tiny muted row" style={{ gap: 6, marginTop: 10 }}><Sunset size={14} /> {tr("Sunset today {time}", { time: data.daily[0].sunset })}</div>
       )}
       <div className="tiny faint" style={{ marginTop: 8 }}>
-        {data.live ? <>Live · <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a></> : `Typical for this month in Sarandë (${data.typical?.air_high}° air / ${data.typical?.sea}° sea)`}
+        {data.live ? <>{tr("Live")} · <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a></> : tr("Typical for this month in Sarandë ({air}° air / {sea}° sea)", { air: data.typical?.air_high, sea: data.typical?.sea })}
       </div>
     </div>
   );

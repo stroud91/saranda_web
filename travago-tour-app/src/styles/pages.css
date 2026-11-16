@@ -630,6 +630,48 @@ a.ticket-body:hover .ticket-title { color: var(--accent); }
 .pay-methods, .pay-method { text-align: left; }
 .pay-methods legend { margin-bottom: 6px; }
 
+.site-health ul { margin: 6px 0 0; padding-left: 18px; }
+.site-health li { margin: 4px 0; }
+.site-health p { margin: 0; }
+
+/* Host desk: visitors. One chart colour (--chart-1); text keeps the text colours. */
+.visitors h3 { font-size: 1.05rem; margin: 0; }
+.visitors .card.pad { padding: 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.visitors .card p { margin: 0; }
+.visitors .is-loading { opacity: 0.55; transition: opacity 0.2s; }
+.visitor-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.visitor-tiles .stat-value { font-family: var(--font-body); font-size: 1.7rem; font-weight: 700; }
+.chart { position: relative; min-width: 0; touch-action: pan-y; border-radius: 8px; }
+.chart:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.chart svg { display: block; max-width: 100%; }
+.chart-grid { stroke: var(--line); stroke-width: 1; }
+.chart-tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-area { fill: var(--chart-1); opacity: 0.1; }
+.chart-line { fill: none; stroke: var(--chart-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-cross { stroke: var(--line-strong); stroke-width: 1; }
+.chart-dot { fill: var(--chart-1); stroke: var(--surface); stroke-width: 2; }
+.chart-tip { position: absolute; top: 4px; transform: translateX(12px); pointer-events: none; display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: var(--bg-elev); border: 1px solid var(--line-strong); box-shadow: var(--sh-2); font-size: 0.8rem; white-space: nowrap; z-index: 2; color: var(--text-2); }
+.chart-tip.flip { transform: translateX(calc(-100% - 12px)); }
+.chart-tip-date { font-size: 0.72rem; color: var(--muted); }
+.chart-tip-row { display: flex; align-items: center; gap: 6px; }
+.chart-tip-row b { color: var(--text); }
+.chart-tip-row i { width: 10px; height: 2px; border-radius: 2px; flex: none; }
+.chart-tip-row i.chart-key { background: var(--chart-1); }
+.chart-table summary { cursor: pointer; font-size: 0.8rem; color: var(--muted); font-weight: 700; }
+.chart-table-scroll { max-height: 280px; overflow: auto; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.chart-table table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.chart-table th, .chart-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--line); font-weight: 500; }
+.chart-table th:first-child { text-align: left; }
+.chart-table thead th { position: sticky; top: 0; background: var(--bg-sunk); font-weight: 800; color: var(--muted); }
+.rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-items: start; }
+.rank-pair { display: grid; gap: 12px; min-width: 0; }
+.rank-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; }
+.rank-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; font-size: 0.86rem; }
+.rank-name { overflow-wrap: anywhere; }
+.rank-value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rank-bar { grid-column: 1 / -1; height: 8px; }
+.rank-bar span { display: block; height: 100%; min-width: 3px; background: var(--chart-1); border-radius: 0 4px 4px 0; }
+
 /* ---------- Privacy policy & booking terms ---------- */
 .legal .legal-toc { margin-bottom: 26px; }
 .legal .legal-toc ol { margin: 8px 0 0; padding-left: 20px; columns: 2 220px; column-gap: 24px; }
@@ -749,3 +791,94 @@ h2.h3 { font-size: 1.25rem; }
 .look-page .biz-hero h1 { font-size: clamp(1.4rem, 3vw, 2rem); }
 .look-page .biz-hero svg.guide-avatar { width: 64px; height: 64px; }
 .look-samples { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+/* ---------- Photos: picker, gallery, viewer ---------- */
+.photo-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.photo-grid > li { position: relative; aspect-ratio: 4 / 3; }
+.photo-tile { border-radius: 14px; overflow: hidden; background: var(--bg-sunk); border: 1px solid var(--line); }
+.photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-cover { position: absolute; top: 6px; left: 6px; font-size: 0.68rem; }
+.photo-tools { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 4px; padding: 5px; background: linear-gradient(transparent, rgba(6, 20, 30, 0.72)); }
+.photo-tools .icon-btn { width: 30px; height: 30px; background: rgba(255, 255, 255, 0.92); color: #0d2733; border: 0; }
+.photo-tools .icon-btn:disabled { opacity: 0.35; }
+.photo-add { width: 100%; height: 100%; display: grid; place-items: center; align-content: center; gap: 6px; border: 2px dashed var(--line-strong); border-radius: 14px; background: transparent; color: var(--muted); font-weight: 700; font-size: 0.84rem; text-align: center; padding: 8px; transition: border-color 0.2s, color 0.2s; }
+.photo-add:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.row-thumb { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; flex: none; background: var(--bg-sunk); }
+.row-thumb.none { display: grid; place-items: center; color: var(--faint); }
+.review-photos { display: flex; flex-wrap: wrap; gap: 6px; }
+.review-photos a { display: block; width: 84px; height: 63px; border-radius: 10px; overflow: hidden; border: 2px solid transparent; }
+.review-photos a.new { border-color: var(--olive); }
+.review-photos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; display: block; }
+.car-icon.photo { object-fit: cover; padding: 0; }
+.exp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stay-gallery.photos { position: relative; }
+.stay-gallery.photos > button:not(.btn) { border: 0; padding: 0; background: var(--bg-sunk); cursor: zoom-in; display: block; }
+.stay-gallery.photos.n1 { grid-template-columns: 1fr; }
+.stay-gallery.photos.n2 { grid-template-rows: 1fr; grid-template-columns: 3fr 2fr; }
+.stay-gallery.photos.n2 .main { grid-row: auto; }
+.stay-gallery .gallery-all { position: absolute; right: 14px; bottom: 14px; overflow: visible; }
+@media (max-width: 640px) { .stay-gallery.photos.n2 { grid-template-columns: 1fr; } .stay-gallery > .gallery-all { display: inline-flex; } }
+.photo-viewer { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; background: rgba(4, 12, 18, 0.94); padding: 56px 12px; }
+.photo-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; }
+.photo-viewer .icon-btn { position: absolute; background: rgba(255, 255, 255, 0.14); color: #fff; border: 0; }
+.photo-viewer .pv-close { top: 12px; right: 12px; }
+.photo-viewer .pv-prev { left: 12px; top: 50%; transform: translateY(-50%); }
+.photo-viewer .pv-next { right: 12px; top: 50%; transform: translateY(-50%); }
+.photo-viewer .pv-count { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); color: #fff; font-weight: 700; font-size: 0.85rem; }
+
+/* ---------- Tick boxes in forms ---------- */
+.tick { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+.tick input { position: absolute; opacity: 0; pointer-events: none; }
+.tick .box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--line-strong); display: grid; place-items: center; color: transparent; flex: none; transition: background 0.2s, border-color 0.2s; }
+.tick.on .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tick:focus-within .box { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Stay calendar (host and business) ---------- */
+.host-cal .cal-d.bk { background: color-mix(in srgb, var(--accent) 82%, transparent); color: var(--accent-ink); }
+.host-cal .cal-d.imp { background: color-mix(in srgb, #f4b63f 78%, transparent); color: #3a2a04; }
+.host-cal .cal-d.man { background: repeating-linear-gradient(135deg, var(--bg-sunk), var(--bg-sunk) 4px, var(--line-strong) 4px, var(--line-strong) 6px); }
+.host-cal .cal-d.in { box-shadow: inset 0 0 0 2px var(--ink); border-radius: 0; background-color: color-mix(in srgb, var(--accent) 14%, transparent); }
+.host-cal .cal-d.start { background: var(--ink) !important; color: var(--bg); border-radius: 10px; box-shadow: none; }
+.host-cal .cal-legend { flex-wrap: wrap; }
+.host-cal .lg.bk { background: var(--accent); }
+.host-cal .lg.imp { background: #f4b63f; }
+.host-cal .lg.man { background: repeating-linear-gradient(135deg, var(--bg-sunk), var(--bg-sunk) 3px, var(--line-strong) 3px, var(--line-strong) 5px); }
+.copy-row { display: flex; gap: 8px; }
+.copy-row .input { flex: 1; min-width: 0; font-size: 0.82rem; }
+@media (max-width: 480px) { .copy-row { flex-direction: column; } }
+.link-btn.small { font-size: 0.84rem; justify-self: start; text-align: left; }
+
+/* ---------- Text in other languages (listing forms) ---------- */
+.field.translations { display: grid; gap: 8px; padding: 14px; border: 1px dashed var(--line-strong); border-radius: 16px; }
+.field.translations .chips { margin: 2px 0; }
+.review-diff dd { white-space: pre-wrap; }
+
+/* ---------- Guest reviews ---------- */
+.stars { display: inline-flex; gap: 1px; color: #e8a317; vertical-align: -2px; }
+.review-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
+.review-score { display: grid; justify-items: start; gap: 2px; }
+.review-score > b { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; }
+.review-bars { display: grid; gap: 4px; max-width: 320px; }
+.review-bars > div { display: grid; grid-template-columns: 12px minmax(0, 1fr) 22px; gap: 8px; align-items: center; }
+.review-bars i { display: block; height: 7px; border-radius: 99px; background: var(--bg-sunk); overflow: hidden; }
+.review-bars i b { display: block; height: 100%; background: #e8a317; border-radius: 99px; }
+.review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.review { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.review-list.desk .review { padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.review-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-reply { margin-left: 14px; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--bg-sunk); border-radius: 0 12px 12px 0; }
+.review-reply p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.92rem; }
+.star-input { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.star-input button { border: 0; background: none; padding: 4px; color: var(--line-strong); border-radius: 10px; min-width: 44px; min-height: 44px; display: grid; place-items: center; transition: color 0.15s, transform 0.15s; }
+.star-input button.on { color: #e8a317; }
+.star-input button:hover { transform: scale(1.08); }
+.star-input > span { margin-left: 8px; }
+@media (max-width: 520px) { .review-head { grid-template-columns: 1fr; gap: 12px; } }
+
+/* ---------- Two-step sign-in ---------- */
+.code-input { font-size: 1.5rem; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; text-align: center; font-weight: 700; }
+.two-step-qr { width: 200px; height: 200px; border-radius: 14px; background: #fff; padding: 6px; border: 1px solid var(--line); }
+.two-step-key { display: inline-block; font-size: 0.85rem; letter-spacing: 0.06em; word-break: break-all; user-select: all; }
+.recovery-codes { list-style: none; margin: 0; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; background: var(--bg-sunk); border-radius: 14px; }
+.recovery-codes code { font-size: 0.95rem; letter-spacing: 0.04em; user-select: all; }

@@ -26,6 +26,7 @@ class FakePayPal:
         self.approved = True
         self.approve_host = "www.sandbox.paypal.com"
         self.webhook_ok = True
+        self.refunds, self.refund_fails = [], False
 
     def __call__(self, method, url, *, json=None, data=None, headers=None, auth=None, timeout=None):
         upstream._check_url(url)        # the real allowlist still applies
@@ -53,6 +54,16 @@ class FakePayPal:
                 "reference_id": unit["reference_id"],
                 "payments": {"captures": [{"id": "CAP1", "status": self.capture_status, "amount": amount,
                                            "custom_id": unit["custom_id"]}]}}]}
+        if method == "GET" and path.startswith("/v2/checkout/orders/"):
+            unit = self.orders[path.rsplit("/", 1)[1]]["unit"]
+            return 200, {"id": path.rsplit("/", 1)[1], "status": "COMPLETED", "purchase_units": [{
+                "reference_id": unit["reference_id"],
+                "payments": {"captures": [{"id": "CAP1", "status": "COMPLETED", "amount": unit["amount"], "custom_id": unit["custom_id"]}]}}]}
+        if path == "/v2/payments/captures/CAP1/refund":
+            self.refunds.append({"amount": json["amount"], "request_id": headers.get("PayPal-Request-Id")})
+            if self.refund_fails:
+                return 422, {"name": "UNPROCESSABLE_ENTITY", "details": [{"issue": "INSUFFICIENT_FUNDS"}]}
+            return 201, {"id": "REF1", "status": "COMPLETED"}
         if path == "/v1/notifications/verify-webhook-signature":
             assert json["webhook_id"] == "WH-1"
             return 200, {"verification_status": "SUCCESS" if self.webhook_ok else "FAILURE"}

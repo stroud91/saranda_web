@@ -21,6 +21,8 @@ class Tour(Reviewable, db.Model):
     duration_hours = db.Column(db.Numeric(4, 1), nullable=True)
     destination_slug = db.Column(db.String(64), nullable=True)
     guide_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod("guides.id")), nullable=True)
+    image_urls = db.Column(db.JSON, nullable=True)
+    translations = db.Column(db.JSON, nullable=True)
 
     bookings = db.relationship("Booking", backref="tour", lazy=True)
 
@@ -40,5 +42,7 @@ class Tour(Reviewable, db.Model):
             "destination_slug": self.destination_slug,
             "guide_id": self.guide_id,
             "start_time": self.start_date.strftime("%H:%M") if self.start_date else None,
+            "image_urls": self.image_urls or [],
+            "translations": self.translations or {},
             "business": self.business_brief(),
         }

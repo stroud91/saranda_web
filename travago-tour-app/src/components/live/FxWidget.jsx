@@ -37,7 +37,7 @@ export default function FxWidget() {
       <div className="chips" style={{ marginTop: 10 }}>
         {[2, 5, 20, 50, 100].map((v) => <button key={v} className="chip sm" onClick={() => { setDir("eur"); setEur(v); }}>€{v}</button>)}
       </div>
-      <p className="tiny faint" style={{ marginTop: 8 }}>{live ? <>Live rate · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a>.</> : "Approximate rate — check your bank's rate before exchanging."} Keep lek for cafés, parking and small purchases.</p>
+      <p className="tiny faint" style={{ marginTop: 8 }}>{live ? <>{tr("Live rate")} · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a>.</> : tr("Approximate rate — check your bank's rate before exchanging.")} {tr("Keep lek for cafés, parking and small purchases.")}</p>
     </div>
   );
 }

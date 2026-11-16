@@ -5,6 +5,7 @@ import { post } from "../lib/api";
 import { safeNext, useAuth } from "../store/auth";
 import AuthShell from "../components/auth/AuthShell";
 import PasswordField from "../components/auth/PasswordField";
+import { CodeInput } from "../components/account/TwoStep";
 import { Alert, Field, Skeleton } from "../components/ui";
 import { rich, tr } from "../i18n";
 
@@ -29,12 +30,16 @@ function Unavailable() {
 }
 
 export function SignIn() {
-  const { user, ready, available, setUser, next } = useAuthPage("Sign in");
+  const { user, ready, available, setUser, next, params } = useAuthPage("Sign in");
   const navigate = useNavigate();
+  const afterReset = params.get("reset") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [state, setState] = useState({ busy: false, error: "" });
+  const [ticket, setTicket] = useState(""); // set once the password is accepted and a code is needed
+  const [code, setCode] = useState("");
+  const [recovery, setRecovery] = useState(false);
 
   if (!ready) return <div className="page container"><Skeleton h={420} r={26} /></div>;
   if (!available) return <Unavailable />;
@@ -45,16 +50,48 @@ export function SignIn() {
     setState({ busy: true, error: "" });
     try {
       const res = await post("/auth/login", { email, password, remember });
+      if (res.two_step) {
+        setTicket(res.ticket);
+        setPassword("");
+        return setState({ busy: false, error: "" });
+      }
       setUser(res.user);
       navigate(next, { replace: true });
     } catch (err) {
       setState({ busy: false, error: err.message });
     }
   };
+  const submitCode = async (e) => {
+    e.preventDefault();
+    setState({ busy: true, error: "" });
+    try {
+      const res = await post("/auth/login/code", { ticket, code, remember });
+      setUser(res.user);
+      navigate(next, { replace: true });
+    } catch (err) {
+      setCode("");
+      if (err.status === 401 && !err.fields?.code) setTicket(""); // the five minutes ran out: back to the password
+      setState({ busy: false, error: err.message });
+    }
+  };
+  if (ticket) {
+    return (
+      <AuthShell hour={19.2} eyebrow={tr("One more step")} title={tr("Enter your code")} lead={tr("Open your authenticator app and type the 6-digit code for Saranda Companion.")}
+        footer={<button type="button" className="link-btn" onClick={() => { setTicket(""); setCode(""); setState({ busy: false, error: "" }); }}>{tr("Start again")}</button>}>
+        <form className="stack" onSubmit={submitCode} noValidate>
+          <CodeInput value={code} onChange={setCode} recovery={recovery} autoFocus />
+          {state.error && <Alert kind="error">{state.error}</Alert>}
+          <button className="btn primary lg" disabled={state.busy || code.trim().length < 6}>{state.busy ? <span className="spinner" /> : <LogIn size={18} />} {tr("Sign in")}</button>
+          <button type="button" className="link-btn small" onClick={() => { setRecovery((r) => !r); setCode(""); }}>{recovery ? tr("Use a code from my app") : tr("Lost your phone? Use a recovery code")}</button>
+        </form>
+      </AuthShell>
+    );
+  }
   return (
     <AuthShell hour={19.2} eyebrow={tr("Welcome back")} title={tr("Sign in")} lead={tr("See your bookings, guide requests and saved trips.")}
       footer={rich("New here? <a>Create an account</a>", { a: (c) => <Link to={`/signup?next=${encodeURIComponent(next)}`}>{c}</Link> })}>
       <form className="stack" onSubmit={submit} noValidate>
+        {afterReset && <Alert kind="ok">{tr("Your password was changed. Sign in with it, then enter the code from your authenticator app.")}</Alert>}
         <Field label={tr("Email")}><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" maxLength={255} required autoFocus={FINE_POINTER} /></Field>
         <PasswordField value={password} onChange={setPassword} />
         <div className="row between small">
@@ -97,7 +134,7 @@ export function SignUp() {
       <form className="stack" onSubmit={submit} noValidate>
         <Field label={tr("Name")} error={state.fields.name}><input className="input" value={form.name} onChange={up("name")} autoComplete="name" maxLength={120} required autoFocus={FINE_POINTER} /></Field>
         <Field label={tr("Email")} error={state.fields.email}><input className="input" type="email" value={form.email} onChange={up("email")} autoComplete="username" maxLength={255} required /></Field>
-        <PasswordField value={form.password} onChange={up("password")} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
+        <PasswordField value={form.password} onChange={up("password")} error={state.fields.password} autoComplete="new-password" meter hint={tr(PW_HINT)} />
         <input className="hp" tabIndex={-1} autoComplete="off" value={form.website} onChange={up("website")} aria-hidden="true" />
         {state.error && !Object.keys(state.fields).length && <Alert kind="error">{state.error}</Alert>}
         {state.fields.email === "Already registered" && <Alert kind="info">That email already has an account. <Link to="/signin">Sign in</Link> or <Link to="/forgot-password">reset the password</Link>.</Alert>}
@@ -158,6 +195,11 @@ export function ResetPassword() {
     setState({ busy: true, error: "", fields: {} });
     try {
       const res = await post("/auth/password/reset", { token, password });
+      if (res.two_step) {
+        // Two-step sign-in is on: the link changed the password, but signing in still needs the code.
+        setUser(null);
+        return navigate("/signin?reset=1", { replace: true });
+      }
       setUser(res.user);
       navigate("/account?reset=1", { replace: true });
     } catch (err) {
@@ -165,11 +207,11 @@ export function ResetPassword() {
     }
   };
   return (
-    <AuthShell hour={5.6} eyebrow={tr("Almost there")} title={tr("Choose a new password")} lead={tr("You'll be signed in, and every other device will be signed out.")}
+    <AuthShell hour={5.6} eyebrow={tr("Almost there")} title={tr("Choose a new password")} lead={tr("Every device signed in to your account will be signed out. If you use two-step sign-in, you'll then sign in with the new password and your code.")}
       footer={<Link to="/forgot-password">{tr("Ask for a new link")}</Link>}>
       {!token ? <Alert kind="warn">{tr("This page needs the link from your reset email.")}</Alert> : (
         <form className="stack" onSubmit={submit} noValidate>
-          <PasswordField label={tr("New password")} value={password} onChange={setPassword} error={state.fields.password} autoComplete="new-password" meter hint={PW_HINT} />
+          <PasswordField label={tr("New password")} value={password} onChange={setPassword} error={state.fields.password} autoComplete="new-password" meter hint={tr(PW_HINT)} />
           {state.error && !state.fields.password && <Alert kind="error">{state.error}</Alert>}
           <button className="btn primary lg" disabled={state.busy || !password}>{state.busy ? <span className="spinner" /> : <KeyRound size={18} />} {tr("Save password")}</button>
         </form>

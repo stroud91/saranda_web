@@ -35,6 +35,10 @@ class Hotel(Reviewable, db.Model):
     min_nights = db.Column(db.Integer, default=1)
     cleaning_fee = db.Column(db.Numeric(10, 2), default=0)
     is_active = db.Column(db.Boolean(), default=True)
+    # Secret in the link other booking sites use to read this stay's busy nights.
+    calendar_token = db.Column(db.String(48), nullable=True, unique=True)
+    # The name and description in other languages: {"sq": {"hotel_name": ..., "description": ...}}
+    translations = db.Column(db.JSON, nullable=True)
 
     bookings = db.relationship("Booking", backref="hotel", lazy=True)
 
@@ -59,5 +63,6 @@ class Hotel(Reviewable, db.Model):
             "amenities": self.amenities or [],
             "min_nights": self.min_nights or 1,
             "cleaning_fee": float(self.cleaning_fee or 0),
+            "translations": self.translations or {},
             "business": self.business_brief(),
         }

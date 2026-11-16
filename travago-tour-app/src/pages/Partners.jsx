@@ -6,12 +6,13 @@ import { ArrowRight, BedDouble, Car, Clock, Globe, Mail, MapPin, MessageCircle, 
 import { useApi } from "../lib/useApi";
 import { usePartnersOn, whatsappUrl } from "../lib/useConfig";
 import { euro } from "../lib/format";
+import { thumb } from "../lib/photos";
 import GuideAvatar from "../components/art/GuideAvatar";
 import SceneArt from "../components/art/SceneArt";
 import EnquirySheet from "../components/business/EnquirySheet";
 import { BusinessHero, BusinessLook } from "../components/business/BusinessLook";
 import { ErrorState, PageHeader, Skeleton } from "../components/ui";
-import { rich, tr } from "../i18n";
+import { loc, rich, tr } from "../i18n";
 
 const COUNT_LABEL = { stays: ["stay", BedDouble], rentals: ["rental", Car], experiences: ["activity", Ticket] };
 
@@ -48,7 +49,7 @@ export function PartnerDirectory() {
                   <span className="tiny muted"><MapPin size={12} /> {b.city}</span>
                 </div>
               </div>
-              {b.tagline && <p className="small muted clamp-2">{b.tagline}</p>}
+              {loc(b, "tagline") && <p className="small muted clamp-2">{loc(b, "tagline")}</p>}
               <div className="chips">
                 {Object.entries(b.counts).filter(([, n]) => n > 0).map(([k, n]) => {
                   const [word, Icon] = COUNT_LABEL[k];
@@ -87,7 +88,7 @@ export function PartnerProfile() {
         {b.email && <a className="btn" href={`mailto:${b.email}`}><Mail size={16} /> {tr("Email")}</a>}
         {b.website && <a className="btn" href={b.website} target="_blank" rel="noopener noreferrer nofollow ugc"><Globe size={16} /> {tr("Website")}</a>}
       </BusinessHero>
-      {b.description && <p className="biz-about">{b.description}</p>}
+      {loc(b, "description") && <p className="biz-about">{loc(b, "description")}</p>}
 
       {stays.length > 0 && (
         <section className="stack">
@@ -95,10 +96,10 @@ export function PartnerProfile() {
           <div className="grid" style={{ "--min": "280px" }}>
             {stays.map((h) => (
               <Link key={h.id} to={`/stays/${h.id}`} className="stay-card card hover">
-                <div className="stay-art"><SceneArt scene="harbor" seed={`apt-${h.id}`} variant="golden" /></div>
+                <div className="stay-art">{h.image_urls?.[0] ? <img src={thumb(h.image_urls[0])} alt={loc(h, "hotel_name")} loading="lazy" /> : <SceneArt scene="harbor" seed={`apt-${h.id}`} variant="golden" />}</div>
                 <div className="stay-body">
-                  <h3>{h.hotel_name}</h3>
-                  <p className="small muted clamp-2">{h.description}</p>
+                  <h3>{loc(h, "hotel_name")}</h3>
+                  <p className="small muted clamp-2">{loc(h, "description")}</p>
                   <div className="row between">
                     <span><b className="stay-price">{euro(h.price_per_night)}</b> <span className="small muted">{tr("/ night")}</span></span>
                     <span className="btn sm">{tr("View")} <ArrowRight size={14} /></span>
@@ -116,8 +117,9 @@ export function PartnerProfile() {
           <div className="grid" style={{ "--min": "280px" }}>
             {experiences.map((t) => (
               <article key={t.id} className="card pad stack" style={{ "--gap": "8px" }}>
-                <div className="row between"><h3 style={{ margin: 0 }}>{t.tour_name}</h3><span className="badge">{t.category}</span></div>
-                <p className="small muted clamp-3" style={{ margin: 0 }}>{t.description}</p>
+                {t.image_urls?.[0] && <img className="card-photo" src={thumb(t.image_urls[0])} alt={loc(t, "tour_name")} loading="lazy" />}
+                <div className="row between"><h3 style={{ margin: 0 }}>{loc(t, "tour_name")}</h3><span className="badge">{t.category}</span></div>
+                <p className="small muted clamp-3" style={{ margin: 0 }}>{loc(t, "description")}</p>
                 <span className="small muted">{t.duration_hours ? <><Clock size={14} /> {t.duration_hours}h · </> : null}<MapPin size={14} /> {t.location}</span>
                 <div className="row between">
                   <span><b>{euro(t.price)}</b> <span className="small muted">{tr("per person")}</span></span>
@@ -135,8 +137,8 @@ export function PartnerProfile() {
           <div className="car-list">
             {rentals.map((c) => (
               <div key={c.id} className="car-row card">
-                <span className="car-icon"><Car size={22} /></span>
-                <div className="car-main"><b>{c.car_model}</b><span className="tiny muted">{c.location}{c.description ? ` · ${c.description}` : ""}</span></div>
+                {c.image_urls?.[0] ? <img className="car-icon photo" src={thumb(c.image_urls[0])} alt={loc(c, "car_model")} loading="lazy" /> : <span className="car-icon"><Car size={22} /></span>}
+                <div className="car-main"><b>{loc(c, "car_model")}</b><span className="tiny muted">{c.location}{loc(c, "description") ? ` · ${loc(c, "description")}` : ""}</span></div>
                 {c.seats && <span className="small muted hide-mobile"><Users size={14} /> {c.seats}</span>}
                 <span className="badge">{c.car_type}</span>
                 <span className="car-price"><b>{euro(c.price_per_day)}</b><span className="tiny muted">{tr("/day")}</span></span>

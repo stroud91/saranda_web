@@ -59,7 +59,10 @@ def paypal_webhook():
             elif kind in ("PAYMENT.CAPTURE.DENIED", "PAYMENT.CAPTURE.DECLINED") and booking.payment_status != "paid":
                 booking.payment_status = "failed"
             elif kind in ("PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED"):
-                booking.payment_status = "refunded"  # the host decides what happens to the stay
+                # A refund the host sent from the Host desk is already recorded (it may be partial).
+                # Anything else was refunded on paypal.com: the host decides what happens to the stay.
+                if booking.refund_status != "refunded":
+                    booking.payment_status = "refunded"
             db.session.commit()
         else:
             log.info("paypal event for unknown booking")

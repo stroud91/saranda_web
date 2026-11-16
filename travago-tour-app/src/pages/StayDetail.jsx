@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock, Store } from "lucide-react";
+import { BedDouble, Bath, Users, Star, Check, CalendarDays, MessageCircle, ShieldCheck, Compass, CreditCard, Landmark, Wallet, Clock, Store, Images } from "lucide-react";
 import { useApi, useLivePost } from "../lib/useApi";
 import { post } from "../lib/api";
 import { euro, todayIso, addDays, fmtDate, goToPayPal, money } from "../lib/format";
@@ -8,10 +8,12 @@ import { useAuth } from "../store/auth";
 import { useConfig, whatsappUrl } from "../lib/useConfig";
 import SceneArt from "../components/art/SceneArt";
 import Handoff from "../components/ui/Handoff";
+import PhotoViewer from "../components/media/PhotoViewer";
+import Reviews from "../components/stays/Reviews";
 import MonthCalendar from "../components/guides/MonthCalendar";
 import { Alert, ErrorState, Field, Sheet, Skeleton, Stepper } from "../components/ui";
 import { WeatherCard } from "../components/live/Weather";
-import { plural, rich, tr } from "../i18n";
+import { loc, plural, rich, stayName, tr } from "../i18n";
 
 const PaymentStep = lazy(() => import("../components/stays/PaymentStep"));
 
@@ -28,6 +30,7 @@ export default function StayDetail() {
   const [month, setMonth] = useState(todayIso(14).slice(0, 7));
   const [picking, setPicking] = useState("in");
   const [open, setOpen] = useState(false);
+  const [photo, setPhoto] = useState(null);
   const [form, setForm] = useState({ guest_name: "", guest_email: "", guest_phone: "", notes: "", website: "" });
   const [errors, setErrors] = useState({});
   const [state, setState] = useState({ busy: false, error: "", pay: null });
@@ -69,7 +72,7 @@ export default function StayDetail() {
   const quoteBody = useMemo(() => (h && checkOut > checkIn ? { hotel_id: h.id, start_date: checkIn, end_date: checkOut, guest_count: guests } : null), [h, checkIn, checkOut, guests]);
   const { data: quote, error: quoteError } = useLivePost("/bookings/quote", quoteBody, 250);
 
-  useEffect(() => { if (h) document.title = `${h.apartment_name || h.hotel_name} · ${h.business?.name || "Meg'Rooms"}`; }, [h]);
+  useEffect(() => { if (h) document.title = `${stayName(h)} · ${h.business?.name || "Meg'Rooms"}`; }, [h]);
 
   const pick = (iso) => {
     setTouched(true);
@@ -112,8 +115,17 @@ export default function StayDetail() {
 
   return (
     <div className="page container">
-      <div className="stay-gallery">
-        {h.image_urls?.length ? h.image_urls.slice(0, 3).map((u, i) => <img key={u} src={u} alt={`${h.hotel_name} photo ${i + 1}`} className={i === 0 ? "main" : ""} />) : (
+      <div className={`stay-gallery ${h.image_urls?.length ? `photos n${Math.min(h.image_urls.length, 3)}` : ""}`}>
+        {h.image_urls?.length ? (
+          <>
+            {h.image_urls.slice(0, 3).map((u, i) => (
+              <button type="button" key={u} className={i === 0 ? "main" : ""} onClick={() => setPhoto(i)} aria-label={tr("Open photo {n}", { n: i + 1 })}>
+                <img src={u} alt={`${loc(h, "hotel_name")} — ${tr("Photo {n}", { n: i + 1 })}`} loading={i === 0 ? "eager" : "lazy"} />
+              </button>
+            ))}
+            {h.image_urls.length > 1 && <button type="button" className="btn sm glass gallery-all" onClick={() => setPhoto(0)}><Images size={15} /> {tr("All {n} photos", { n: h.image_urls.length })}</button>}
+          </>
+        ) : (
           <>
             <div className="main"><SceneArt scene="harbor" seed={`apt-${h.id}`} variant="golden" /></div>
             <div><SceneArt scene="beach" seed={`apt-b-${h.id}`} variant="day" /></div>
@@ -121,22 +133,24 @@ export default function StayDetail() {
           </>
         )}
       </div>
+      <PhotoViewer photos={h.image_urls || []} index={photo} onIndex={setPhoto} alt={loc(h, "hotel_name")} />
       <div className="split wide-left" style={{ marginTop: 24 }}>
         <div className="stack" style={{ "--gap": "18px" }}>
           <div>
             <div className="eyebrow">{partner ? <><Store size={14} /> {tr("Hosted by")} <Link to={`/partners/${partner.slug}`}>{partner.name}</Link></> : "Meg'Rooms"} · {h.city}</div>
-            <h1 style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)" }}>{h.hotel_name}</h1>
+            <h1 style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)" }}>{loc(h, "hotel_name")}</h1>
             <div className="stay-facts">
               <span><BedDouble size={16} /> {plural(h.bedrooms, "{n} bedroom", "{n} bedrooms")} · {plural(h.beds, "{n} bed", "{n} beds")}</span>
               <span><Bath size={16} /> {h.bathrooms} bath</span>
               <span><Users size={16} /> {tr("up to {n} guests", { n: h.max_guests })}</span>
+              {h.reviews?.count > 0 && <a href="#reviews"><Star size={16} fill="currentColor" /> {h.reviews.average.toFixed(1)} · {plural(h.reviews.count, "{n} review", "{n} reviews")}</a>}
               {h.airbnb_rating && <span><Star size={16} fill="currentColor" /> {h.airbnb_rating} on {h.rating_source}</span>}
             </div>
           </div>
-          <p className="lead">{h.description}</p>
+          <p className="lead">{loc(h, "description")}</p>
           <div className="card pad">
             <h3>{tr("Amenities")}</h3>
-            <ul className="amenities">{h.amenities.map((a) => <li key={a}><Check size={16} /> {a}</li>)}</ul>
+            <ul className="amenities">{h.amenities.map((a) => <li key={a}><Check size={16} /> {tr(a)}</li>)}</ul>
           </div>
           <div className="card pad">
             <h3>{tr("Where you'll be")}</h3>
@@ -159,6 +173,7 @@ export default function StayDetail() {
           ) : (
             <div className="card pad"><h3>{tr("Sarandë weather")}</h3><WeatherCard compact /></div>
           )}
+          <Reviews stayId={h.id} />
         </div>
         <aside className="card pad sticky-col booking-widget">
           <div className="row between">
@@ -188,14 +203,14 @@ export default function StayDetail() {
 
       <Sheet open={open} onClose={() => { setOpen(false); if (state.handoff) setState({ busy: false, error: "", pay: null }); }} title={state.pay ? tr("Secure payment") : state.handoff ? tr("Send your request") : tr("Your details")} variant="center">
         {state.handoff ? (
-          <Handoff handoff={state.handoff} title={`${h.hotel_name} · ${fmtDate(checkIn)} → ${fmtDate(checkOut)}`} />
+          <Handoff handoff={state.handoff} title={`${loc(h, "hotel_name")} · ${fmtDate(checkIn)} → ${fmtDate(checkOut)}`} />
         ) : state.pay ? (
           <Suspense fallback={<Skeleton h={220} />}>
             <PaymentStep publishableKey={cfg.payments.publishable_key} clientSecret={state.pay.secret} reference={state.pay.ref} amount={state.pay.amount} />
           </Suspense>
         ) : (
           <form className="stack" onSubmit={book} noValidate>
-            <div className="quote-mini small">{h.hotel_name} · {fmtDate(checkIn)} → {fmtDate(checkOut)} · {plural(guests, "{n} guest", "{n} guests")} · <b>{quote && euro(quote.total)}</b></div>
+            <div className="quote-mini small">{loc(h, "hotel_name")} · {fmtDate(checkIn)} → {fmtDate(checkOut)} · {plural(guests, "{n} guest", "{n} guests")} · <b>{quote && euro(quote.total)}</b></div>
             <div className="form-grid two">
               <Field label={tr("Full name")} error={errors.guest_name}><input className="input" value={form.guest_name} onChange={up("guest_name")} autoComplete="name" maxLength={120} required /></Field>
               <Field label={tr("Email")} error={errors.guest_email}><input className="input" type="email" value={form.guest_email} onChange={up("guest_email")} autoComplete="email" maxLength={255} required /></Field>

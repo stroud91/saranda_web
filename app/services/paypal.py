@@ -155,6 +155,25 @@ def capture(order_id, reference):
     raise PaymentError("PayPal could not complete the payment")
 
 
+def refund(order_id, *, amount, currency_code, reference):
+    """Send part or all of a captured payment back to the guest. Safe to repeat: PayPal
+    treats a second call with the same request id as the first one."""
+    outcome = get_order(order_id)
+    capture_id = outcome.get("capture_id") or ""
+    if not re.fullmatch(r"[A-Za-z0-9]{1,40}", capture_id) or outcome.get("reference") != reference:
+        raise PaymentError("No PayPal payment was found for this booking")
+    status, body = _call("POST", f"/v2/payments/captures/{capture_id}/refund",
+                         headers=_auth({"PayPal-Request-Id": f"refund-{reference}", "Prefer": "return=representation"}),
+                         json={"amount": {"value": money(amount), "currency_code": currency_code},
+                               "invoice_id": f"refund-{reference}", "note_to_payer": "Refund for your cancelled stay"})
+    if status in (200, 201) and body.get("status") in ("COMPLETED", "PENDING"):
+        return {"id": str(body.get("id") or "paypal"), "status": body.get("status")}
+    issues = {d.get("issue") for d in body.get("details", []) if isinstance(d, dict)}
+    log.warning("paypal refund failed (%s %s %s)", status, body.get("name"), sorted(i for i in issues if i))
+    raise PaymentError("PayPal could not send the refund. Check the balance of your PayPal account, "
+                       "or refund the payment on paypal.com and then mark it as sent here.")
+
+
 def paid_in_full(outcome, *, reference, amount, currency_code):
     """True only for a completed capture of exactly the expected booking, amount and currency."""
     try:

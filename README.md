@@ -7,7 +7,10 @@ An app-like travel companion for Albania, built around *The Ultimate Albania Tra
 - **Plan a whole trip.** Start from the 7-, 10- or 14-day itineraries or from nothing. Reorder stops by dragging, see every day on a map, estimate the budget, tick off the packing list, then save and share a link or export to a calendar (`.ics`).
 - **Pick a local guide.** Filter guides by language, speciality, vehicle and group size, check their availability calendar and send a request. The price is quoted server-side and nothing is charged until the guide confirms.
 - **Book a stay.** Meg'Rooms apartments have an availability calendar and a live server-side quote. Guests pay by PayPal (or card through PayPal) or by bank transfer, optionally as a deposit; with nothing configured it falls back to request-to-book.
-- **Have an account.** Email + password sign-in, with bookings shown as boarding-pass tickets, saved trips, guide requests, a device list, data export and account deletion. Hosts get a Host desk for confirming requests and transfers.
+- **Have an account.** Email + password sign-in with optional two-step sign-in (an authenticator app), bookings shown as boarding-pass tickets, saved trips, guide requests, a device list, data export and account deletion. Hosts get a Host desk for confirming requests and transfers.
+- **Cancel and get refunds on the site.** The booking page shows what the guest gets back under the cancellation rules before they confirm; the host sends the refund from the Host desk.
+- **Read and write reviews.** Only guests who booked here and finished their stay can review it. Ratings appear on the stay pages and in search results.
+- **Read it in their language.** Everything a guest sees, the privacy policy and booking terms included, is in Albanian, English, French, Italian and German.
 - **Ask the concierge.** Claude answers using read-only tools over the planner data. Without an API key, a built-in answer engine handles the common questions.
 - **Check live data.** Weather and sea temperature (Open-Meteo), EUR→ALL rates, optional Google Places ratings, OSRM road geometry, and pre-filled searches on Booking.com, Airbnb, Google Hotels, GetYourGuide, Viator and Rentalcars.
 
@@ -25,7 +28,7 @@ All of it respects `prefers-reduced-motion` (still frames, no fly-throughs), pau
 ## Architecture
 
 ```
-app/                    Flask 3 API (Python 3.10+)
+app/                    Flask 3 API (Python 3.11+)
   data/                 Versioned travel knowledge from the planner:
                         destinations, route legs, itineraries, essentials
   services/             routing (Dijkstra), timeline, budget, live providers,
@@ -106,7 +109,7 @@ The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain roo
 
    | Field | Value |
    |---|---|
-   | Python | 3.10+ |
+   | Python | 3.11+ (the photo library needs it) |
    | Application root | `megrooms_flask` |
    | URL | your domain, empty path |
    | Startup file | `wsgi.py` |
@@ -161,14 +164,104 @@ Both need the Python app (they use the database and secret keys); the static upl
 Local businesses can add themselves at **/business**: one profile, then their apartments, rentals and activities, all managed from one dashboard. It needs the Python app with accounts and outgoing email (owners must confirm their address).
 
 - **Nothing is public until you approve it.** New businesses and listings appear in *My account → Host desk → Partners*, with every submitted field. Approve, or send it back with a note that is emailed to the owner.
-- **Edits are reviewed too.** On an approved profile or listing, prices, capacity and the on/off switch change at once. Names, descriptions and contact details wait for approval while the approved version stays live. The Host desk shows the old and new text side by side.
+- **Edits are reviewed too.** On an approved profile or listing, prices, capacity and the on/off switch change at once. Names, descriptions, contact details and new photos wait for approval while the approved version stays live. The Host desk shows the old and new text side by side, and the photos as thumbnails.
 - **Guests deal with the business directly.** A partner's stay is always request-to-book: the site never takes money for another business, even if PayPal or bank transfer is set up for your own apartments. Rentals and activities get an enquiry form. Requests go to the owner's confirmed account email and to their dashboard, where they confirm or decline.
 - **Public pages.** `/partners` lists approved businesses and `/partners/<slug>` shows one with its listings. Partner stays appear on `/stays` under "More places to stay"; activities and rentals appear on `/experiences` with the business's name.
 - **Taking things down.** *Take offline* in the Host desk hides a business and everything it lists, and *Put back online* restores it. An owner can pause or remove a listing, and deleting their account closes the business and erases its contact details.
 - **Page style.** Under *Page style* a business picks its page's background (clean, soft colour, waves, dots or an illustrated header), colours and card style, with a live preview that changes on every click and can be flipped between light and dark. Guests see the new look only after **Save**. A style is a set of choices from fixed lists (`STYLE_OPTIONS` in `app/models/business.py`), never free CSS, colours or URLs, so it applies without review.
 - **Limits and switch.** `PARTNER_MAX_LISTINGS` (default 40 per business); `PARTNERS_ENABLED=false` hides the portal and every partner listing.
 
-Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`). Photo uploads aren't supported yet; partner listings use the site's illustrations.
+Owners can only send the fields in `app/services/partners.py`; ownership, review state and ratings never come from a request. Each owner's routes look the business up from the signed-in session, so one business can't read or change another's listings or requests (`tests/test_partners.py`).
+
+## Photos, calendars and your own listings
+
+These three need the Python app; the static upload shows whatever was in the database when it was exported.
+
+### Photos
+
+Every apartment, rental and activity can have up to 12 photos. In the form, press **Add photos**, pick several at once, and use the arrows to put the best one first (it is the cover on cards). A listing without photos keeps the site's illustration.
+
+- The browser shrinks each photo before sending it, so a 6 MB phone photo uploads as a few hundred KB.
+- The server accepts JPEG, PNG and WebP up to `UPLOAD_MAX_MB` (default 10) and 50 megapixels. It re-draws every photo and saves it again as a JPEG in two sizes (1600 px and 640 px). That removes the location and camera details stored in phone photos.
+- Files live in `instance/uploads/` (or `UPLOAD_DIR`) under random names. Deploys never touch that folder, so **include it in your backups**.
+- A business's new photos wait for your review like its text does. Removing or reordering photos you already approved applies at once.
+- Photos that were uploaded but never saved on a listing are deleted after two days by `flask users cleanup`. A business that closes takes its photos with it.
+
+### Calendars: blocking nights and syncing with Airbnb or Booking.com
+
+Each stay has a **Calendar** button, in the Host desk for your apartments and in the business dashboard for a partner's. It shows three kinds of taken nights: booked on this site, imported from another site, and blocked by hand.
+
+- **Block nights** for repairs, your own use, or a booking you took by phone. A block can't be laid over an existing booking.
+- **Import from another site.** Paste that site's calendar (iCal) link under *Connect a calendar*. Its reserved nights become unavailable here. Links are accepted only from Airbnb, Booking.com, Vrbo, HomeAway, Tripadvisor and Google Calendar; add other hosts with `CALENDAR_FEED_HOSTS`.
+- **Export to another site.** Copy the link shown under the connected site (or *Our link for other sites*) into that site's "import calendar" box. It lists taken nights only, with no names or prices. The link made for a connected site leaves out that site's own nights, so reservations never bounce back and forth.
+- **How fresh it is.** `flask calendars sync` refreshes every connected calendar; run it from cron every 30 minutes (see `docs/GO-LIVE.md`). A stay's calendars are also re-read just before a booking is accepted if the last check is older than `CALENDAR_SYNC_MINUTES` (default 30). Other sites read our link on their own schedule, usually every few hours, so a night can still be sold twice within that window: block by hand after a last-minute booking elsewhere.
+- If another site's link stops working, the nights from the last good check stay blocked and the calendar shows the problem.
+
+### Your own listings
+
+*My account → Host desk → Your listings* lists your apartments, rentals, activities and guides with **Edit**, **Calendar**, **Pause** and **Remove**, and an **Add** button for each. Changes are live as soon as you save, with no review step.
+
+- The forms are the same as a business's, plus a few host-only fields: the badge and Airbnb rating on an apartment, the company name on a rental, the start time of an activity.
+- An apartment with bookings ahead can't be removed (pause it instead). A removed listing is kept in the database so past bookings still make sense.
+- **Guides** are added and edited here too. A guide with requests on record can be switched off but not deleted. Untick *Sample profile* on a seeded guide once you have replaced its details with a real person's.
+- Listings that belong to a partner business are not editable here; they go through the review queue under *Partners*.
+
+## Reviews
+
+Only a guest who booked on this site and whose stay has ended can review it, once per stay. The day after check-out, `flask users cleanup` (the daily cron job) emails them a personal link; the link works for six months. For guests you talk to on WhatsApp, press **Review link** on a past stay in the Host desk and send them the copied link.
+
+- Reviews go live as soon as they're written, good or bad. They show on the stay's page with the guest's first name, the first letter of their surname and the month of the stay; the stay cards and search results get the average rating.
+- In *Host desk → Reviews* you can post one public reply to each review, and hide one that is abusive, off-topic, advertising or shows someone's personal details. Hiding needs a reason, and nobody can change what a guest wrote.
+- Partner businesses reply to reviews of their own stays from their dashboard; only you can hide one.
+- `REVIEWS_ENABLED=false` switches reviews off.
+
+## Cancellations and refunds
+
+The rules live in `.env` and apply to your own apartments: `CANCEL_FULL_REFUND_DAYS` (default 14), `CANCEL_PARTIAL_REFUND_DAYS` (default 7) and `CANCEL_PARTIAL_REFUND_PERCENT` (default 50) give "everything back 14 days or more before check-in, half back at 7–13 days, nothing after that". The booking terms page shows the same table. On the static upload the table comes from `cancellation` in `travago-tour-app/src/data/business.json`, so keep both the same.
+
+- **A guest cancels** from their booking page (the link in their confirmation email) until the day before check-in. They see the exact amount they'll get back before they confirm. Nothing is paid back automatically: the booking is marked *refund due* and appears in *Host desk → Needs you*.
+- **You send the refund** with one button: **Refund via PayPal** or **Refund to the card** sends it through the payment provider and records it; for a bank transfer, pay it back from your bank and press **I've paid it back**. The guest is emailed in each case. A refund can't be sent twice.
+- **You cancel** a booking with **Cancel** in the Host desk. The guest is owed everything they paid.
+- A business listed on the site handles its own cancellations and refunds; nothing for them passes through this site.
+
+## Two-step sign-in
+
+Anyone with an account can switch it on under *My account → Security*: scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, Aegis…), type the 6-digit code, and save the ten recovery codes it shows once. Signing in then asks for a code from the app after the password.
+
+- **Hosts should switch it on.** `REQUIRE_TWO_STEP_FOR_HOSTS=true` makes it compulsory: the Host desk then refuses to open until it is on.
+- **Lost phone and recovery codes:** in the cPanel terminal, `flask --app app users disable-two-step you@example.com` switches it off and signs that account out everywhere. Only do this when you are sure who is asking.
+- **Never change `SECRET_KEY`** once people use two-step sign-in. The app secrets are encrypted with a key made from it, so after a change nobody with two-step sign-in can sign in until you run the command above for them.
+
+## Visitor statistics
+
+*Host desk → Visitors* shows how many people visit, which pages they read, where they came from (the other site's name only), their language and whether they're on a phone or a computer, for the last 7, 30 or 90 days or 12 months, next to the bookings made on the site. Hover or use the arrow keys on the chart to read a day; the same numbers are available as a table.
+
+- **No cookies, nothing stored on the visitor's device and no record per person**, so no cookie banner is needed. A visitor is counted once a day through a scrambled code whose key changes every day; the codes are deleted the next day by the daily cron job, and only daily totals are kept (`STATS_KEEP_DAYS`, default about two years).
+- Robots, your own visits while signed in as host, and browsers that send *Do Not Track* or *Global Privacy Control* are not counted.
+- The static upload has no server, so it can't count; `STATS_ENABLED=false` switches counting off on the Python app.
+
+## Backups and alerts
+
+Two commands look after the site; `docs/GO-LIVE.md` (step 11) shows how to run them from cron.
+
+**`flask --app app backup run`** (daily) copies the database while the site is running, checks the copy and saves it in `instance/backups/` (or `BACKUP_DIR`), readable only by your account. It adds an archive of the uploaded photos when they've changed, at most once a week. Old backups are thinned out: one for each of the last 7 days, the last 4 weeks and the last 6 months (`BACKUP_KEEP_*`).
+
+- **Encryption.** With `BACKUP_PASSPHRASE` set, every file is encrypted with AES-256-GCM before it is written (`.tar.gz.enc`). Keep the passphrase somewhere safe outside the server: without it the backups can't be opened.
+- **A copy elsewhere.** A backup on the same server doesn't survive losing the server. `BACKUP_UPLOAD_URL` (an `https://` WebDAV folder, with `BACKUP_UPLOAD_USER` and `BACKUP_UPLOAD_PASSWORD`) gets a copy of each new backup, and old ones are removed there too. Copies only ever leave encrypted: without a passphrase the copy is refused. Otherwise, download the newest file from `instance/backups/` now and then.
+- **Checking and restoring.** `flask --app app backup list` shows them, `backup verify [name]` opens one and checks it, `backup extract <name> <folder>` unpacks one to look at, and `backup restore <name>` puts it back (a data backup replaces the whole database after first backing up the current one; a photos backup only adds missing photos). Postgres databases are dumped with `pg_dump` when it is installed.
+
+**`flask --app app monitor check`** (hourly) looks for what fails quietly on a small site: a failed or missing backup, a calendar from another site that hasn't updated for a day, low disk space, outgoing mail that stopped working, the daily clean-up not running, the site not answering or its certificate about to run out, booking requests waiting more than a day and refunds not sent after three days. When something needs you, it emails `ALERT_EMAIL` (default `CONTACT_EMAIL`) once, again each day while it lasts, and once more when it's solved. The same list shows at the top of *Host desk → Needs you*, with the time of the last backup.
+
+- Errors the site didn't expect are emailed straight away, at most one an hour (`ALERT_ERROR_MINUTES`). The email names the page and the line of code, never what a guest typed.
+- `ALERT_HEARTBEAT_URL` is called after each check (with `/fail` added when something is wrong). A free service such as healthchecks.io then tells you when the checks themselves stop, for example when the whole server is down. `flask --app app monitor test` sends a test alert.
+
+## Search engines
+
+Every public page gets its own title, description, preview image and canonical link, in the visitor's language with links to the other four (`app/services/seo.py`). Stays carry their price, address and review rating as structured data, so search results can show them. `/sitemap.xml` lists the public pages and `/robots.txt` points to it and keeps private pages (bookings, accounts, review links) out of search. Addresses that lead nowhere answer with a real 404.
+
+- Set `PUBLIC_BASE_URL`; links and the sitemap use only that address.
+- After going live, add the site to Google Search Console and submit `https://yourdomain/sitemap.xml`.
+- The static upload gets the same tags: `deploy/package_static.sh` writes a page for every address. Run it with `PUBLIC_BASE_URL=https://yourdomain` for canonical links and the sitemap.
 
 ## Languages and appearance
 
@@ -180,7 +273,15 @@ How translation works:
 - `travago-tour-app/src/i18n/table.js` holds one row per phrase: `[English, Shqip, Français, Italiano, Deutsch]`. It loads only for visitors who aren't using English. **To translate more of the site, add rows there**; nothing else changes. A phrase without a row shows in English.
 - `src/i18n/i18n.test.js` fails the build if a row is incomplete, a phrase is listed twice, or a translation loses a `{value}` or `<tag>`.
 
-What is translated today: menus, footer, home page, stays and booking, experiences and rentals, business pages and the business dashboard, the style editor, sign-in and sign-up, contact. Still English: the destination guides, itineraries and essentials (they come from `app/data/`), the planner, map and atlas panels, the account and Host desk screens, the legal pages (which say so in the visitor's language), the concierge's answers and e-mails.
+Three tables hold the translations:
+
+- `src/i18n/table.js`: the interface (buttons, headings, messages), for every page and the Host desk.
+- `src/i18n/content.js`: the travel content from `app/data/` (place guides, itineraries, Know before you go). It is keyed on the English sentences, and `src/i18n/content.test.js` fails when a sentence in `app/data/` changes without its translations.
+- `src/i18n/legal.js`: the privacy policy and booking terms, loaded only on those two pages. Each page says that the English version applies if a translation differs. `src/i18n/legal.test.js` fails when a sentence on either page has no translation, or a translation loses a number, link or value.
+
+Listings carry their own translations: the forms for apartments, rentals and activities have a *Translations* section where the host or business can write the name and description in each language. A listing without one shows the original text.
+
+Still English: the concierge's answers, the emails, the Credits page (licence attributions), the sample tours and rental cars (placeholder data to replace with your own) and the names of YouTube films (as published by their creators). The translations were written for this site, not by a native speaker of each language; have them read once before launch.
 
 ## Free mode (current default)
 
@@ -218,8 +319,16 @@ Everything is set through environment variables; see `.env.example`. None of the
 | Affiliate links | `BOOKING_AFFILIATE_ID`, `GYG_PARTNER_ID`, `VIATOR_PARTNER_ID` | Plain search links |
 | Admin API with Clerk tokens | `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTIES`, `ADMIN_USER_IDS` | Use a host account instead |
 | Business portal | `PARTNERS_ENABLED` (default on), `PARTNER_MAX_LISTINGS` | On when accounts are on; businesses need a confirmed email, so set up `SMTP_*` |
+| Photos | `UPLOAD_MAX_MB` (default 10), `UPLOAD_DIR`, `PARTNER_MAX_PHOTOS` (default 300 per business) | Stored in `instance/uploads/` |
+| Calendar sync | `CALENDAR_SYNC_MINUTES` (default 30), `CALENDAR_FEED_HOSTS` (extra hosts to import from) | Works with the built-in list of booking sites; add the cron job to keep it fresh |
 | Sample guide profiles | `SHOW_SAMPLE_GUIDES=true` (demos only) | Hidden; guide pages appear once a real guide is added |
 | Message retention | `MESSAGE_RETENTION_MONTHS` (default 24) | Old contact messages and unconfirmed guide requests are deleted by `flask users cleanup` |
+| Reviews | `REVIEWS_ENABLED` (default on) | On; invitations need `SMTP_*` and the daily cron job |
+| Cancellation rules | `CANCEL_FULL_REFUND_DAYS` (14), `CANCEL_PARTIAL_REFUND_DAYS` (7), `CANCEL_PARTIAL_REFUND_PERCENT` (50) | These defaults |
+| Two-step sign-in | `REQUIRE_TWO_STEP_FOR_HOSTS` (default off) | Optional for everyone, hosts included |
+| Visitor statistics | `STATS_ENABLED` (default on), `STATS_KEEP_DAYS` (default 760) | On, without cookies |
+| Backups | `BACKUP_PASSPHRASE`, `BACKUP_DIR`, `BACKUP_KEEP_DAILY` / `_WEEKLY` / `_MONTHLY` / `_PHOTOS`, `BACKUP_PHOTOS_EVERY_DAYS`, `BACKUP_UPLOAD_URL` / `_USER` / `_PASSWORD` | Unencrypted backups kept on the server only, once the cron job runs |
+| Alerts | `ALERT_EMAIL`, `ALERT_HEARTBEAT_URL`, `ALERT_MIN_FREE_MB` (500), `ALERT_REPEAT_HOURS` (24), `ALERT_ERROR_MINUTES` (60), `ALERT_CALENDAR_HOURS` (24), `ALERT_CERT_DAYS` (10), `BACKUP_MAX_AGE_HOURS` (36) | Alerts go to `CONTACT_EMAIL` once the hourly cron job runs |
 
 Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `payment_intent.succeeded`, `payment_intent.processing` and `payment_intent.canceled`.
 
@@ -237,8 +346,27 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
   - An account sees bookings made earlier with its address only after that address is verified.
   - State-changing requests from other sites are rejected (`Origin` / `Sec-Fetch-Site` checks on top of SameSite and JSON-only writes).
   - Hosts are verified, allow-listed addresses or accounts created from the server's terminal, and host sessions last 12 hours.
+- **Two-step sign-in** (`app/services/twofactor.py`, `tests/test_two_step.py`).
+  - Codes are standard TOTP (RFC 6238, 30-second steps, one step of clock drift allowed). A code that was accepted can't be used again, so a code seen over someone's shoulder is useless.
+  - The app secret is stored encrypted (Fernet, with a key derived from `SECRET_KEY`) and recovery codes only as hashes; each recovery code works once.
+  - After the password, the browser gets a short-lived, single-use ticket for the code step, and wrong codes count towards the same sign-in limit as wrong passwords. A password-reset link changes the password and signs every device out, but signs nobody in: whoever got into the mailbox still needs the code. Switching it off needs the password and a current code; new recovery codes need the password.
+- **Reviews** (`app/services/reviews.py`, `tests/test_reviews.py`). Only a finished stay booked on this site can be reviewed, once. The emailed link carries a random key stored only as a hash; a signed-in guest can review their own stays without it. Text is stored as plain text and shown escaped, and a host or business can reply or hide, never edit.
+- **Refunds** (`app/services/cancellations.py`, `tests/test_cancellations.py`). The amount owed is worked out on the server from the payment actually received and the cancellation rules; the browser never sends an amount. A guest's click never moves money: the host sends each refund, the payment provider is called with an idempotency key, and a refund already sent is refused.
+- **Visitor statistics** (`app/services/stats.py`, `tests/test_stats.py`). No cookie or browser storage is used. The visitor code is an HMAC of IP address and browser with a key that changes daily; codes are deleted the next day and nothing else stored can be tied to a person. Private addresses (booking, review and trip links) are counted as one page, so their references never reach the statistics, and only the other site's host name is kept from a referrer.
+- **Backups and alerts** (`app/services/backups.py`, `app/services/monitor.py`, `tests/test_backups.py`). Backup files and their folder are readable only by the site's account. Encryption is AES-256-GCM in 1 MiB pieces whose nonces carry the piece number and a last-piece flag, so pieces can't be reordered, dropped or cut off; the key comes from the passphrase with scrypt. Copies are sent only encrypted, only over HTTPS and without following redirects. Restoring takes only the files a backup of this site contains, whatever else an archive holds. Error emails carry the error's type, page pattern and line of code, never the request's content.
 - **No enumerable IDs.** Bookings and guide requests use unguessable 60-bit references, and public reads mask contact details. Shared trips have a public share id plus a secret edit key, which is stored hashed and compared in constant time.
-- **Request hardening.** CORS is allow-listed, writes must be JSON (which blocks cross-site form CSRF), bodies are capped at 256 KB, every write is validated against a declared schema, and bot-facing forms have honeypots. Rate limits apply per IP, with stricter ones on booking, contact, trip-saving and concierge endpoints.
+- **Request hardening.** CORS is allow-listed, writes must be JSON (which blocks cross-site form CSRF), bodies are capped at 256 KB, every write is validated against a declared schema, and bot-facing forms have honeypots. Rate limits apply per IP, with stricter ones on booking, contact, trip-saving and concierge endpoints. The one exception to "JSON only, 256 KB" is the photo upload route.
+- **Photo uploads** (`app/services/uploads.py`, `tests/test_uploads.py`).
+  - Only a signed-in host, or a business owner with a confirmed email, can upload. The request must carry a header that a cross-site form can't set.
+  - The file type is decided by decoding the file, never by its name or declared type. Size and pixel limits are checked before decoding, which stops decompression bombs.
+  - Nothing is stored as it arrived: each photo is re-encoded to JPEG. That drops metadata, embedded scripts and anything appended to the file.
+  - Files get random 128-bit names in a folder outside the code and are served only as `image/jpeg` with `nosniff`. A request for any other name under `/media/u/` is a 404.
+  - A listing accepts only addresses of photos its own business uploaded, so one business can't attach another's photo or an outside URL. Per-business quotas apply.
+- **Calendar import** (`app/services/calendars.py`, `tests/test_calendar.py`).
+  - Fetching a link that a user typed is a classic route into a server's private network (SSRF). Links are fetched only over HTTPS from an allowlist of booking-site hosts. Ports, logins in the URL and IP addresses are refused, redirects are not followed, and there is a time limit and a 1.5 MB size limit.
+  - Only dates are read from the file. The number and length of events are capped.
+  - The export link carries a random secret per stay and reveals only which nights are taken.
+  - A calendar can be opened or changed only by the host (own apartments) or by the owner of that stay's business.
 - **Headers.** Strict CSP (Stripe, map tiles and the YouTube player only; the static build also allows the browser's calls to the free weather, rates and routing APIs), HSTS, `X-Frame-Options: DENY`, `nosniff`, a restrictive `Permissions-Policy` and COOP. The same set is applied in `.htaccess` for the static host.
 - **Outbound calls.** HTTPS only, to an explicit host allowlist (an SSRF guard), with timeouts, size caps and negative caching.
 - **Admin authentication.** Clerk RS256 JWTs are verified against JWKS with issuer, expiry and authorized-party checks, and admins come from an allow-list.
@@ -247,8 +375,8 @@ Point the Stripe webhook at `POST /api/webhooks/stripe` and subscribe it to `pay
 
 ## Content notes
 
-- The guide profiles in `app/seeds/guides.py` are **samples** with no ratings or reviews. Guests don't see them: until a real guide is added (through `POST /api/admin/guides`), the guide links are hidden and `/guides` says guides are on their way. `SHOW_SAMPLE_GUIDES=true` shows the samples, labelled "Sample profile", for demos.
-- The privacy policy (`/privacy`) and booking terms (`/terms`) read your business details and cancellation rules from `travago-tour-app/src/data/business.json`, and the live configuration decides which payment methods and features they describe.
+- The guide profiles in `app/seeds/guides.py` are **samples** with no ratings or reviews. Guests don't see them: until a real guide is added (in *Host desk → Your listings*), the guide links are hidden and `/guides` says guides are on their way. `SHOW_SAMPLE_GUIDES=true` shows the samples, labelled "Sample profile", for demos.
+- The privacy policy (`/privacy`) and booking terms (`/terms`) read your business details from `travago-tour-app/src/data/business.json`, and the live configuration decides which payment methods and features they describe (statistics, reviews, two-step sign-in, backups). Both pages are translated; when you change a sentence, update its row in `src/i18n/legal.js` too (the test says which).
 - Rental cars and experiences are sample seed data too.
 - Distances, times and prices are planning estimates. Legs from the planner are labelled "Planner data" and everything else "Estimate". Ferry schedules are never shown as fixed; the site always tells travellers to check the operator.
 - Update `app/data/` each season: ferry notes, budget ranges and attraction details (see `LAST_REVIEWED` in `app/data/essentials.py`).
