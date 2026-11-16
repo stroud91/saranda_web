@@ -13,7 +13,7 @@ stripe==15.6.1
 # EPC "SEPA QR" codes for bank-transfer payments (pure Python)
 segno==1.6.6
 # Checks and re-encodes uploaded photos
-pillow==12.3.0
+pillow==13.0.0
 anthropic==1.9.0
 python-dotenv==1.2.3
 gunicorn==26.2.0
