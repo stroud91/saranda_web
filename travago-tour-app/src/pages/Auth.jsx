@@ -30,8 +30,9 @@ function Unavailable() {
 }
 
 export function SignIn() {
-  const { user, ready, available, setUser, next } = useAuthPage("Sign in");
+  const { user, ready, available, setUser, next, params } = useAuthPage("Sign in");
   const navigate = useNavigate();
+  const afterReset = params.get("reset") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -90,6 +91,7 @@ export function SignIn() {
     <AuthShell hour={19.2} eyebrow={tr("Welcome back")} title={tr("Sign in")} lead={tr("See your bookings, guide requests and saved trips.")}
       footer={rich("New here? <a>Create an account</a>", { a: (c) => <Link to={`/signup?next=${encodeURIComponent(next)}`}>{c}</Link> })}>
       <form className="stack" onSubmit={submit} noValidate>
+        {afterReset && <Alert kind="ok">{tr("Your password was changed. Sign in with it, then enter the code from your authenticator app.")}</Alert>}
         <Field label={tr("Email")}><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" maxLength={255} required autoFocus={FINE_POINTER} /></Field>
         <PasswordField value={password} onChange={setPassword} />
         <div className="row between small">
@@ -193,6 +195,11 @@ export function ResetPassword() {
     setState({ busy: true, error: "", fields: {} });
     try {
       const res = await post("/auth/password/reset", { token, password });
+      if (res.two_step) {
+        // Two-step sign-in is on: the link changed the password, but signing in still needs the code.
+        setUser(null);
+        return navigate("/signin?reset=1", { replace: true });
+      }
       setUser(res.user);
       navigate("/account?reset=1", { replace: true });
     } catch (err) {
@@ -200,7 +207,7 @@ export function ResetPassword() {
     }
   };
   return (
-    <AuthShell hour={5.6} eyebrow={tr("Almost there")} title={tr("Choose a new password")} lead={tr("You'll be signed in, and every other device will be signed out.")}
+    <AuthShell hour={5.6} eyebrow={tr("Almost there")} title={tr("Choose a new password")} lead={tr("Every device signed in to your account will be signed out. If you use two-step sign-in, you'll then sign in with the new password and your code.")}
       footer={<Link to="/forgot-password">{tr("Ask for a new link")}</Link>}>
       {!token ? <Alert kind="warn">{tr("This page needs the link from your reset email.")}</Alert> : (
         <form className="stack" onSubmit={submit} noValidate>

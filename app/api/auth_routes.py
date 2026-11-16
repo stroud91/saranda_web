@@ -315,7 +315,10 @@ def forgot_password():
 @auth_routes.post("/password/reset")
 @limiter.limit("10 per hour")
 def reset_password():
-    """Set a new password with a reset link's token; signs every device out."""
+    """Set a new password with a reset link's token; signs every device out.
+
+    With two-step sign-in on, the link changes the password but signs nobody in: someone
+    who got into the mailbox still needs the code from the authenticator app."""
     body = request.get_json(silent=True) or {}
     token = body.get("token")
     probe = accounts.consume_token(token, "reset")
@@ -331,6 +334,12 @@ def reset_password():
     probe.mark_verified()  # the link proved control of the inbox
     accounts.revoke_sessions(probe)
     accounts.clear_failures(accounts.throttle_key(probe.email))
+    if twofactor.enabled(probe):
+        old = accounts.current_session()
+        if old:  # whoever was signed in on this browser is signed out too
+            old.revoked_at = utcnow()
+        db.session.commit()
+        return jsonify({"ok": True, "two_step": True})
     return _signed_in(probe, True)
 
 

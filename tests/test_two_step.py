@@ -141,7 +141,13 @@ def test_switching_it_off_needs_password_and_code_and_signs_other_devices_out_wh
     mailer.outbox.clear()
     app.test_client().post("/api/auth/password/forgot", json={"email": EMAIL})
     token = re.search(r"token=([\w-]+)", next(m["text"] for m in mailer.outbox if "reset" in m["subject"].lower())).group(1)
-    assert app.test_client().post("/api/auth/password/reset", json={"token": token, "password": "brand-new-harbour-42"}).status_code == 200
+    attacker = app.test_client()  # someone who got into the mailbox
+    reset = attacker.post("/api/auth/password/reset", json={"token": token, "password": "brand-new-harbour-42"})
+    assert reset.status_code == 200 and reset.get_json() == {"ok": True, "two_step": True}
+    assert "Set-Cookie" not in reset.headers or "sc_session=;" in reset.headers.get("Set-Cookie", "")
+    assert attacker.get("/api/account/overview").status_code == 401  # the link alone signs nobody in
+    assert attacker.get("/api/auth/me").get_json().get("user") is None
+    assert first_device.get("/api/account/overview").status_code == 401  # and every device was signed out
     assert sign_in(app, password="brand-new-harbour-42")[1].get_json().get("two_step") is True
 
 
