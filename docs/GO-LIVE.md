@@ -36,13 +36,15 @@ cPanel → **Setup Python App** → *Create Application*:
 
 | Field | Value |
 |---|---|
-| Python version | 3.10 or newer (the newest offered) |
+| Python version | 3.11 or newer (pick the newest offered; 3.10 can't install the photo library) |
 | Application root | `megrooms_flask` |
 | Application URL | your domain, path left empty |
 | Application startup file | `wsgi.py` |
 | Application Entry point | `app` |
 
 Click **Create**. At the top of the app's page, cPanel shows a command that starts with `source /home/…/virtualenv/megrooms_flask/…/bin/activate`. Copy it; steps 6, 7 and 11 use it.
+
+**Check the server is new enough.** cPanel → **Terminal**, run `ldd --version`. The first line ends with a version number, which must be **2.28 or higher** (for example `ldd (GNU libc) 2.28`). The photo library (Pillow) only installs ready-made on those servers. If it shows 2.17, ask Namecheap support to move your account to a CloudLinux 8 server before deploying.
 
 ## 4. Create the mailbox
 
