@@ -39,10 +39,10 @@ cPanel → **Setup Python App** → *Create Application*:
 | Python version | 3.11 or newer (pick the newest offered; 3.10 can't install the photo library) |
 | Application root | `megrooms_flask` |
 | Application URL | your domain, path left empty |
-| Application startup file | `wsgi.py` |
-| Application Entry point | `app` |
+| Application startup file | `passenger_wsgi.py` |
+| Application Entry point | `application` |
 
-Click **Create**. At the top of the app's page, cPanel shows a command that starts with `source /home/…/virtualenv/megrooms_flask/…/bin/activate`. Copy it; steps 6, 7 and 11 use it.
+Click **Create**. (The repository has its own `passenger_wsgi.py`, and every deploy copies it over the placeholder cPanel creates. Don't use `wsgi.py` / `app` here: the wrapper cPanel writes for those uses a module that Python 3.12 removed.) At the top of the app's page, cPanel shows a command like `source /home/<user>/virtualenv/megrooms_flask/3.11/bin/activate && cd /home/<user>/megrooms_flask`. Copy it; steps 7 and 11 use it.
 
 **Check the server is new enough.** cPanel → **Terminal**, run `ldd --version`. The first line ends with a version number, which must be **2.28 or higher** (for example `ldd (GNU libc) 2.28`). The photo library (Pillow) only installs ready-made on those servers. If it shows 2.17, ask Namecheap support to move your account to a CloudLinux 8 server before deploying.
 
@@ -109,8 +109,13 @@ Payments are added in step 9. Leave them out for now, and the site takes "reques
    ```bash
    cd travago-tour-app && npm ci && npm run build
    ```
-   Zip the `build` folder, upload it to `megrooms_flask/travago-tour-app/` in File Manager, and **Extract** it there.
-4. Clear out the old site: in `public_html`, delete the old site files but **keep `.htaccess`**, which connects the domain to the app.
+   Zip the `build` folder, upload it to `megrooms_flask/travago-tour-app/` in File Manager (the deploy creates that folder), and **Extract** it there. You should then have `megrooms_flask/travago-tour-app/build/index.html`.
+4. Clear out the old site in `public_html` (turn on *Settings → Show Hidden Files* in File Manager):
+   - Delete the old site's files and folders (`index.html`, `assets`, `media` and the rest).
+   - **Edit `.htaccess`, don't keep it as it is.** Keep only the block cPanel added when you created the app, from `# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN` to `# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END`, and delete every other line. If you uploaded the static site before, the rest of that file answers every `/api/` address with "not found", so the site would open but quietly as the static version, with no accounts, bookings or payments. The app itself now does the HTTPS redirect and security headers those lines used to add.
+   - Before editing, right-click `.htaccess` → **Copy** and name the copy `.htaccess.bak`, so you can go back. If the file has no Passenger block at all, don't write one by hand: ask Namecheap support to repair the Python app's `.htaccess`.
+
+   Every deploy warns in its log if the old static rules are still in `public_html/.htaccess`.
 
 ## 7. Set up the database and your host account
 
@@ -222,7 +227,7 @@ Guests book and pay those businesses directly; no money for them passes through 
 
 ## 11. Scheduled jobs: clean-up, backups and alerts
 
-Four jobs keep the site healthy. Add each one in cPanel → **Cron Jobs**. Each command needs the full path of the app's `flask`: take the `source …/bin/activate` command from step 3, drop `source ` from the front and change `activate` at the end to `flask`, for example `/home/<user>/virtualenv/megrooms_flask/3.11/bin/flask`. Below, `FLASK` stands for that path and `<user>` for your cPanel username.
+Four jobs keep the site healthy. Add each one in cPanel → **Cron Jobs**. Each command needs the full path of the app's `flask`: take the command from step 3, keep only the path that ends in `/bin/activate` (drop `source ` before it and `&& cd …` after it), and change `activate` to `flask`, for example `/home/<user>/virtualenv/megrooms_flask/3.11/bin/flask`. Below, `FLASK` stands for that path and `<user>` for your cPanel username.
 
 | How often | Cron setting | Command |
 |---|---|---|

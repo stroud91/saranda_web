@@ -116,8 +116,10 @@ The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain roo
    | Python | 3.11+ (the photo library needs it) |
    | Application root | `megrooms_flask` |
    | URL | your domain, empty path |
-   | Startup file | `wsgi.py` |
-   | Entry point | `app` |
+   | Startup file | `passenger_wsgi.py` |
+   | Entry point | `application` |
+
+   The deploy copies the repository's `passenger_wsgi.py` over cPanel's placeholder. (The wrapper cPanel writes for any other start file uses `imp`, which Python 3.12 removed.)
 
 2. **Create `/home/<user>/megrooms_flask/.env`** (see `.env.example`). With SQLite, use:
    ```
@@ -129,7 +131,7 @@ The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain roo
    Leave `SCHEMA` unset unless you use PostgreSQL.
 3. **Connect the repository** in cPanel → Git Version Control, then click **Deploy HEAD Commit**.
 4. **Seed the database once**, from cPanel → Terminal inside the app's virtualenv: `flask seed all`. (It refuses to run on a database that already has data, so it can't wipe real bookings.)
-5. **Remove the old site files from `public_html`**, but keep its `.htaccess`, which connects the domain to the app.
+5. **Remove the old site files from `public_html`** and edit its `.htaccess` down to the block cPanel added (`CLOUDLINUX PASSENGER CONFIGURATION BEGIN` … `END`). The static site's rules answer `/api/` with 404, which hides the app; each deploy warns in its log while they're still there.
 
 **Every update:** in Git Version Control, click **Update from Remote**, then **Deploy HEAD Commit**. `deploy/cpanel_deploy.sh` then:
 - syncs the backend (never touching `.env` or the database);
@@ -138,7 +140,7 @@ The site runs as one **cPanel "Setup Python App"** (Passenger) at the domain roo
 
 It builds the frontend only if the server has Node.js 20.19+/22.12+. Otherwise it keeps the current build: run `npm ci && npm run build` locally and upload `travago-tour-app/build/` to `megrooms_flask/travago-tour-app/build/`.
 
-The account paths are set at the top of `deploy/cpanel_deploy.sh`: `CPANEL_USER`, `APP_ROOT` and `VENV_BASE`.
+`deploy/cpanel_deploy.sh` works out the paths from the cPanel account that runs it (`~/megrooms_flask`, `~/virtualenv/megrooms_flask`, `~/public_html`), so it needs no editing. To use other folders, set `ACCOUNT_HOME`, `APP_ROOT`, `VENV_BASE` or `DOCROOT` in the environment.
 
 ## Accounts and payments
 

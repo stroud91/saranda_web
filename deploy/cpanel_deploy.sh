@@ -3,8 +3,8 @@
 # Called by .cpanel.yml from cPanel → Git Version Control → "Deploy HEAD Commit".
 #
 # What it does:
-#   1. Syncs backend code (app/, migrations/, wsgi.py, requirements.txt) into APP_ROOT.
-#      Never touches APP_ROOT/.env or APP_ROOT/instance/ (your secrets and database).
+#   1. Syncs backend code (app/, migrations/, wsgi.py, passenger_wsgi.py, requirements.txt)
+#      into APP_ROOT. Never touches APP_ROOT/.env or APP_ROOT/instance/ (your secrets and database).
 #   2. Builds the frontend if a recent Node.js/npm exists on the server; if not (or the
 #      build fails) it keeps the build/ folder you uploaded. Set SKIP_FRONTEND_BUILD=1
 #      to always upload the build yourself (build locally: npm ci && npm run build).
@@ -12,10 +12,19 @@
 #   4. Restarts the Passenger app.
 set -euo pipefail
 
-# ---- Settings (match these to your cPanel account) --------------------------------
-CPANEL_USER="${CPANEL_USER:-megruhsm}"
-APP_ROOT="${APP_ROOT:-/home/$CPANEL_USER/megrooms_flask}"
-VENV_BASE="${VENV_BASE:-/home/$CPANEL_USER/virtualenv/megrooms_flask}"
+# ---- Settings ----------------------------------------------------------------------
+# Paths are worked out from the cPanel account running the deploy, so nothing here needs
+# editing. To use other folders, set ACCOUNT_HOME, APP_ROOT, VENV_BASE or DOCROOT in the
+# environment instead.
+ACCOUNT_HOME="${ACCOUNT_HOME:-$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)}"
+ACCOUNT_HOME="${ACCOUNT_HOME:-${HOME:-}}"
+if [ -z "$ACCOUNT_HOME" ] || [ ! -d "$ACCOUNT_HOME" ]; then
+  echo "[deploy] Can't find this account's home folder. Set ACCOUNT_HOME and deploy again." >&2
+  exit 1
+fi
+APP_ROOT="${APP_ROOT:-$ACCOUNT_HOME/megrooms_flask}"
+VENV_BASE="${VENV_BASE:-$ACCOUNT_HOME/virtualenv/megrooms_flask}"
+DOCROOT="${DOCROOT:-$ACCOUNT_HOME/public_html}"   # the domain's folder, where .htaccess lives
 SRC="${DEPLOYMENT_SOURCE:-$(cd "$(dirname "$0")/.." && pwd)}"
 # -----------------------------------------------------------------------------------
 
@@ -33,16 +42,25 @@ sync_dir() {  # sync_dir <source dir> <dest dir>: mirror, removing stale files
 
 log "Source: $SRC"
 log "App root: $APP_ROOT"
-mkdir -p "$APP_ROOT" "$APP_ROOT/instance" "$APP_ROOT/tmp"
+# travago-tour-app/ is where the website build goes (uploaded by hand when the server has no Node).
+mkdir -p "$APP_ROOT" "$APP_ROOT/instance" "$APP_ROOT/tmp" "$APP_ROOT/travago-tour-app"
 
 # 1. Backend code
 sync_dir "$SRC/app" "$APP_ROOT/app"
 sync_dir "$SRC/migrations" "$APP_ROOT/migrations"
-cp "$SRC/wsgi.py" "$SRC/requirements.txt" "$APP_ROOT/"
+cp "$SRC/wsgi.py" "$SRC/passenger_wsgi.py" "$SRC/requirements.txt" "$APP_ROOT/"
 log "Backend code synced"
 
 if [ ! -f "$APP_ROOT/.env" ]; then
   log "WARNING: $APP_ROOT/.env is missing. Create it (see .env.example) before the app can start in production."
+fi
+
+# The static upload's .htaccess answers every /api/ address with 404 and sends every other
+# address to index.html. Left in the domain's folder, it hides the Python app: the site still
+# opens, but quietly as the static version, with no accounts, bookings or payments.
+if [ -f "$DOCROOT/.htaccess" ] && grep -qF 'RewriteRule ^api/ - [R=404,L]' "$DOCROOT/.htaccess"; then
+  log "WARNING: $DOCROOT/.htaccess still has the old static site's rules, which block the app's /api/ addresses."
+  log "         Edit it and keep only the lines from 'CLOUDLINUX PASSENGER CONFIGURATION BEGIN' to '... END'."
 fi
 
 # 2. Frontend
