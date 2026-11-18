@@ -1,6 +1,8 @@
-# cPanel → Git Version Control → "Deploy HEAD Commit" runs these tasks.
-# The site runs as a "Setup Python App" (Passenger) at the domain root;
-# see deploy/cpanel_deploy.sh for what each deploy does and the paths it uses.
+---
+# cPanel → Git Version Control → "Deploy HEAD Commit" runs these tasks, from the
+# repository's own folder (repositories/saranda_web). The site runs as a
+# "Setup Python App" (Passenger) at the domain root; see deploy/cpanel_deploy.sh
+# for what each deploy does and the paths it uses.
 deployment:
   tasks:
-    - /bin/bash $DEPLOYMENT_SOURCE/deploy/cpanel_deploy.sh
+    - /bin/bash deploy/cpanel_deploy.sh

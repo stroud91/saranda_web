@@ -35,7 +35,7 @@ def test_deploy_script_uses_the_accounts_own_folders(tmp_path):
     home = tmp_path / "home"
     (home / "public_html").mkdir(parents=True)
     shutil.copy(STATIC_HTACCESS, home / "public_html" / ".htaccess")
-    env = {**os.environ, "ACCOUNT_HOME": str(home), "DEPLOYMENT_SOURCE": ROOT, "SKIP_FRONTEND_BUILD": "1"}
+    env = {**os.environ, "ACCOUNT_HOME": str(home), "SKIP_FRONTEND_BUILD": "1"}
 
     def deploy():
         r = subprocess.run(["bash", os.path.join(ROOT, "deploy", "cpanel_deploy.sh")], env=env,
@@ -58,3 +58,31 @@ def test_deploy_script_uses_the_accounts_own_folders(tmp_path):
     # With only cPanel's Passenger block left, there is nothing to warn about.
     (home / "public_html" / ".htaccess").write_text(PASSENGER_BLOCK)
     assert "static site's rules" not in deploy()
+
+
+def _cpanel_tasks():
+    tasks, inside = [], False
+    with open(os.path.join(ROOT, ".cpanel.yml")) as f:
+        for line in f:
+            if line.strip() == "tasks:":
+                inside = True
+            elif inside and line.strip().startswith("- "):
+                tasks.append(line.strip()[2:])
+    return tasks
+
+
+@pytest.mark.skipif(not shutil.which("bash"), reason="needs bash")
+def test_cpanel_deploy_button_runs_the_deploy(tmp_path):
+    """"Deploy HEAD Commit" runs each task from the repository folder with only the account's
+    own environment: no variable names the repository, so the tasks mustn't rely on one."""
+    home = tmp_path / "home"
+    home.mkdir()
+    env = {k: v for k, v in os.environ.items() if k != "DEPLOYMENT_SOURCE"}
+    env.update(ACCOUNT_HOME=str(home), SKIP_FRONTEND_BUILD="1")
+    tasks = _cpanel_tasks()
+    assert tasks
+    for task in tasks:
+        r = subprocess.run(["bash", "-c", task], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, task + "\n" + r.stdout[-2000:] + r.stderr[-2000:]
+    assert (home / "megrooms_flask" / "passenger_wsgi.py").is_file()
+    assert (home / "megrooms_flask" / "app" / "__init__.py").is_file()

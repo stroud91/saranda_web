@@ -105,6 +105,10 @@ Payments are added in step 9. Leave them out for now, and the site takes "reques
    - Repository path: `repositories/saranda_web`
    - If the repository is private, first create an SSH key (cPanel → **SSH Access** → *Manage SSH Keys*) and add its public key to GitHub → the repository → *Settings* → *Deploy keys* (read-only). Then use the SSH clone URL.
 2. Open the repository → **Pull or Deploy** → **Deploy HEAD Commit**. This copies the code into `megrooms_flask`, installs packages, sets up the database tables and restarts the app.
+   The same deploy can be run by hand from cPanel → **Terminal**, which also shows every message as it happens:
+   ```bash
+   bash ~/repositories/saranda_web/deploy/cpanel_deploy.sh
+   ```
 3. The website itself (the frontend) is built only if the server has Node.js 20.19 or newer. If the deploy log says *no frontend installed yet*, build it on your computer and upload it:
    ```bash
    cd travago-tour-app && npm ci && npm run build

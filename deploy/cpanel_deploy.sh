@@ -1,6 +1,8 @@
 #!/bin/bash
 # Deploys Saranda Companion to a cPanel "Setup Python App" (Passenger) application.
 # Called by .cpanel.yml from cPanel → Git Version Control → "Deploy HEAD Commit".
+# It can also be run by hand from cPanel → Terminal:
+#   bash ~/repositories/saranda_web/deploy/cpanel_deploy.sh
 #
 # What it does:
 #   1. Syncs backend code (app/, migrations/, wsgi.py, passenger_wsgi.py, requirements.txt)
@@ -25,7 +27,7 @@ fi
 APP_ROOT="${APP_ROOT:-$ACCOUNT_HOME/megrooms_flask}"
 VENV_BASE="${VENV_BASE:-$ACCOUNT_HOME/virtualenv/megrooms_flask}"
 DOCROOT="${DOCROOT:-$ACCOUNT_HOME/public_html}"   # the domain's folder, where .htaccess lives
-SRC="${DEPLOYMENT_SOURCE:-$(cd "$(dirname "$0")/.." && pwd)}"
+SRC="$(cd "$(dirname "$0")/.." && pwd)"   # the repository this script is in
 # -----------------------------------------------------------------------------------
 
 log() { echo "[deploy] $*"; }
