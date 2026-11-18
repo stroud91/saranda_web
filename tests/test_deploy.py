@@ -86,3 +86,33 @@ def test_cpanel_deploy_button_runs_the_deploy(tmp_path):
         assert r.returncode == 0, task + "\n" + r.stdout[-2000:] + r.stderr[-2000:]
     assert (home / "megrooms_flask" / "passenger_wsgi.py").is_file()
     assert (home / "megrooms_flask" / "app" / "__init__.py").is_file()
+
+
+@pytest.mark.skipif(not shutil.which("bash"), reason="needs bash")
+def test_deploy_installs_packages_one_at_a_time(tmp_path):
+    """Shared hosting kills a process that uses too much memory, and a single
+    `pip install -r requirements.txt` got killed there. Each package is installed on its own,
+    without pip's cache; then the database is migrated (only once .env exists)."""
+    home = tmp_path / "home"
+    venv_bin = home / "virtualenv" / "megrooms_flask" / "3.11" / "bin"
+    venv_bin.mkdir(parents=True)
+    calls = tmp_path / "calls.txt"
+    for tool in ("pip", "flask"):
+        (venv_bin / tool).write_text(f'#!/bin/bash\necho "{tool} $*" >> "{calls}"\n')
+        (venv_bin / tool).chmod(0o755)
+    (venv_bin / "activate").write_text(f'PATH="{venv_bin}:$PATH"\ndeactivate() {{ :; }}\n')
+    (home / "megrooms_flask").mkdir()
+    (home / "megrooms_flask" / ".env").write_text("FLASK_ENV=production\n")
+    env = {**os.environ, "ACCOUNT_HOME": str(home), "SKIP_FRONTEND_BUILD": "1"}
+    r = subprocess.run(["bash", os.path.join(ROOT, "deploy", "cpanel_deploy.sh")], env=env,
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout[-2000:] + r.stderr[-2000:]
+    assert "Database migrations applied" in r.stdout
+
+    with open(os.path.join(ROOT, "requirements.txt")) as f:
+        wanted = [line.strip() for line in f if line.strip() and not line.lstrip().startswith("#")]
+    lines = calls.read_text().splitlines()
+    pips = [line for line in lines if line.startswith("pip ")]
+    assert [p.split()[-1] for p in pips] == wanted
+    assert all("--no-cache-dir" in p and "-r" not in p.split() for p in pips)
+    assert lines[-1] == "flask db upgrade"

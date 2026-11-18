@@ -118,7 +118,16 @@ if [ -n "$ACTIVATE" ]; then
   log "Using virtualenv: $(dirname "$(dirname "$ACTIVATE")")"
   # shellcheck disable=SC1090
   source "$ACTIVATE"
-  (cd "$APP_ROOT" && pip install --quiet -r requirements.txt)
+  # One package at a time, without pip's download cache: shared hosting stops ("Killed") any
+  # process that uses too much memory, and installing everything in one go can get there.
+  # Packages already installed at the right version are skipped in a second or two.
+  (
+    cd "$APP_ROOT"
+    grep -vE '^[[:space:]]*(#|$)' requirements.txt | while read -r requirement; do
+      log "Installing $requirement"
+      pip install --quiet --no-cache-dir --prefer-binary "$requirement" || exit 1
+    done
+  )
   log "Python packages installed"
   if [ -f "$APP_ROOT/.env" ]; then
     (cd "$APP_ROOT" && FLASK_APP=app flask db upgrade)
