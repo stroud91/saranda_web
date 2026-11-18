@@ -246,6 +246,19 @@ def _check_waiting(now):
     return found
 
 
+def free_mb():
+    """Free disk space where the site keeps its data, in MB (None if it can't be read).
+    The instance folder may not exist yet on a new install, so the nearest folder that does
+    exists is measured: it is on the same disk."""
+    path = os.path.abspath(current_app.instance_path)
+    while not os.path.isdir(path) and os.path.dirname(path) != path:
+        path = os.path.dirname(path)
+    try:
+        return shutil.disk_usage(path).free // (1024 * 1024)
+    except OSError:
+        return None
+
+
 def checks(deep=False, now=None):
     """Everything that needs the host right now, as [{"key", "level", "message"}].
     ``deep`` adds the checks that reach out over the network (mail server, the public site)."""
@@ -260,12 +273,9 @@ def checks(deep=False, now=None):
     if current and head and current != head:
         found.append(_problem("migration", "The database is older than the code. Run `flask db upgrade`, then restart the app."))
     found.append(_check_backups(now))
-    try:
-        free = shutil.disk_usage(current_app.instance_path).free // (1024 * 1024)
-        if free < int(_cfg("ALERT_MIN_FREE_MB", 500)):
-            found.append(_problem("disk", f"Only {free} MB of disk space is left. Photos and backups will start to fail: delete old files or enlarge the plan."))
-    except OSError:
-        pass
+    free = free_mb()
+    if free is not None and free < int(_cfg("ALERT_MIN_FREE_MB", 500)):
+        found.append(_problem("disk", f"Only {free} MB of disk space is left. Photos and backups will start to fail: delete old files or enlarge the plan."))
     found += _check_calendars(now)
     found.append(_check_mail(deep))
     notes = recall()
@@ -288,10 +298,7 @@ def facts():
     """Numbers for the Host desk's health line."""
     last = backups.latest("data")
     rows = backups.listing()
-    try:
-        free = shutil.disk_usage(current_app.instance_path).free // (1024 * 1024)
-    except OSError:
-        free = None
+    free = free_mb()
     try:
         offsite = bool(backups.offsite())
     except backups.BackupError:
