@@ -52,17 +52,21 @@ The planner's knowledge (places, road times, itineraries, advice) lives in code 
 
 ## Running locally
 
+You need **Python 3.11 or newer** and **Node.js 20.19+ or 22.12+** (`python3 --version`, `node --version`). On Windows, use WSL and keep the project in your Linux home folder (for example `~/saranda_web`): builds on `/mnt/c` are several times slower. If your Node is older, install a current one with nvm (`nvm install 22`).
+
 ```bash
 # Backend
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env            # fill in what you need; everything optional works without keys
-flask db upgrade && flask seed all
+cp .env.example .env            # works as is; fill in only what you want to try (all optional)
+flask db upgrade                 # creates instance/dev.db
+flask seed all                   # sample stays, guides, experiences and cars
+flask users create-host you@example.com   # asks for a password; opens the Host desk
 flask run                        # http://127.0.0.1:5000
 
 # Frontend (second terminal)
 cd travago-tour-app
-npm install
+npm ci
 npm run dev                      # http://localhost:5173 (proxies /api to Flask)
 
 # Tests
@@ -70,7 +74,7 @@ pytest                           # backend
 cd travago-tour-app && npm test  # frontend unit tests
 ```
 
-For a production-like run, `npm run build` and then `gunicorn "wsgi:app"`. Flask serves the built SPA.
+For a production-like run, `npm run build` in `travago-tour-app` and open http://127.0.0.1:5000: Flask serves the built site. To start again with fresh sample data, `flask seed all --reset` (it deletes everything in the local database).
 
 ## Hosting on Namecheap without Python (static upload)
 
