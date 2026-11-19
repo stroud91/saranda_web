@@ -200,6 +200,8 @@ a.card:hover { text-decoration: none; }
   background: var(--bg-elev); color: var(--text); transition: border-color 0.2s, box-shadow 0.2s;
 }
 .textarea { min-height: 110px; resize: vertical; }
+/* The open list of a native <select> takes the theme's colours, never white with light text. */
+select option, select optgroup { background-color: var(--surface); color: var(--text); }
 .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
 .field.error .input, .field.error .select, .field.error .textarea { border-color: var(--danger); }
 .field-error { color: var(--danger); font-size: 0.8rem; font-weight: 700; }

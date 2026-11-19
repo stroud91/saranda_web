@@ -348,3 +348,37 @@
 .footer-langs button { border: 1px solid rgba(255, 255, 255, 0.22); background: transparent; color: inherit; font: inherit; font-size: 0.85rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; opacity: 0.85; }
 .footer-langs button:hover { opacity: 1; border-color: rgba(255, 255, 255, 0.5); }
 .footer-langs button.on { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.5); opacity: 1; }
+
+/* ---------- Place picker (components/ui/PlacePicker.jsx) ----------
+   The site's own dropdown for choosing a place: the browser's <select> list can't be
+   styled reliably and opened white with faded text in dark mode. */
+.pp-trigger { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; align-self: stretch; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 800; font-size: 1rem; text-align: left; cursor: pointer; }
+.pp-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 10px; }
+.pp-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-value.placeholder { color: var(--muted); font-weight: 650; }
+.pp-chevron { flex: none; opacity: 0.55; transition: transform 0.2s ease, opacity 0.2s ease; }
+.pp-trigger:hover .pp-chevron { opacity: 0.9; }
+.pp-trigger[aria-expanded="true"] .pp-chevron { transform: rotate(180deg); opacity: 0.9; }
+
+.pp-panel { position: fixed; z-index: 1260; display: flex; flex-direction: column; overflow: hidden; outline: none; background: var(--surface); color: var(--text); border: 1px solid var(--line-strong); border-radius: 18px; box-shadow: 0 24px 60px -18px rgba(4, 20, 30, 0.5), 0 2px 10px rgba(4, 20, 30, 0.1); font-family: var(--font-body); font-size: 0.95rem; color-scheme: light; }
+:root[data-theme="dark"] .pp-panel, .pp-panel.theme-scope[data-theme="dark"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pp-panel { color-scheme: dark; } }
+.pp-search { display: flex; align-items: center; gap: 8px; flex: none; margin: 8px; padding: 0 12px; height: 42px; border-radius: 12px; background: var(--bg-sunk); color: var(--muted); border: 1px solid var(--line); }
+.pp-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.pp-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--text); font: inherit; outline: none; }
+.pp-search input::placeholder { color: var(--muted); opacity: 1; }
+.pp-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 8px; scrollbar-width: thin; }
+.pp-group { padding: 10px 10px 4px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.pp-option { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 6px 10px; border-radius: 12px; cursor: pointer; font-weight: 650; color: var(--text); user-select: none; }
+.pp-option.active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.pp-option[aria-selected="true"] { font-weight: 800; }
+.pp-icon { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 9px; color: color-mix(in srgb, var(--c) 72%, var(--text)); background: color-mix(in srgb, var(--c) 16%, transparent); }
+.pp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-check { flex: none; color: var(--accent); }
+.pp-empty { margin: 0; padding: 12px 12px 16px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .pp-panel { animation: pp-in 0.14s ease-out; } }
+@keyframes pp-in { from { opacity: 0; transform: translateY(-4px) scale(0.985); } }
+@media (forced-colors: active) {
+  .pp-panel { border: 1px solid CanvasText; }
+  .pp-option.active { outline: 2px solid Highlight; outline-offset: -2px; }
+}

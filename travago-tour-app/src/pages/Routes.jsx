@@ -8,6 +8,7 @@ import { hm, hmRange, kmRange } from "../lib/format";
 import AlbaniaMap from "../components/map/AlbaniaMap";
 import Timeline from "../components/planner/Timeline";
 import { MODE_META, PageHeader, Segmented, Skeleton, toast } from "../components/ui";
+import PlacePicker from "../components/ui/PlacePicker";
 import { useTrip } from "../store/trip";
 import { tr } from "../i18n";
 
@@ -15,12 +16,10 @@ const MODE_ICON = { drive: Car, ferry: Ship, boat: Sailboat };
 
 function PlaceSelect({ id, value, onChange, list, label, dot }) {
   return (
-    <div className="rc-field">
+    <div className="rc-field" data-pp-anchor>
       <span className={`hc-dot ${dot}`} />
       <label htmlFor={id} className="rc-label">{label}</label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-        {list.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
-      </select>
+      <PlacePicker id={id} label={label} value={value} onChange={onChange} places={list} />
     </div>
   );
 }
@@ -149,13 +148,15 @@ export default function Routes() {
             <span key={v + i} className="chip sm on">via {name(v)} <button className="chip-x" onClick={() => update({ via: via.filter((_, j) => j !== i).join(",") })} aria-label={`Remove ${name(v)}`}><X size={12} /></button></span>
           ))}
           {via.length < 4 && (
-            <label className="chip sm add-via">
-              <Plus size={14} /> Add a stop
-              <select value="" onChange={(e) => e.target.value && update({ via: [...via, e.target.value].join(",") })} aria-label={tr("Add a stop along the way")}>
-                <option value="">Add a stop</option>
-                {list.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
-              </select>
-            </label>
+            <PlacePicker
+              className="chip sm add-via"
+              label={tr("Add a stop along the way")}
+              value=""
+              onChange={(v) => update({ via: [...via, v].join(",") })}
+              places={list.filter((d) => d.slug !== from && d.slug !== to && !via.includes(d.slug))}
+            >
+              <Plus size={14} /> {tr("Add a stop")}
+            </PlacePicker>
           )}
           <span style={{ flex: 1 }} />
           <Segmented layoutId="rc-modes" value={modes} onChange={setModes} options={[{ value: "all", label: "All" }, { value: "ferry", label: "No boats" }, { value: "road", label: "Road only" }]} />
