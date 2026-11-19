@@ -16,6 +16,7 @@ import OceanHero from "../components/hero/OceanHero";
 import ReelSection from "../components/media/ReelSection";
 import GuideAvatar from "../components/art/GuideAvatar";
 import { Skeleton } from "../components/ui";
+import PlacePicker from "../components/ui/PlacePicker";
 import { useUi } from "../store/ui";
 import { useTrip } from "../store/trip";
 import { loc, plural, rich, tr } from "../i18n";
@@ -39,19 +40,13 @@ function HeroConnector() {
   const options = list.filter((d) => d.category !== "boat");
   return (
     <form className="hero-connector glass-card" onSubmit={(e) => { e.preventDefault(); navigate(`/routes?from=${from}&to=${to}`); }}>
-      <div className="hc-field">
+      <div className="hc-field" data-pp-anchor>
         <span className="hc-dot a" />
-        <label className="sr-only" htmlFor="hc-from">{tr("From")}</label>
-        <select id="hc-from" value={from} onChange={(e) => setFrom(e.target.value)}>
-          {options.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
-        </select>
+        <PlacePicker id="hc-from" label={tr("From")} value={from} onChange={setFrom} places={options} />
       </div>
-      <div className="hc-field">
+      <div className="hc-field" data-pp-anchor>
         <span className="hc-dot b" />
-        <label className="sr-only" htmlFor="hc-to">{tr("To")}</label>
-        <select id="hc-to" value={to} onChange={(e) => setTo(e.target.value)}>
-          {list.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
-        </select>
+        <PlacePicker id="hc-to" label={tr("To")} value={to} onChange={setTo} places={list} />
       </div>
       <button className="btn sun"><Route size={18} /> {tr("How long?")}</button>
     </form>

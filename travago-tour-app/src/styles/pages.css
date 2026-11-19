@@ -48,7 +48,6 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero-connector { background: rgba(8, 32, 46, 0.88); color: var(--text); } }
 @media (max-width: 640px) { .hero-connector { grid-template-columns: 1fr; } }
 .hc-field { position: relative; display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 54px; border-radius: 18px; background: var(--bg-sunk); }
-.hc-field select, .rc-field select { flex: 1; min-width: 0; border: 0; background: transparent; font-weight: 800; font-size: 1rem; outline: none; appearance: none; cursor: pointer; color: inherit; }
 .hc-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 12%, transparent); }
 .hc-dot.a { background: var(--sun); color: var(--sun); }
 .hc-dot.b { background: var(--lagoon-500); color: var(--lagoon-500); }
@@ -160,12 +159,11 @@
 @media (max-width: 640px) { .rc-grid { grid-template-columns: 1fr; } .rc-swap { justify-self: center; transform: rotate(0); } }
 .rc-field { display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 16px; border-radius: 18px; background: var(--bg-sunk); border: 1px solid var(--line); position: relative; }
 .rc-label { position: absolute; top: 6px; left: 38px; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
-.rc-field select { padding-top: 14px; font-size: 1.05rem; }
+.rc-field .pp-trigger { padding-top: 14px; font-size: 1.05rem; }
 .rc-swap { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: var(--sh-1); }
 @media (min-width: 641px) { .rc-swap { transform: rotate(90deg); } }
 .chip-x { border: 0; background: rgba(255, 255, 255, 0.2); color: inherit; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; margin-left: 2px; }
-.add-via { position: relative; overflow: hidden; cursor: pointer; }
-.add-via select { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.add-via { position: relative; cursor: pointer; font: inherit; }
 .route-summary { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 24px; border-radius: var(--r-lg); color: #fff; background: var(--grad-aegean); box-shadow: var(--sh-2); position: relative; overflow: hidden; }
 .route-summary::after { content: ""; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(244, 182, 63, 0.35), transparent 70%); }
 .rs-time { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.05; }
@@ -468,8 +466,7 @@
 .atlas-panel { position: absolute; top: calc(var(--topbar-h) + 76px); left: var(--gutter); width: min(360px, calc(100% - 2 * var(--gutter))); padding: 12px; display: grid; gap: 10px; max-height: calc(100% - var(--topbar-h) - 200px); overflow: auto; }
 .atlas-od { display: grid; gap: 6px; }
 .atlas-od label { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(143, 230, 234, 0.14); }
-.atlas-od select { flex: 1; min-width: 0; height: 40px; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; }
-.atlas-od select option { color: #102028; }
+.atlas-od .pp-trigger { height: 40px; font-weight: 700; }
 .atlas-od .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .atlas-od .dot.a { background: #f4b63f; box-shadow: 0 0 10px #f4b63f; } .atlas-od .dot.b { background: #3fd3cf; box-shadow: 0 0 10px #3fd3cf; }
 .atlas-error { color: #ffb4a8; margin: 0; }

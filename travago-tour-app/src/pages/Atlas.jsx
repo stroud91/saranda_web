@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { hmRange, kmRange } from "../lib/format";
 import { CATEGORY_META, CategoryIcon, Skeleton } from "../components/ui";
+import PlacePicker from "../components/ui/PlacePicker";
 import { createAtlas, webglSupported } from "../components/atlas/atlasScene";
 import { prefersReducedMotion } from "../lib/media";
 import { tr } from "../i18n";
@@ -167,11 +168,11 @@ export default function Atlas() {
               onSubmit={(e) => { e.preventDefault(); connect(); }}
             >
               <div className="atlas-od">
-                <label><span className="dot a" /> <span className="sr-only">{tr("From")}</span>
-                  <select value={from} onChange={(e) => setFrom(e.target.value)}>{options.map((n) => <option key={n.slug} value={n.slug}>{n.name}</option>)}</select>
+                <label data-pp-anchor><span className="dot a" />
+                  <PlacePicker label={tr("From")} value={from} onChange={setFrom} places={options} tone="dark" />
                 </label>
-                <label><span className="dot b" /> <span className="sr-only">{tr("To")}</span>
-                  <select value={to} onChange={(e) => setTo(e.target.value)}>{nodes.map((n) => <option key={n.slug} value={n.slug}>{n.name}</option>)}</select>
+                <label data-pp-anchor><span className="dot b" />
+                  <PlacePicker label={tr("To")} value={to} onChange={setTo} places={nodes} tone="dark" />
                 </label>
               </div>
               <div className="row gap-sm">
